@@ -205,8 +205,8 @@ bool KBParameterContainer::GetParBool(TString name, Bool_t &val, bool exitElse) 
   if (obj == nullptr) {
     cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
     if (exitElse)
-      return false;
-    gApplication -> Terminate();
+      gApplication -> Terminate();
+    return false;
   }
 
   val = ((TParameter<Bool_t> *) obj) -> GetVal();
@@ -219,8 +219,8 @@ bool KBParameterContainer::GetParInt(TString name, Int_t &val, bool exitElse) co
   if (obj == nullptr) {
     cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
     if (exitElse)
-      return false;
-    gApplication -> Terminate();
+      gApplication -> Terminate();
+    return false;
   }
 
   val = ((TParameter<Int_t> *) obj) -> GetVal();
@@ -233,8 +233,8 @@ bool KBParameterContainer::GetParDouble(TString name, Double_t &val, bool exitEl
   if (obj == nullptr) {
     cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
     if (exitElse)
-      return false;
-    gApplication -> Terminate();
+      gApplication -> Terminate();
+    return false;
   }
 
   val = ((TParameter<Double_t> *) obj) -> GetVal();
@@ -247,8 +247,8 @@ bool KBParameterContainer::GetParString(TString name, TString &val, bool exitEls
   if (obj == nullptr) {
     cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
     if (exitElse)
-      return false;
-    gApplication -> Terminate();
+      gApplication -> Terminate();
+    return false;
   }
 
   val = ((TNamed *) obj) -> GetTitle();
