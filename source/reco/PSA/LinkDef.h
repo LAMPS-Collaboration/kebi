@@ -4,7 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class S2PSATask+;
-#pragma link C++ class S2PSA+;
+#pragma link C++ class KBPSATask+;
+#pragma link C++ class KBPSA+;
 
 #endif
