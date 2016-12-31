@@ -14,6 +14,18 @@ option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation 
 #---Add source directories. Directory should be under "/path/to/KEBI/"
 list(APPEND KEBI_SOURCE_DIRECTORY_LIST
   source/base
+  source/format
+  source/detector
+  source/tool
+  source/reco/PSA
+  source/analysis/PlotChannels
+
+  GETDecoder/source/GETCore
+  GETDecoder/source/GETFormat
+  GETDecoder/source/GETUtil
+
+  LAMPS/detector
+  LAMPS/task
 )
 
 #---Add geant4 source directories. Directory should be under "/path/to/KEBI/".
@@ -60,12 +72,12 @@ foreach(_directory ${KEBI_SOURCE_DIRECTORY_LIST})
   string(REPLACE / _ _name ${_directory})
   list(APPEND KEBI_SOURCE_NAME_LIST ${_name})
   set(KEBI_${_name}_G_NAME G__${_name}Dict)
-  file(GLOB KEBI_${_name}_LIB_FILE     ${CMAKE_SOURCE_DIR}/${_directory}/lib*)
+  file(GLOB KEBI_${_name}_LINKDEF_FILE ${CMAKE_SOURCE_DIR}/${_directory}/LinkDef.h)
   file(GLOB KEBI_${_name}_SOURCE_FILES ${CMAKE_SOURCE_DIR}/${_directory}/*cc)
   file(GLOB KEBI_${_name}_HEADER_FILES ${CMAKE_SOURCE_DIR}/${_directory}/*hh)
 
   #message(STATUS "[" ${_name} "]")
-  #message(STATUS "  LinkDef file: " ${KEBI_${_name}_LIB_FILE})
+  #message(STATUS "  LinkDef file: " ${KEBI_${_name}_LINKDEF_FILE})
   foreach(_file ${KEBI_${_name}_SOURCE_FILES})
     #message(STATUS "  source  file: " ${_file})
   endforeach(_file)
@@ -78,7 +90,7 @@ add_definitions(${ROOT_CXX_FLAGS})
 foreach(_name ${KEBI_SOURCE_NAME_LIST})
   ROOT_GENERATE_DICTIONARY(${KEBI_${_name}_G_NAME}
     ${KEBI_${_name}_HEADER_FILES}
-    LINKDEF ${KEBI_${_name}_LIB_FILE}
+    LINKDEF ${KEBI_${_name}_LINKDEF_FILE}
   )
 endforeach(_name)
 
