@@ -1,0 +1,27 @@
+#LAMPS TPC parameter
+
+padMap s  $PWD/LAP.padMap.ELPH.dat
+
+worldSize d  1000.  # side legnth of cubic world [mm]
+rMinTPC   d  75.    # minimum radius (gas) [mm]
+rMaxTPC   d  245.   # maximum radius (gas) [mm]
+dyTPC     d  570.   # lenth along y-axis of TPC [mm]
+yOffset   d  -285.  # offset along y-axis [mm]
+
+ppRMin d 75.
+ppRMax d 245.
+
+tbStart i 345
+nTbs    i 50
+tbTime  d 20   # [ns]
+
+gasDriftVelocity  d  0.0542411  # [mm/ns]
+
+tpcEFieldAxis  s y  # axis of field direction one of (x, y, z)
+tpcDriftAxis   i 3  # direction of electric field (1:x, 2:y, 3:z)
+
+tpcNPadPlanes i 1
+tpcPadPlaneK0 d 0
+tpcCathodePlaneK d -570
+
+ADCThreshold d 500
