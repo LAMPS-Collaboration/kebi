@@ -1,0 +1,29 @@
+void reco(Int_t runID = 101)
+{
+  auto run = new KBRun();
+  run -> SetRunID(runID);
+  run -> SetOutputFile(Form("run%04d.reco",runID));
+  run -> AddParameterFile("LAP.par");
+  run -> AddDetector(new LAPTpc());
+
+  auto decoder = new LAPDecoderTask();
+  decoder -> ReadDirectory("/home/storage/LAMPS_TPC_Prototype_ELPH_data/corrected");
+
+  auto psa = new KBPSATask();
+
+  auto noiseSubtraction = new LAPNoiseSubtractionTask();
+
+  auto plot = new KBPlotChannelTask();
+  plot -> SetNameType(1);
+  plot -> SetOutputDirectory(Form("/home/ejungwoo/public_html/plot_LAP_ELPH/run_%04d/",runID));
+
+  run -> Add(decoder);
+  run -> Add(noiseSubtraction);
+  run -> Add(psa);
+  //run -> Add(plot);
+
+  run -> Init();
+  run -> RunSingle(0);
+  //run -> Run();
+  //run -> RunInRange(0,99);
+}
