@@ -142,6 +142,12 @@ void KBRun::SetInputFile(TString fileName, TString treeName) {
 void KBRun::AddFriend(TString fileName) { fFriendFileNameArray.push_back(ConfigureDataPath(fileName)); }
 void KBRun::SetOutputFile(TString name) { fOutputFileName = ConfigureDataPath(name); }
 
+void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
+{
+  SetInputFile(inputName, treeName);
+  SetOutputFile(outputName);
+}
+
 bool KBRun::Init()
 {
   Int_t idxFriend = 0;
@@ -226,6 +232,7 @@ bool KBRun::Init()
   }
 
   fRunHeader = new KBParameterContainer();
+  fRunHeader -> SetName("RunHeader");
   fRunHeader -> SetPar("KEBIVersion",KBRun::GetKEBIVersion());
   fRunHeader -> SetPar("GETDecoderVersion",KBRun::GetGETDecoderVersion());
   fRunHeader -> SetPar("KEBIHostName",KBRun::GetKEBIHostName());
@@ -338,6 +345,7 @@ void KBRun::Run()
     fOutputFile -> cd();
     fOutputTree -> Write();
     fPar -> Write(fPar->GetName(),TObject::kSingleKey);
+    fRunHeader -> Write(fRunHeader->GetName(),TObject::kSingleKey);
   }
 
   cout << endl;
@@ -517,7 +525,7 @@ void KBRun::RunEve(Long64_t eventID)
   padplane -> DrawFrame();
 }
 
-void Terminate(KBTask *obj, TString message)
+void KBRun::Terminate(TObject *obj, TString message)
 {
   cout << "Terminated from [" << obj -> GetName() << "] " << message << endl;
   gApplication -> Terminate();
