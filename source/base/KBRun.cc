@@ -63,11 +63,11 @@ void KBRun::PrintKEBI()
   cout << "===========================================================================================" << endl;
   cout << "[KEBI] Compiled Information" << endl;
   cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "  KEBI Version     : " << KBRun::GetKEBIVersion() << endl;
+  cout << "  KEBI Version       : " << KBRun::GetKEBIVersion() << endl;
   cout << "  GETDecoder Version : " << KBRun::GetGETDecoderVersion() << endl;
-  cout << "  KEBI Host Name   : " << KBRun::GetKEBIHostName() << endl;
-  cout << "  KEBI User Name   : " << KBRun::GetKEBIUserName() << endl;
-  cout << "  KEBI Path        : " << KBRun::GetKEBIPath() << endl;
+  cout << "  KEBI Host Name     : " << KBRun::GetKEBIHostName() << endl;
+  cout << "  KEBI User Name     : " << KBRun::GetKEBIUserName() << endl;
+  cout << "  KEBI Path          : " << KBRun::GetKEBIPath() << endl;
   cout << "===========================================================================================" << endl;
 }
 
@@ -206,6 +206,30 @@ bool KBRun::Init()
     }
   }
 
+  if (fInputFile != nullptr && fInputFile -> Get("RunHeader") != nullptr) {
+    auto runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
+    Int_t runID;
+    runHeaderIn -> GetParInt("RunID",runID);
+
+    if (fRunID == -1)
+      fRunID = runID;
+    else if (runID != -1 && fRunID != runID) {
+      cout << "[KBRun] Run-ID for input and output file do not match!" << endl;
+      return false;
+    }
+  }
+
+  fRunHeader = new KBParameterContainer();
+  fRunHeader -> SetName("RunHeader");
+  fRunHeader -> SetPar("KEBIVersion",KBRun::GetKEBIVersion());
+  fRunHeader -> SetPar("GETDecoderVersion",KBRun::GetGETDecoderVersion());
+  fRunHeader -> SetPar("KEBIHostName",KBRun::GetKEBIHostName());
+  fRunHeader -> SetPar("KEBIUserName",KBRun::GetKEBIUserName());
+  fRunHeader -> SetPar("KEBIPath",KBRun::GetKEBIPath());
+  fRunHeader -> SetPar("RunID",fRunID);
+  if (fInputFileName.IsNull() == false)
+    fRunHeader -> SetPar("InputFile",fInputFileName);
+
   if (fDetector != nullptr) {
     fDetector -> SetParameterContainer(fPar);
     fDetector -> Init();
@@ -230,14 +254,6 @@ bool KBRun::Init()
     cout << "        Exit run." << endl;
     Terminate(this);
   }
-
-  fRunHeader = new KBParameterContainer();
-  fRunHeader -> SetName("RunHeader");
-  fRunHeader -> SetPar("KEBIVersion",KBRun::GetKEBIVersion());
-  fRunHeader -> SetPar("GETDecoderVersion",KBRun::GetGETDecoderVersion());
-  fRunHeader -> SetPar("KEBIHostName",KBRun::GetKEBIHostName());
-  fRunHeader -> SetPar("KEBIUserName",KBRun::GetKEBIUserName());
-  fRunHeader -> SetPar("KEBIPath",KBRun::GetKEBIPath());
 
   return fInitialized;
 }
