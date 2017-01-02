@@ -19,6 +19,8 @@ class LAPDecoderTask : public KBTask
     bool Init();
     void Exec(Option_t*);
 
+    void SetPadPersistent(bool persistent);
+
     void ReadDirectory(TString directoryName);
 
     void AddData(TString name);
@@ -27,6 +29,7 @@ class LAPDecoderTask : public KBTask
 
   private:
     TClonesArray* fPadArray;
+    bool fPersistent;
 
     KBPadPlane *fPadPlane;
 

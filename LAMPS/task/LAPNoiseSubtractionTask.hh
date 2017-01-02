@@ -20,13 +20,15 @@ class LAPNoiseSubtractionTask : public KBTask
     void Exec(Option_t*);
 
     void SetNoiseRange(Int_t tbi, Int_t tbf);
-    void SetGainThreshold(Double_t val);
+    void SetNoiseAmplitudeThreshold(Double_t val);
 
   private:
     void FindReferencePad();
     void CopyRaw(Short_t *in, Double_t *out);
     Double_t BaseLineCorrection(Double_t *out, Int_t tbi, Int_t tbf);
     Double_t NoiseAmplitudeCorrection(Double_t *out, Double_t *ref, Int_t tbi, Int_t tbf);
+    void SaturationCorrection(Double_t *out, Short_t *raw, Double_t baseLine);
+
   private:
     TClonesArray* fPadArray;
 
@@ -34,8 +36,6 @@ class LAPNoiseSubtractionTask : public KBTask
 
     Int_t fTbNoiseStart = 0;
     Int_t fTbNoiseEnd = 320;
-
-    Double_t fGainThreshold = 4;
 
   ClassDef(LAPNoiseSubtractionTask, 1)
 };

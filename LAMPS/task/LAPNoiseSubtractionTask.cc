@@ -59,6 +59,7 @@ void LAPNoiseSubtractionTask::Exec(Option_t*)
     CopyRaw(raw, out);
     Double_t baseLine = BaseLineCorrection(out, fTbNoiseStart, fTbNoiseEnd);
     Double_t amp = NoiseAmplitudeCorrection(out, outRef, fTbNoiseStart, fTbNoiseEnd);
+    SaturationCorrection(out, raw, baseLine);
 
     pad -> SetBufferOut(out);
     pad -> SetBaseLine(baseLine);
@@ -75,8 +76,6 @@ void LAPNoiseSubtractionTask::SetNoiseRange(Int_t tbi, Int_t tbf)
   fTbNoiseStart = tbi;
   fTbNoiseEnd = tbf;
 }
-
-void LAPNoiseSubtractionTask::SetGainThreshold(Double_t val) { fGainThreshold = val; }
 
 void LAPNoiseSubtractionTask::FindReferencePad()
 {
@@ -105,12 +104,10 @@ void LAPNoiseSubtractionTask::FindReferencePad()
     if (yMin != 0 && yMax < 2000 && yDiff > yDiffMax) {
       yDiffMax = yDiff;
       fIdxPadRef = iPad;
-      //cout << "max " << fIdxPadRef << " " << yDiffMax << " " << yDiffMin << " / " << yDiff << " " << yMax << " " << yMin << endl;
     }
     else if (yDiffMax == 0 && yDiff < yDiffMin) {
       yDiffMin = yDiff;
       fIdxPadRef = iPad;
-      //cout << "min " << fIdxPadRef << " " << yDiffMax << " " << yDiffMin << " / " << yDiff << " " << yMax << " " << yMin << endl;
     }
   }
 }
@@ -142,6 +139,8 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
   for (auto tb = tbi; tb < tbf; tb++) {
     auto valRef = ref[tb];
     auto val = out[tb];
+    if (val == 0)
+      continue;
     sum1 += valRef * val;
     sum2 += valRef * valRef;
   }
@@ -151,11 +150,18 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
   for (auto tb = 0; tb < 512; tb++)
     out[tb] = out[tb] - ref[tb]/amp;
 
-  if (amp < fGainThreshold && amp > 0.1)
-    for (auto tb = 0; tb < 512; tb++)
-      out[tb] = amp * out[tb];
-  else
-    amp = 0;
-
   return amp;
+}
+
+void LAPNoiseSubtractionTask::SaturationCorrection(Double_t *out, Short_t *raw, Double_t baseLine)
+{
+  Double_t saturationHigh = 4095 - baseLine;
+  for (auto tb = 0; tb < 512; tb++) {
+    if (raw[tb] == 0)
+      out[tb] = 0;
+    else if (raw[tb] == 4095)
+      out[tb] = saturationHigh;
+    if (out[tb] > saturationHigh)
+      out[tb] = saturationHigh;
+  }
 }

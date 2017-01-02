@@ -27,7 +27,7 @@ bool LAPDecoderTask::Init()
   auto par = run -> GetParameterContainer();
 
   fPadArray = new TClonesArray("KBPad");
-  run -> RegisterBranch("Pad", fPadArray, true);
+  run -> RegisterBranch("Pad", fPadArray, fPersistent);
 
   TString padMapFileName;
   par -> GetParString("padMap", padMapFileName);
@@ -65,7 +65,8 @@ void LAPDecoderTask::Exec(Option_t*)
     auto frame = cobo -> GetFrame(iAsAd);
     for (auto iAGET = 0; iAGET < 4; iAGET++) {
       for (auto iChannel = 0; iChannel < 68; iChannel++) {
-        if (iAsAd == 0 && iAGET == 2) continue;
+        if (iAsAd == 0 && iAGET == 2)
+          continue;
 
         Int_t asad, aget, channel, padID;
         bool foundPad = false;
@@ -105,6 +106,8 @@ void LAPDecoderTask::Exec(Option_t*)
   
   return;
 }
+
+void LAPDecoderTask::SetPadPersistent(bool persistent) { fPersistent = persistent; }
 
 void LAPDecoderTask::ReadDirectory(TString directoryName)
 {
