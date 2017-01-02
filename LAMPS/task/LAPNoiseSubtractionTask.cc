@@ -145,10 +145,10 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
     sum2 += valRef * valRef;
   }
 
-  Double_t amp = sum2/sum1;
+  Double_t amp = sum1/sum2;
 
   for (auto tb = 0; tb < 512; tb++)
-    out[tb] = out[tb] - ref[tb]/amp;
+    out[tb] = out[tb] - ref[tb]*amp;
 
   return amp;
 }
