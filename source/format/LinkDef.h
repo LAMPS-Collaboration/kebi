@@ -13,6 +13,10 @@
 #pragma link C++ class KBMCStep+;
 #pragma link C++ class KBMCTrack+;
 
+#pragma link C++ class KBTrackModel+;
+#pragma link C++ class KBLinearTrack+;
 #pragma link C++ class KBHelixTrack+;
+
+#pragma link C++ class KBHitList+;
 
 #endif

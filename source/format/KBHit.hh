@@ -11,8 +11,6 @@ using namespace std;
 class KBHit : public TObject
 {
   public :
-    enum KBCenterAxis { kX, kY, kZ };
-
     KBHit() {};
     virtual ~KBHit() {};
 
@@ -27,7 +25,12 @@ class KBHit : public TObject
     void SetDX(Double_t dx);
     void SetDY(Double_t dy);
     void SetDZ(Double_t dz);
+    void SetSection(Int_t section);
+    void SetRow(Int_t row);
+    void SetLayer(Int_t layer);
+    void SetTb(Double_t tb);
     void SetCharge(Double_t charge);
+    void AddHit(KBHit *hit);
 
     Int_t GetHitID() const;
     Int_t GetPadID() const;
@@ -39,7 +42,11 @@ class KBHit : public TObject
     Double_t GetDX() const;
     Double_t GetDY() const;
     Double_t GetDZ() const;
+    Int_t GetSection() const;
+    Int_t GetRow() const;
+    Int_t GetLayer() const;
     TVector3 GetPosSigma() const;
+    Double_t GetTb() const;
     Double_t GetCharge() const;
 
     vector<Int_t> *GetTrackCandArray();
@@ -54,20 +61,45 @@ class KBHit : public TObject
     Int_t fHitID = -1;
     Int_t fPadID = -1;
     Int_t fTrackID = -1;
+
     Double_t fX = -999;
     Double_t fY = -999;
     Double_t fZ = -999;
     Double_t fDX = -999;
     Double_t fDY = -999;
     Double_t fDZ = -999;
+
+    Int_t fSection = -999;
+    Int_t fRow = -999;
+    Int_t fLayer = -999;
+
+    Double_t fTb = -1;
     Double_t fCharge = -1;
 
     vector<Int_t> fTrackCandArray;  //!
 
-    KBCenterAxis fCenterAxis = KBHit::kZ;
-
 
   ClassDef(KBHit, 1)
+};
+
+class KBHitSortSectionRow {
+  public:
+    KBHitSortSectionRow();
+    bool operator() (KBHit* h1, KBHit* h2) {
+      if (h1 -> GetSection() == h2 -> GetSection())
+        return h1 -> GetRow() < h2 -> GetRow();
+      return h1 -> GetSection() < h2 -> GetSection();
+    }
+};
+
+class KBHitSortSectionLayer {
+  public:
+    KBHitSortSectionLayer();
+    bool operator() (KBHit* h1, KBHit* h2) {
+      if (h1 -> GetSection() == h2 -> GetSection())
+        return h1 -> GetLayer() < h2 -> GetLayer();
+      return h1 -> GetSection() < h2 -> GetSection();
+    }
 };
 
 class KBHitSortDirection {
@@ -185,7 +217,7 @@ class KBHitSortChargeInv {
 
 class KBHitSortXYZInv {
   public:
-    bool operator() (KBHit* h1, KBHit* h2) { 
+    bool operator() (KBHit* h1, KBHit* h2) {
       if (h1 -> GetPosition().Z() == h2 -> GetPosition().Z()) {
         if (h1 -> GetPosition().X() == h2 -> GetPosition().X())
           return h1 -> GetPosition().Y() < h2 -> GetPosition().Y(); 

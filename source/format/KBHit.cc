@@ -7,9 +7,11 @@ ClassImp(KBHit)
 void KBHit::Print(Option_t *option) const
 {
   cout << "[KBHit]" << endl;
-  cout << "  Hit/Pad/Track-ID: " << fHitID << " / " << fPadID << " / " << fTrackID << endl;
-  cout << "  Position: (" << fX << ", " << fY << ", " << fZ << ") " << endl;
-  cout << "  Charge: " << fCharge << endl;
+  cout << "  Hit-ID           : " << fHitID << endl;
+  cout << "  Pad-ID           : " << fPadID << endl;
+  cout << "  Track-ID         : " << fTrackID << endl;
+  cout << "  Position         : (" << fX << ", " << fY << ", " << fZ << ") " << endl;
+  cout << "  (tb, Charge)     : (" << fTb << ", " << fCharge << ")" << endl;
 }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
@@ -21,7 +23,20 @@ void KBHit::SetZ(Double_t z) { fZ = z; }
 void KBHit::SetDX(Double_t dx) { fDX = dx; }
 void KBHit::SetDY(Double_t dy) { fDY = dy; }
 void KBHit::SetDZ(Double_t dz) { fDZ = dz; }
+void KBHit::SetSection(Int_t section) { fSection = section; }
+void KBHit::SetRow(Int_t row) { fRow = row; }
+void KBHit::SetLayer(Int_t layer) { fLayer = layer; }
+void KBHit::SetTb(Double_t tb) { fTb = tb; }
 void KBHit::SetCharge(Double_t charge) { fCharge = charge; }
+
+void KBHit::AddHit(KBHit *hit)
+{
+  auto charge = hit -> GetCharge();
+  fX = (fCharge*fX + charge*hit->GetX()) / (fCharge + charge);
+  fY = (fCharge*fY + charge*hit->GetY()) / (fCharge + charge);
+  fZ = (fCharge*fZ + charge*hit->GetZ()) / (fCharge + charge);
+  fCharge += charge;
+}
 
 Int_t KBHit::GetHitID() const { return fHitID; }
 Int_t KBHit::GetPadID() const { return fPadID; }
@@ -33,7 +48,11 @@ TVector3 KBHit::GetPosition() const { return TVector3(fX, fY, fZ); }
 Double_t KBHit::GetDX() const { return fDX; }
 Double_t KBHit::GetDY() const { return fDY; }
 Double_t KBHit::GetDZ() const { return fDZ; }
+Int_t KBHit::GetSection() const { return fSection; }
+Int_t KBHit::GetRow() const { return fRow; }
+Int_t KBHit::GetLayer() const { return fLayer; }
 TVector3 KBHit::GetPosSigma() const { return TVector3(fDX, fDY, fDZ); }
+Double_t KBHit::GetTb() const { return fTb; }
 Double_t KBHit::GetCharge() const { return fCharge; }
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }

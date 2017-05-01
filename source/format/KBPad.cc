@@ -40,6 +40,9 @@ void KBPad::SetPad(KBPad *pad)
   fSection = pad -> GetSection();
   fRow = pad -> GetRow();
   fLayer = pad -> GetLayer();
+
+  fBaseLine = pad -> GetBaseLine();
+  fNoiseAmp = pad -> GetNoiseAmplitude();
 }
 
 void KBPad::CopyPadData(KBPad* pad)
@@ -87,6 +90,9 @@ void KBPad::GetPosition(Double_t &i, Double_t &j) const
 
 Double_t KBPad::GetI() const { return fI; }
 Double_t KBPad::GetJ() const { return fJ; }
+
+void KBPad::AddPadCorner(Double_t i, Double_t j) { fPadCorners.push_back(TVector2(i,j)); }
+vector<TVector2> *KBPad::GetPadCorners() { return &fPadCorners; }
 
 void KBPad::SetSectionRowLayer(Int_t section, Int_t row, Int_t layer) 
 {
@@ -157,6 +163,16 @@ void KBPad::LetGo() { fGrabed = false; }
 
 TH1D *KBPad::GetHist(Option_t *option)
 {
+  TH1D *hist = new TH1D(Form("Pad%03d",fID),"",512,0,512);
+  SetHist(hist, option);
+
+  return hist;
+}
+
+void KBPad::SetHist(TH1D *hist, Option_t *option)
+{
+  hist -> Reset();
+
   TString optionString = TString(option);
   optionString.ToLower();
 
@@ -180,8 +196,7 @@ TH1D *KBPad::GetHist(Option_t *option)
   if (firstNameOn == false)
     name = namePad;
 
-  TH1D *hist = new TH1D("hist",name+";Time Bucket;ADC",512,0,512);
-  hist -> SetNameTitle(name,name);
+  hist -> SetNameTitle(name,name+";Time Bucket;ADC");
 
   if (optionString.Index("o") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
@@ -195,6 +210,4 @@ TH1D *KBPad::GetHist(Option_t *option)
   }
 
   hist -> GetYaxis() -> SetRangeUser(0,4095);
-
-  return hist;
 }

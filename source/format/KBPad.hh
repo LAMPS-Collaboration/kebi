@@ -6,6 +6,7 @@
 
 #include "TObject.h"
 #include "TH1D.h"
+#include "TVector2.h"
 
 #include <vector>
 using namespace std;
@@ -51,6 +52,9 @@ class KBPad : public KBChannel
     Double_t GetI() const;
     Double_t GetJ() const;
 
+    void AddPadCorner(Double_t i, Double_t j);
+    vector<TVector2> *GetPadCorners();
+
     void SetSectionRowLayer(Int_t section, Int_t row, Int_t layer);
     void GetSectionRowLayer(Int_t &section, Int_t &row, Int_t &layer) const;
     Int_t GetSection() const;
@@ -81,14 +85,14 @@ class KBPad : public KBChannel
     void Grab();
     void LetGo();
 
+    void SetHist(TH1D *hist, Option_t *option = "");
     TH1D *GetHist(Option_t *option = "");
 
   private:
     bool fActive = false; //!
 
     Int_t fPlaneID = 0;
-    Int_t fAsAdID = -1;
-    Int_t fAGETID = -1;
+    Int_t fAsAdID = -1; Int_t fAGETID = -1;
     Int_t fChannelID = -1;
 
     Double_t fBaseLine = 0;
@@ -96,6 +100,8 @@ class KBPad : public KBChannel
 
     Double_t fI = -999;
     Double_t fJ = -999;
+
+    vector<TVector2> fPadCorners; //!
 
     Int_t fSection = -999;
     Int_t fRow = -999;
