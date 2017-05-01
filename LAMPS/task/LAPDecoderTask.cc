@@ -27,7 +27,7 @@ bool LAPDecoderTask::Init()
   auto par = run -> GetParameterContainer();
 
   fPadArray = new TClonesArray("KBPad");
-  run -> RegisterBranch("Pad", fPadArray, fPersistent);
+  run -> RegisterBranch("Pad", fPadArray, fPersistency);
 
   TString padMapFileName;
   par -> GetParString("padMap", padMapFileName);
@@ -107,7 +107,7 @@ void LAPDecoderTask::Exec(Option_t*)
   return;
 }
 
-void LAPDecoderTask::SetPadPersistent(bool persistent) { fPersistent = persistent; }
+void LAPDecoderTask::SetPadPersistency(bool persistence) { fPersistency = persistence; }
 
 void LAPDecoderTask::ReadDirectory(TString directoryName)
 {
