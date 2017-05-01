@@ -27,6 +27,7 @@
 #include "TEvePointSet.h"
 #include "TEveLine.h"
 
+#include <unistd.h>
 #include <iostream>
 using namespace std;
 
@@ -52,11 +53,11 @@ KBRun::KBRun()
     fBranchPtr[i] = nullptr;
 }
 
-TString KBRun::GetKEBIVersion()     { return TString(KEBI_VERSION); }
+TString KBRun::GetKEBIVersion()       { return TString(KEBI_VERSION); }
 TString KBRun::GetGETDecoderVersion() { return TString(GETDECODER_VERSION); }
-TString KBRun::GetKEBIHostName()    { return TString(KEBI_HOSTNAME); }
-TString KBRun::GetKEBIUserName()    { return TString(KEBI_USERNAME); }
-TString KBRun::GetKEBIPath()        { return TString(KEBI_PATH); }
+TString KBRun::GetKEBIHostName()      { return TString(KEBI_HOSTNAME); }
+TString KBRun::GetKEBIUserName()      { return TString(KEBI_USERNAME); }
+TString KBRun::GetKEBIPath()          { return TString(KEBI_PATH); }
 
 void KBRun::PrintKEBI()
 {
@@ -118,15 +119,19 @@ TString KBRun::ConfigureDataPath(TString name)
 {
   TString newName = name;
 
-  if (newName[0] != '/' && newName[0] != '$' && newName != '~') {
-    if (fDataPath.IsNull())
-      newName = TString(gSystem -> Getenv("KEBIPATH")) + "/data/" + newName;
-    else
-      newName = fDataPath + "/" + newName;
-  }
+  if (name == "last")
+    newName = TString(KEBI_PATH) + "/log/LAST_OUTPUT";
+  else {
+    if (newName[0] != '/' && newName[0] != '$' && newName != '~') {
+      if (fDataPath.IsNull())
+        newName = TString(gSystem -> Getenv("KEBIPATH")) + "/data/" + newName;
+      else
+        newName = fDataPath + "/" + newName;
+    }
 
-  if (newName.Index(".root") != newName.Sizeof()-6)
-    newName = newName + ".root";
+    if (newName.Index(".root") != newName.Sizeof()-6)
+      newName = newName + ".root";
+  }
 
   return newName;
 }
@@ -370,8 +375,11 @@ void KBRun::Run()
   cout << endl;
   Print("cio");
 
-  if (fOutputTree != nullptr)
+  if (fOutputTree != nullptr) {
     fOutputFile -> Close();
+    TString linkName = TString(KEBI_PATH) + "/log/LAST_OUTPUT";
+    symlink(fOutputFileName.Data(), linkName.Data());
+  }
 
   Terminate(this);
 }
@@ -485,6 +493,7 @@ void KBRun::OpenEventDisplay()
   for (auto iPlane = 0; iPlane < fDetector -> GetNPlanes(); iPlane++) {
     auto plane = fDetector -> GetDetectorPlane(iPlane);
     auto cvs = plane -> GetCanvas();
+    cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
     fCvsDetectorPlaneArray -> Add(cvs);
     cvs -> cd();
     plane -> GetHist() -> Draw("colz");
@@ -502,9 +511,8 @@ void KBRun::RunEve(Long64_t eventID)
 
   this -> GetEntry(eventID);
 
-  auto fTpc = (KBTpc *) fDetector;
-
-  auto padplane = fTpc -> GetPadPlane(0);
+  auto tpc = (KBTpc *) fDetector;
+  auto padplane = tpc -> GetPadPlane(0);
   auto hist_padplane = padplane -> GetHist();
 
   auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
@@ -545,4 +553,72 @@ void KBRun::Terminate(TObject *obj, TString message)
 {
   cout << "Terminated from [" << obj -> GetName() << "] " << message << endl;
   gApplication -> Terminate();
+}
+
+void KBRun::ClickSelectedPadPlane()
+{
+  TObject* select = ((TCanvas*)gPad) -> GetClickSelected();
+
+  if (select == NULL || (!(select -> InheritsFrom(TH2::Class())) && !(select -> InheritsFrom(TGraph::Class()))))
+    return;
+
+  TH2D* hist = (TH2D*) select;
+
+  Int_t xEvent = gPad -> GetEventX();
+  Int_t yEvent = gPad -> GetEventY();
+
+  Float_t xAbs = gPad -> AbsPixeltoX(xEvent);
+  Float_t yAbs = gPad -> AbsPixeltoY(yEvent);
+  Double_t xOnClick = gPad -> PadtoX(xAbs);
+  Double_t yOnClick = gPad -> PadtoY(yAbs);
+
+  Int_t bin = hist -> FindBin(xOnClick, yOnClick);
+  gPad -> SetUniqueID(bin);
+  gPad -> GetCanvas() -> SetClickSelected(NULL);
+
+  KBRun::GetRun() -> DrawPadByPosition(xOnClick,yOnClick);
+}
+
+void KBRun::DrawPadByPosition(Double_t x, Double_t y)
+{
+  if (fCvsChannelBuffer == nullptr)
+    fCvsChannelBuffer = new TCanvas("channel_buffer","channel buffer",700,400);
+  fCvsChannelBuffer -> cd();
+
+  if (fHistChannelBuffer == nullptr) {
+    fHistChannelBuffer = new TH1D("channel_buffer","",512,0,512);
+    fHistChannelBuffer -> SetStats(0);
+  }
+
+  if (fGraphChannelBoundary == nullptr) {
+    fGraphChannelBoundary = new TGraph();
+    fGraphChannelBoundary -> SetLineColor(kRed);
+    fGraphChannelBoundary -> SetLineWidth(2);
+  }
+  fGraphChannelBoundary -> Set(0);
+
+  auto tpc = (KBTpc *) fDetector;
+  auto padplane = tpc -> GetPadPlane();
+  auto id = padplane -> FindPadID(x, y);
+  if (id < 0) {
+    cout << "Could not find pad at position: " << x << ", " << y << endl;
+    return;
+  }
+
+  auto pad = padplane -> GetPad(id);
+  pad -> SetHist(fHistChannelBuffer,"pao");
+  pad -> Print();
+
+  auto corners = pad -> GetPadCorners();
+  for (auto corner : *corners) {
+    cout << "corner: " << corner.X() << ", " <<  corner.Y() << endl;
+    fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
+  }
+
+  fHistChannelBuffer -> Draw("l");
+  fCvsChannelBuffer -> Modified();
+  fCvsChannelBuffer -> Update();
+
+  ((TCanvas *) fCvsDetectorPlaneArray -> At(0)) -> cd();
+  fGraphChannelBoundary -> Draw("samel");
 }

@@ -10,6 +10,9 @@
 #include "KBTpc.hh"
 #include "KBPadPlane.hh"
 
+#include "TH1D.h"
+#include "TGraph.h"
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
@@ -99,6 +102,9 @@ class KBRun : public KBTask
 
     void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
 
+    static void ClickSelectedPadPlane();
+    void DrawPadByPosition(Double_t x, Double_t y);
+
     void Terminate(TObject *obj, TString message = "");
 
   private:
@@ -147,6 +153,8 @@ class KBRun : public KBTask
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
     TCanvas *fCvsChannelBuffer = nullptr;
+    TH1D *fHistChannelBuffer = nullptr;
+    TGraph *fGraphChannelBoundary = nullptr;
 
   private:
     static KBRun *fInstance;
