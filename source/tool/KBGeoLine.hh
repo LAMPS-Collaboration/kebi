@@ -3,7 +3,7 @@
 
 #include "TObject.h"
 #include "TVector3.h"
-#include "TLine.h"
+#include "TArrow.h"
 
 class KBGeoLine : public TObject
 {
@@ -14,6 +14,7 @@ class KBGeoLine : public TObject
     virtual ~KBGeoLine() {}
 
     void SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2);
+    void SetLine(TVector3 pos1, TVector3 pos2);
 
     Double_t GetX1();
     Double_t GetY1();
@@ -25,6 +26,8 @@ class KBGeoLine : public TObject
     TVector3 GetPoint1();
     TVector3 GetPoint2();
 
+    Double_t Length(Double_t x, Double_t y, Double_t z);
+    Double_t Length(TVector3 position);
     Double_t Length();
 
     void ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0);
@@ -33,12 +36,11 @@ class KBGeoLine : public TObject
     Double_t DistanceToLine(Double_t x, Double_t y, Double_t z);
     Double_t DistanceToLine(TVector3 pos);
 
-    KBGeoLine *CreateGeoLineToPoint(Double_t x, Double_t y, Double_t z);
-    KBGeoLine *CreateGeoLineToPoint(TVector3 pos);
-
-    TLine *CreateTLineXY();
-    TLine *CreateTLineYZ();
-    TLine *CreateTLineZX();
+    TArrow *CreateTArrowXY();
+    TArrow *CreateTArrowYZ();
+    TArrow *CreateTArrowZY();
+    TArrow *CreateTArrowZX();
+    TArrow *CreateTArrowXZ();
 
   private:
     Double_t fX1 = 0;
