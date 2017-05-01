@@ -23,7 +23,7 @@ bool LAPBeamTrackingTask::Init()
   fLinearTrackArray = new TClonesArray("KBLinearTrack");
   fHitListArray = new TClonesArray("KBHitList");
 
-  run -> RegisterBranch("HitCluster", HitClusterArray, fHitClusterPersistency);
+  run -> RegisterBranch("HitCluster", fHitClusterArray, fHitClusterPersistency);
   run -> RegisterBranch("Beam", fLinearTrackArray, fLinearTrackPersistency);
   run -> RegisterBranch("BeamHitList", fHitListArray, fHitListPersistency);
 
