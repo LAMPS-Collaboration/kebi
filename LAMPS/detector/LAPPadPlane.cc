@@ -130,22 +130,34 @@ Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
 {
   auto section = FindSection(i, j);
 
+  //cout << "section: " << section << endl;
   if (section == -1)
     return -1;
 
-  Int_t layer = Int_t((j-fRBase[section]+fDR[section]/2.)/fDR[section]);
+  Double_t r = i;
+  Double_t w = j;
+  if (section > 1) {
+    r = j;
+    w = i;
+  }
+  r = abs(r);
+
+  Int_t layer = Int_t((r-fRBase[section]+fDR[section]/2.)/fDR[section]);
+  //cout << r << " - " << fRBase[section]+fDR[section]/2. << " / " << fDR[section] << endl;
   Int_t nLayers = fNRowsInLayer[section].size();
+  //cout << "layer: " << layer << endl;
   if (layer < 0 || layer >= nLayers)
     return -1;
 
   Int_t nRowsHalf = (fNRowsInLayer[section][layer]-1)/2;
-  Double_t x0 = (i-fDR[section]/2.);
+  Double_t x0 = (w-fDR[section]/2.);
   Int_t row;
   if (x0 > 0)
     row = Int_t(x0/fDW[section]);
   else
     row = Int_t((-x0)/fDW[section])-1;
 
+  //cout << "row: " << row << endl;
   if (std::abs(row) > nRowsHalf)
     return -1;
 
@@ -206,6 +218,8 @@ TH2* LAPPadPlane::GetHist(Option_t *option)
     for (auto iPoint = 0; iPoint < 5; iPoint++) {
       iPoints[iPoint] = i + iSigns[iPoint]*di;
       jPoints[iPoint] = j + jSigns[iPoint]*dj;
+
+      pad -> AddPadCorner(iPoints[iPoint], jPoints[iPoint]);
     }
 
     h2 -> AddBin(5, iPoints, jPoints);
@@ -213,7 +227,7 @@ TH2* LAPPadPlane::GetHist(Option_t *option)
 
   fH2Plane = (TH2 *) h2;
   fH2Plane -> SetStats(0);
-  fH2Plane -> SetTitle(";x (mm); y (mm)");
+  fH2Plane -> SetTitle(";x (mm); z (mm)");
   fH2Plane -> GetXaxis() -> CenterTitle();
   fH2Plane -> GetYaxis() -> CenterTitle();
 
@@ -284,9 +298,9 @@ Int_t LAPPadPlane::FindSection(Double_t i, Double_t j)
     if (j > fTanPi1o8*i) {
       if (j > fTanPi7o8*i) {
         if (j > fTanPi5o8*i) {
-          return 0;
+          return 2;
         } else return -1;
-      } else return 1;
+      } else return 0;
     } else return -1;
   }
   else
@@ -294,9 +308,9 @@ Int_t LAPPadPlane::FindSection(Double_t i, Double_t j)
     if (j < fTanPi1o8*i) {
       if (j < fTanPi7o8*i) {
         if (j < fTanPi5o8*i) {
-          return 2;
+          return 3;
         } else return -1;
-      } else return 3;
+      } else return 1;
     } else return -1;
   }
 }
