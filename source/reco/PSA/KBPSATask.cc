@@ -75,7 +75,11 @@ void KBPSATask::Exec(Option_t*)
       hit -> SetX(pad -> GetI());
       hit -> SetY(z);
       hit -> SetZ(pad -> GetJ());
+      hit -> SetTb(channelHit.GetTDC());
       hit -> SetCharge(channelHit.GetADC());
+      hit -> SetSection(pad -> GetSection());
+      hit -> SetRow(pad -> GetRow());
+      hit -> SetLayer(pad -> GetLayer());
 
       idx++;
     }
