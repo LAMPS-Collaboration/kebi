@@ -25,7 +25,7 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
 
     virtual TCanvas *GetCanvas(Option_t *option = "");
     virtual void DrawFrame(Option_t *option = "") = 0;
-    virtual TH2* GetHist(Option_t *option = "") = 0;
+    virtual TH2* GetHist(Option_t *option = "-1") = 0;
 
   public:
     void SetPlaneID(Int_t id);

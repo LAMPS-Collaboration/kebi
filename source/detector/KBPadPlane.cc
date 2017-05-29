@@ -55,8 +55,12 @@ void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val)
 
 void KBPadPlane::FillBufferToHist(Option_t *option)
 {
-  if (fH2Plane == nullptr)
+  if (fH2Plane == nullptr) {
+    cout << "[KBPadPlane] Pad plane histogram does not exist! Run GetHist(option) before filling buffer." << endl;
     return;
+  }
+
+  cout << "[KBPadPlane] " << "Filling buffer-" << TString(option) << " into pad-plane histogram" << endl;
 
   TString optionString = TString(option);
 
@@ -66,17 +70,23 @@ void KBPadPlane::FillBufferToHist(Option_t *option)
   if (optionString == "out") {
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferOut();
-      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),*max_element(buffer,buffer+512));
+      Double_t val = *max_element(buffer,buffer+512);
+      if (val < 1) val = 0;
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
   } else if (optionString == "raw") {
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferRaw();
-      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),*max_element(buffer,buffer+512));
+      Double_t val = *max_element(buffer,buffer+512);
+      if (val < 1) val = 0;
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
   } else if (optionString == "in") {
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferIn();
-      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),*max_element(buffer,buffer+512));
+      Double_t val = *max_element(buffer,buffer+512);
+      if (val < 1) val = 0;
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
   }
 }
