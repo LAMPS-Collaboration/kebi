@@ -5,15 +5,15 @@
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
 
+KBPrimaryGeneratorAction::KBPrimaryGeneratorAction()
+{
+  fParticleGun = new G4ParticleGun();
+}
+
 KBPrimaryGeneratorAction::KBPrimaryGeneratorAction(const char *fileName)
 {
   fParticleGun = new G4ParticleGun();
   fEventGenerator = new KBMCEventGenerator(fileName);
-}
-
-KBPrimaryGeneratorAction::KBPrimaryGeneratorAction(G4String fileName)
-:KBPrimaryGeneratorAction(fileName.data())
-{
 }
 
 KBPrimaryGeneratorAction::~KBPrimaryGeneratorAction()
@@ -39,4 +39,9 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     fParticleGun -> SetParticleMomentumDirection(momentum.unit());
     fParticleGun -> GeneratePrimaryVertex(anEvent);
   }
+}
+
+void KBPrimaryGeneratorAction::SetEventGenerator(const char *fileName)
+{
+  fEventGenerator = new KBMCEventGenerator(fileName);
 }

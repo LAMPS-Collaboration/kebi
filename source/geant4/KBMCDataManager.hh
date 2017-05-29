@@ -9,7 +9,7 @@ class KBMCDataManager
 {
   public:
     static KBMCDataManager* Instance();
-    KBMCDataManager(TString name = "");
+    KBMCDataManager(const char *name);
 
     virtual ~KBMCDataManager();
 

@@ -6,7 +6,7 @@
 KBMCDataManager* KBMCDataManager::fInstance = 0;
 KBMCDataManager* KBMCDataManager::Instance() { return fInstance; }
 
-KBMCDataManager::KBMCDataManager(TString name)
+KBMCDataManager::KBMCDataManager(const char *name)
 {
   fName = name;
   fInstance = this;
@@ -33,14 +33,13 @@ void KBMCDataManager::Init()
 void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz)
 {
   fTrackID = trackID;
-  G4cout << fTrackArray -> GetEntries() << G4endl;
-  KBMCTrack *track = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntries());
+  KBMCTrack *track = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
   track -> SetMCTrack(trackID, parentID, pdg, px, py, pz);
 }
 
 void KBMCDataManager::AddMCStep(Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
 {
-  KBMCStep *step = (KBMCStep *) fStepArray -> ConstructedAt(fStepArray -> GetEntries());
+  KBMCStep *step = (KBMCStep *) fStepArray -> ConstructedAt(fStepArray -> GetEntriesFast());
   step -> SetMCStep(fTrackID, x, y, z, t, e);
 }
 
@@ -55,6 +54,7 @@ void KBMCDataManager::NextEvent()
 void KBMCDataManager::EndOfRun() 
 { 
   fFile -> cd();
+  G4cout << "[KBMCDataManager] Writing file " << fFile -> GetName() << endl;
   fTree -> Write(); 
   fFile -> Close();
 }

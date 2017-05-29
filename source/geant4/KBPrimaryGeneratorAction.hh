@@ -10,8 +10,8 @@
 class KBPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
   public:
+    KBPrimaryGeneratorAction();
     KBPrimaryGeneratorAction(const char *fileName);
-    KBPrimaryGeneratorAction(G4String fileName);
     virtual ~KBPrimaryGeneratorAction();
 
     // method from the base class
@@ -19,6 +19,8 @@ class KBPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
   
     // method to access particle gun
     const G4ParticleGun* GetParticleGun() const { return fParticleGun; }
+
+    void SetEventGenerator(const char *fileName);
   
   private:
     G4ParticleGun* fParticleGun;
