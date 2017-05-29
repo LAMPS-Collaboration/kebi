@@ -19,6 +19,7 @@ class KBPad : public KBChannel
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
+    virtual void Draw(Option_t *option = "");
 
     void SetPad(KBPad* pad);
     void CopyPadData(KBPad* pad);
@@ -92,7 +93,8 @@ class KBPad : public KBChannel
     bool fActive = false; //!
 
     Int_t fPlaneID = 0;
-    Int_t fAsAdID = -1; Int_t fAGETID = -1;
+    Int_t fAsAdID = -1;
+    Int_t fAGETID = -1;
     Int_t fChannelID = -1;
 
     Double_t fBaseLine = 0;

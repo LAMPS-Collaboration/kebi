@@ -26,6 +26,10 @@ void KBPad::Print(Option_t *option) const
   cout << "  Position              : (" << fI << ", " << fJ << ") " << endl;
 }
 
+void KBPad::Draw(Option_t *option)
+{
+}
+
 void KBPad::SetPad(KBPad *pad)
 {
   fID = pad -> GetPadID();

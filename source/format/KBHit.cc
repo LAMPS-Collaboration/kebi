@@ -1,5 +1,7 @@
 #include "KBHit.hh"
 
+#include "TEvePointSet.h"
+
 #include <iostream>
 
 ClassImp(KBHit)
@@ -84,4 +86,29 @@ void KBHit::ChangeBack()
   fX = fZ;
   fZ = fY;
   fY = x;
+}
+
+
+
+bool KBHit::DrawByDefault() { return true; }
+bool KBHit::IsEveSet() { return true; }
+
+TEveElement *KBHit::CreateEveElement()
+{
+  auto pointSet = new TEvePointSet("Hit");
+  pointSet -> SetMarkerColor(kMagenta);
+  pointSet -> SetMarkerSize(0.8);
+  pointSet -> SetMarkerStyle(20);
+
+  return pointSet;
+}
+
+void KBHit::SetEveElement(TEveElement *)
+{
+}
+
+void KBHit::AddToEveSet(TEveElement *eveSet)
+{
+  auto pointSet = (TEvePointSet *) eveSet;
+  pointSet -> SetNextPoint(fX, fY, fZ);
 }

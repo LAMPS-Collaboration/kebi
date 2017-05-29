@@ -1,9 +1,11 @@
 #ifndef KBMCSTEP_HH
 #define KBMCSTEP_HH
 
-#include "TObject.h"
+#include "KBContainer.hh"
 
-class KBMCStep : public TObject
+#include "TEveElement.h"
+
+class KBMCStep : public KBContainer
 {
   public:
     KBMCStep();
@@ -27,6 +29,12 @@ class KBMCStep : public TObject
     Double_t GetTime()  const;
     Double_t GetEdep()  const;
 
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *);
+    virtual void AddToEveSet(TEveElement *eveSet);
+
   private:
     Int_t fTrackID;
     Double_t fX;
@@ -34,7 +42,7 @@ class KBMCStep : public TObject
     Double_t fZ;
     Double_t fTime;
     Double_t fEdep;
-  
+
   ClassDef(KBMCStep, 2)
 };
 

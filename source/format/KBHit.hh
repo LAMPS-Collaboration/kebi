@@ -1,14 +1,16 @@
 #ifndef KBHIT_HH
 #define KBHIT_HH
 
-#include "TObject.h"
+#include "KBContainer.hh"
+
+#include "TEveElement.h"
 #include "TVector3.h"
 #include "TMath.h"
 
 #include <vector>
 using namespace std;
 
-class KBHit : public TObject
+class KBHit : public KBContainer
 {
   public :
     KBHit() {};
@@ -56,6 +58,12 @@ class KBHit : public TObject
 
     void Change();
     void ChangeBack();
+
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *);
+    virtual void AddToEveSet(TEveElement *eveSet);
 
   protected:
     Int_t fHitID = -1;

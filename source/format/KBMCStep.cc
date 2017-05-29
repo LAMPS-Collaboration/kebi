@@ -1,5 +1,7 @@
 #include "KBMCStep.hh"
 
+#include "TEvePointSet.h"
+
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -47,3 +49,28 @@ Double_t KBMCStep::GetY()     const { return fY; }
 Double_t KBMCStep::GetZ()     const { return fZ; }
 Double_t KBMCStep::GetTime()  const { return fTime; }
 Double_t KBMCStep::GetEdep()  const { return fEdep; }
+
+
+
+bool KBMCStep::DrawByDefault() { return true; }
+bool KBMCStep::IsEveSet() { return true; }
+
+TEveElement *KBMCStep::CreateEveElement()
+{
+  auto pointSet = new TEvePointSet("MCStep");
+  pointSet -> SetMarkerColor(kBlue);
+  pointSet -> SetMarkerSize(0.8);
+  pointSet -> SetMarkerStyle(20);
+
+  return pointSet;
+}
+
+void KBMCStep::SetEveElement(TEveElement *)
+{
+}
+
+void KBMCStep::AddToEveSet(TEveElement *eveSet)
+{
+  auto pointSet = (TEvePointSet *) eveSet;
+  pointSet -> SetNextPoint(fX, fY, fZ);
+}
