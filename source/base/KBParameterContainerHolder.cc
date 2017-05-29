@@ -1,5 +1,6 @@
 #include "KBParameterContainerHolder.hh"
 
-KBParameterContainer *KBParameterContainerHolder::CreateParameterContainer() { fPar = new KBParameterContainer(); }
+void KBParameterContainerHolder::CreateParameterContainer() { fPar = new KBParameterContainer(); }
 void KBParameterContainerHolder::SetParameterContainer(KBParameterContainer *par) { fPar = par; }
-KBParameterContainer *KBParameterContainerHolder::GetParameterConainer() { return fPar; }
+void KBParameterContainerHolder::SetParameterContainer(TString file) { fPar = new KBParameterContainer(file); }
+KBParameterContainer *KBParameterContainerHolder::GetParameterContainer() { return fPar; }

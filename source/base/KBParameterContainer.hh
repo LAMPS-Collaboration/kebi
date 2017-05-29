@@ -58,9 +58,9 @@ class KBParameterContainer : public TObjArray
     bool GetParDouble(TString name, Double_t &val, bool exitElse = true) const; ///< Get Double_t type parameter to val with given name. Terminate if parameter do not exist.
     bool GetParString(TString name, TString &val, bool exitElse = true)  const; ///< G get TString type parameter to val with given name. Terminate if parameter do not exist.
 
-  private:
-    void ReplaceEnviromentVariable(TString &val);
+    void ReplaceEnvironmentVariable(TString &val);
 
+  private:
     Int_t fNumInputFiles = 0;
 
   ClassDef(KBParameterContainer, 1)

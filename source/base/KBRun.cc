@@ -22,6 +22,7 @@
 #include "TRootEmbeddedCanvas.h"
 
 #include "KBHit.hh"
+#include "KBContainer.hh"
 #include "KBHelixTrack.hh"
 #include "KBMCStep.hh"
 #include "TEvePointSet.h"
@@ -120,7 +121,7 @@ TString KBRun::ConfigureDataPath(TString name)
   TString newName = name;
 
   if (name == "last")
-    newName = TString(KEBI_PATH) + "/log/LAST_OUTPUT";
+    newName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
   else {
     if (newName[0] != '/' && newName[0] != '$' && newName != '~') {
       if (fDataPath.IsNull())
@@ -144,7 +145,8 @@ void KBRun::SetInputFile(TString fileName, TString treeName) {
   fInputTreeName = treeName;
 }
 
-void KBRun::AddFriend(TString fileName) { fFriendFileNameArray.push_back(ConfigureDataPath(fileName)); }
+void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(ConfigureDataPath(fileName)); }
+void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 void KBRun::SetOutputFile(TString name) { fOutputFileName = ConfigureDataPath(name); }
 
 void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
@@ -155,10 +157,10 @@ void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 
 bool KBRun::Init()
 {
-  Int_t idxFriend = 0;
-  if (fInputFileName.IsNull() && fFriendFileNameArray.size() != 0) {
-    fInputFileName = fFriendFileNameArray[0];
-    idxFriend = 1;
+  Int_t idxInput = 0;
+  if (fInputFileName.IsNull() && fInputFileNameArray.size() != 0) {
+    fInputFileName = fInputFileNameArray[0];
+    idxInput = 1;
   }
 
   if (fInputFileName.IsNull() == false) {
@@ -166,8 +168,16 @@ bool KBRun::Init()
     cout << "[KBRun] Input file : " << fInputFileName << endl;
     fInputFile = new TFile(fInputFileName, "read");
 
+    if (fInputTreeName.IsNull())
+      fInputTreeName = "data";
+
     fInputTree = new TChain(fInputTreeName);
     fInputTree -> AddFile(fInputFileName);
+
+    Int_t nInputs = fInputFileNameArray.size();
+    for (auto i = idxInput; i < nInputs; i++)
+      fInputTree -> AddFile(fInputFileNameArray[i]);
+
     fNumEntries = fInputTree -> GetEntries();
     cout << "  " << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
 
@@ -181,25 +191,6 @@ bool KBRun::Init()
       fNBranches++;
       cout << "  Input branch " << branch -> GetName() << " found" << endl;
     }
-
-    Int_t nFriends = fFriendFileNameArray.size();
-    for (auto i = idxFriend; i < nFriends; i++) {
-      auto chain = new TChain("data");
-      chain -> AddFile(fFriendFileNameArray[i]);
-      fInputTree -> AddFriend(chain);
-
-      branchArray = chain -> GetListOfBranches();
-      nBranches = branchArray -> GetEntries();
-      for (Int_t iBranch = 0; iBranch < nBranches; iBranch++) {
-        TBranch *branch = (TBranch *) branchArray -> At(iBranch);
-        chain -> SetBranchStatus(branch -> GetName(), 1);
-        chain -> SetBranchAddress(branch -> GetName(), &fBranchPtr[fNBranches]);
-        fBranchPtrMap[branch -> GetName()] = fBranchPtr[fNBranches];
-        fNBranches++;
-        cout << "  Input branch " << branch -> GetName() << " found" << endl;
-      }
-    }
-
   }
 
   if (fPar == nullptr) {
@@ -455,7 +446,9 @@ void KBRun::OpenEventDisplay()
 
   gEve -> FullRedraw3D(kTRUE);
 
-  gEve -> GetDefaultViewer() -> GetGLViewer() -> SetClearColor(kWhite);
+  //gEve -> GetDefaultViewer() -> GetGLViewer() -> SetClearColor(kWhite);
+
+  //return;
 
   /*
   gEve -> GetBrowser() -> SetTabTitle("3D", TRootBrowser::kRight);
@@ -511,31 +504,44 @@ void KBRun::RunEve(Long64_t eventID)
 
   this -> GetEntry(eventID);
 
-  auto tpc = (KBTpc *) fDetector;
-  auto padplane = tpc -> GetPadPlane(0);
-  auto hist_padplane = padplane -> GetHist();
+  for (auto iBranch = 0; iBranch < fNBranches; ++iBranch)
+  {
+    auto branch = (TClonesArray *) fBranchPtr[iBranch];
+    TObject *objSample = nullptr;
 
-  auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
-  auto hitEveSet = new TEvePointSet("hit");
-  hitEveSet -> SetMarkerColor(kBlack);
-  hitEveSet -> SetMarkerSize(0.8);
-  hitEveSet -> SetMarkerStyle(20);
-  gEve -> AddElement(hitEveSet);
-  
-  Double_t threshold;
-  fPar -> GetParDouble("ADCThreshold", threshold);
-
-  auto nHits = hitArray -> GetEntriesFast();
-  for (auto iHit = 0; iHit < nHits; iHit++) {
-    auto hit = (KBHit *) hitArray -> At(iHit);
-    if (hit -> GetCharge() < threshold) 
+    if (branch -> GetEntriesFast() != 0) {
+      objSample = branch -> At(0);
+      if (objSample -> InheritsFrom("KBContainer") == false)
+        continue;
+    }
+    else
       continue;
 
-    hitEveSet -> SetNextPoint(hit -> GetX(), hit -> GetY(), hit -> GetZ());
+    auto eveObj = (KBContainer *) objSample;
+    if (eveObj -> IsEveSet()) {
+      auto eveSet = eveObj -> CreateEveElement();
+      auto nObjects = branch -> GetEntriesFast();
+      for (auto iObject = 0; iObject < nObjects; ++iObject) {
+        eveObj = (KBContainer *) branch -> At(iObject);
+        eveObj -> AddToEveSet(eveSet);
+      }
+      gEve -> AddElement(eveSet);
+    }
+    else {
+      auto nObjects = branch -> GetEntriesFast();
+      for (auto iObject = 0; iObject < nObjects; ++iObject) {
+        eveObj = (KBContainer *) branch -> At(iObject);
+        auto eveElement = eveObj -> CreateEveElement();
+        gEve -> AddElement(eveElement);
+      }
+    }
   }
 
   gEve -> Redraw3D();
 
+  auto tpc = (KBTpc *) fDetector;
+  auto padplane = tpc -> GetPadPlane(0);
+  auto hist_padplane = padplane -> GetHist();
 
   auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
   padplane -> SetPadArray(padArray);

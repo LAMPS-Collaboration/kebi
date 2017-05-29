@@ -9,9 +9,10 @@ class KBParameterContainerHolder
     KBParameterContainerHolder() {};
     virtual ~KBParameterContainerHolder() {};
 
-    KBParameterContainer *CreateParameterContainer();
+    void CreateParameterContainer();
     void SetParameterContainer(KBParameterContainer *par);
-    KBParameterContainer *GetParameterConainer();
+    void SetParameterContainer(TString file);
+    KBParameterContainer *GetParameterContainer();
 
   protected:
     KBParameterContainer *fPar;

@@ -23,7 +23,7 @@ KBParameterContainer::KBParameterContainer(TString parName)
   AddFile(parName);
 }
 
-void KBParameterContainer::ReplaceEnviromentVariable(TString &val)
+void KBParameterContainer::ReplaceEnvironmentVariable(TString &val)
 {
   if (val[0] == '$') {
     TString env = val;
@@ -41,8 +41,10 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
 
   if (fileName[0] != '/' && fileName[0] != '$' && fileName != '~')
     fileNameFull = TString(gSystem -> Getenv("KEBIPATH")) + "/input/" + fileName;
+  else
+    fileNameFull = fileName;
 
-  ReplaceEnviromentVariable(fileNameFull);
+  ReplaceEnvironmentVariable(fileNameFull);
 
   if (TString(gSystem -> Which(".", fileNameFull.Data())).IsNull())
     fileNameFull = TString(gSystem -> Getenv("PWD")) + "/" + fileName;
@@ -78,7 +80,7 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
     if (parType == "f" || parType == "file" || parType == "FILE") {
       TString val;
       ss >> val;
-      ReplaceEnviromentVariable(val);
+      ReplaceEnvironmentVariable(val);
       AddFile(val, parName);
     }
     else if (parType == "b" || parType == "bool" || parType == "Bool_t") {
@@ -99,7 +101,7 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
     else if (parType == "s" || parType == "TString") {
       TString val;
       ss >> val;
-      ReplaceEnviromentVariable(val);
+      ReplaceEnvironmentVariable(val);
       SetPar(parName, val);
     }
     else

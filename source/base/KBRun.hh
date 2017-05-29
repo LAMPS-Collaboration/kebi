@@ -60,7 +60,8 @@ class KBRun : public KBTask
     TString GetDataPath();
 
     void SetInputFile(TString fileName, TString treeName = "data"); ///< Set input file and tree name
-    void AddFriend(TString fileName); ///< Add friend to input file
+    void AddInput(TString fileName); ///< Add friend to input file
+    void SetInputTreeName(TString treeName); ///< Set input tree name
 
     void SetOutputFile(TString name); ///< Set output file name
 
@@ -124,7 +125,7 @@ class KBRun : public KBTask
     TFile *fInputFile = nullptr;
     TChain *fInputTree = nullptr;
 
-    vector<TString> fFriendFileNameArray;
+    vector<TString> fInputFileNameArray;
 
     TString fOutputFileName = "";
     TFile *fOutputFile = nullptr;
