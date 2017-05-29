@@ -94,7 +94,6 @@ class KBODRFitter
     Double_t fRMSLine; /// Root mean square of the line fit
     Double_t fRMSPlane; /// Root mean square of the plane fit
 
-
   ClassDef(KBODRFitter, 1)
 };
 
