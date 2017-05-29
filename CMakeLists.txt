@@ -5,7 +5,7 @@ project(KEBI)
 
 
 #---Options
-option(KEBI_BUILD_GEANT4 "Build Geant4 simulation" off)
+option(KEBI_BUILD_GEANT4 "Build Geant4 simulation" on)
 option(CREATE_GIT_LOG "Create git-log at when building KEBI" on)
 option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" on)
 
@@ -13,6 +13,7 @@ option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation 
 
 #---Add source directories. Directory should be under "/path/to/KEBI/"
 list(APPEND KEBI_SOURCE_DIRECTORY_LIST
+  source/fit
   source/base
   source/format
   source/detector
@@ -30,10 +31,13 @@ list(APPEND KEBI_SOURCE_DIRECTORY_LIST
 
 #---Add geant4 source directories. Directory should be under "/path/to/KEBI/".
 list(APPEND KEBI_GEANT4_DIRECTORY_LIST
+  source/geant4
+  LAMPS/geant4
 )
 
 #---Add geant4 main programs. Directory should be under "/path/to/KEBI/"
 list(APPEND KEBI_GEANT4_EXECUTABLE_LIST
+  LAMPS/macros/mc_tpc.cc
 )
 
 

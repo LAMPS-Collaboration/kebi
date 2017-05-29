@@ -4,8 +4,8 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = S2ROOT
-PROJECT_NUMBER         = @S2ROOT_VERSION@
+PROJECT_NAME           = KEBI
+PROJECT_NUMBER         = @KEBI_VERSION@
 PROJECT_BRIEF          =
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       =
