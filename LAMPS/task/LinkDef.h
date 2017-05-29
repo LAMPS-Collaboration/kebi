@@ -8,4 +8,7 @@
 #pragma link C++ class LAPNoiseSubtractionTask+;
 #pragma link C++ class LAPBeamTrackingTask+;
 
+#pragma link C++ class LADriftElectronTask+;
+#pragma link C++ class LAElectronicsTask+;
+
 #endif
