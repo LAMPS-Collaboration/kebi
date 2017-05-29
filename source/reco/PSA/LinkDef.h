@@ -6,5 +6,6 @@
 
 #pragma link C++ class KBPSATask+;
 #pragma link C++ class KBPSA+;
+#pragma link C++ class KBPSAFastFit+;
 
 #endif

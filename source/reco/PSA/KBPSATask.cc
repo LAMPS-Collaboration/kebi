@@ -19,26 +19,22 @@ bool KBPSATask::Init()
   KBRun *run = KBRun::GetRun();
 
   auto par = run -> GetParameterContainer();
-  auto tpc = (KBTpc *) run -> GetDetector();
+  fTpc = (KBTpc *) run -> GetDetector();
 
-  fNPlanes = tpc -> GetNPlanes();
-  par -> GetParInt("tbStart", fTbStart);
-  par -> GetParInt("nTbs", fNTbs);
+  fNPlanes = fTpc -> GetNPlanes();
   par -> GetParDouble("gasDriftVelocity", fDriftVelocity);
   par -> GetParDouble("tbTime", fTbTime);
-  par -> GetParDouble("ADCThreshold", fADCThreshold);
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 
   for (auto iPlane = 0; iPlane < fNPlanes; iPlane++)
-    fPadPlane[iPlane] = tpc -> GetPadPlane(iPlane);
+    fPadPlane[iPlane] = fTpc -> GetPadPlane(iPlane);
 
   fHitArray = new TClonesArray("KBHit", 5000);
   run -> RegisterBranch("Hit", fHitArray, true);
 
   fPSA = new KBPSA();
-  fPSA -> SetTbRange(fTbStart, fTbStart + fNTbs - 1);
-  fPSA -> SetThreshold(fADCThreshold);
+  fPSA -> SetParameters(par);
 
   return true;
 }
@@ -53,7 +49,7 @@ void KBPSATask::Exec(Option_t*)
 
   for (auto iPad = 0; iPad < nPads; iPad++) {
     auto pad = (KBPad *) fPadArray -> At(iPad);
-    Double_t zPlane = fPadPlane[pad->GetPlaneID()] -> GetPlaneK();
+    Double_t kPlane = fPadPlane[pad->GetPlaneID()] -> GetPlaneK();
 
     auto bufferOut = pad -> GetBufferOut();
 
@@ -63,18 +59,21 @@ void KBPSATask::Exec(Option_t*)
     for (auto channelHit : hitArray) {
 
       ///@todo build pad plane dependent code
-      Double_t z;
+      Double_t k;
       if (pad -> GetPlaneID() == 0)
-        z = zPlane - (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+        k = kPlane - (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
       else
-        z = zPlane + (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+        k = kPlane + (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+
+      Double_t x,y,z;
+      fTpc -> IJKToXYZ(pad->GetI(),pad->GetJ(),k,x,y,z);
 
       auto hit = (KBHit *) fHitArray -> ConstructedAt(idx);
       hit -> SetHitID(idx);
       hit -> SetPadID(pad -> GetPadID());
-      hit -> SetX(pad -> GetI());
-      hit -> SetY(z);
-      hit -> SetZ(pad -> GetJ());
+      hit -> SetX(x);
+      hit -> SetY(y);
+      hit -> SetZ(z);
       hit -> SetTb(channelHit.GetTDC());
       hit -> SetCharge(channelHit.GetADC());
       hit -> SetSection(pad -> GetSection());
@@ -86,4 +85,9 @@ void KBPSATask::Exec(Option_t*)
   }
 
   cout << "  [" << this -> GetName() << "] Number of found hits: " << idx << endl;
+}
+
+void KBPSATask::SetPSA(KBPSA *psa)
+{
+  fPSA = psa;
 }

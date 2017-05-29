@@ -2,6 +2,7 @@
 #define KBPSA_HH
 
 #include "KBChannelHit.hh"
+#include "KBParameterContainer.hh"
 
 #include <vector>
 #include <iostream>
@@ -16,6 +17,8 @@ class KBPSA
     virtual void AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray);
     void SetTbRange(Int_t tbi, Int_t tbf);
     void SetThreshold(Double_t val);
+
+    void SetParameters(KBParameterContainer *par);
 
   protected:
     Int_t fTbStart = 0;

@@ -4,6 +4,7 @@
 #include "KBTask.hh"
 #include "KBPSA.hh"
 #include "KBPadPlane.hh"
+#include "KBTpc.hh"
 
 #include "TClonesArray.h"
 
@@ -16,9 +17,13 @@ class KBPSATask : public KBTask
     bool Init();
     void Exec(Option_t*);
 
+    void SetPSA(KBPSA *psa);
+
   private:
     TClonesArray* fPadArray;
     TClonesArray* fHitArray;
+
+    KBTpc *fTpc;
 
     Int_t fNPlanes;
     Int_t fTbStart;
