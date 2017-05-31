@@ -16,7 +16,6 @@ class KBTracklet : public TObject
     Int_t fParentID;  ///< Vertex ID
 
     KBHitList *fHitList = nullptr;  //!
-    KBTrackFitter *fTrackFitter = nullptr;
 
   public:
     KBTracklet() {}

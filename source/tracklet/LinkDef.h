@@ -6,10 +6,10 @@
 
 #pragma link C++ class KBTracklet+;
 #pragma link C++ class KBLinearTrack+;
-//#pragma link C++ class KBHelixTrack+;
+#pragma link C++ class KBHelixTrack+;
 
 #pragma link C++ class KBTrackFitter+;
 #pragma link C++ class KBLinearTrackFitter+;
-//#pragma link C++ class KBHelixTrackFitter+;
+#pragma link C++ class KBHelixTrackFitter+;
 
 #endif
