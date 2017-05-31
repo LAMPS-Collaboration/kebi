@@ -37,17 +37,23 @@ void KBGeoLine::SetLine(TVector3 pos1, TVector3 pos2)
   fZ2 = pos2.Z();
 }
 
-Double_t KBGeoLine::GetX1() { return fX1; }
-Double_t KBGeoLine::GetY1() { return fY1; }
-Double_t KBGeoLine::GetZ1() { return fZ1; }
-Double_t KBGeoLine::GetX2() { return fX2; }
-Double_t KBGeoLine::GetY2() { return fY2; }
-Double_t KBGeoLine::GetZ2() { return fZ2; }
+Double_t KBGeoLine::GetX1() const { return fX1; }
+Double_t KBGeoLine::GetY1() const { return fY1; }
+Double_t KBGeoLine::GetZ1() const { return fZ1; }
+Double_t KBGeoLine::GetX2() const { return fX2; }
+Double_t KBGeoLine::GetY2() const { return fY2; }
+Double_t KBGeoLine::GetZ2() const { return fZ2; }
 
-TVector3 KBGeoLine::GetPoint1() { return TVector3(fX1, fY1, fZ1); }
-TVector3 KBGeoLine::GetPoint2() { return TVector3(fX2, fY2, fZ2); }
+TVector3 KBGeoLine::GetPoint1() const { return TVector3(fX1, fY1, fZ1); }
+TVector3 KBGeoLine::GetPoint2() const { return TVector3(fX2, fY2, fZ2); }
 
-Double_t KBGeoLine::Length(Double_t x, Double_t y, Double_t z)
+TVector3 KBGeoLine::Direction() const
+{
+  auto v = TVector3(fX2-fX1, fY2-fY1, fZ2-fZ1);
+  return v.Unit();
+}
+
+Double_t KBGeoLine::Length(Double_t x, Double_t y, Double_t z) const
 {
   auto length = std::sqrt((fX1-x)*(fX1-x) + (fY1-y)*(fY1-y) + (fZ1-z)*(fZ1-z)); 
   auto direction = TVector3(fX1-x, fY1-y, fZ1-z).Dot(TVector3(fX1-fX2, fY1-fY2, fZ1-fZ2));
@@ -59,10 +65,10 @@ Double_t KBGeoLine::Length(Double_t x, Double_t y, Double_t z)
   return direction * length;
 }
 
-Double_t KBGeoLine::Length(TVector3 position) { Length(position.X(), position.Y(), position.Z()); }
-Double_t KBGeoLine::Length() { return std::sqrt((fX1-fX2)*(fX1-fX2) + (fY1-fY2)*(fY1-fY2) + (fZ1-fZ2)*(fZ1-fZ2)); }
+Double_t KBGeoLine::Length(TVector3 position) const { return Length(position.X(), position.Y(), position.Z()); }
+Double_t KBGeoLine::Length() const { return std::sqrt((fX1-fX2)*(fX1-fX2) + (fY1-fY2)*(fY1-fY2) + (fZ1-fZ2)*(fZ1-fZ2)); }
 
-void KBGeoLine::ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0)
+void KBGeoLine::ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0) const
 {
   Double_t xv = fX2 - fX1;
   Double_t yv = fY2 - fY1;
@@ -85,14 +91,15 @@ void KBGeoLine::ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t 
   z0 = fZ1 + l*zv;
 }
 
-void KBGeoLine::ClosestPointOnLine(TVector3 pos, TVector3 &pos0)
+TVector3 KBGeoLine::ClosestPointOnLine(TVector3 pos) const
 {
   Double_t x0 = 0, y0 = 0, z0 = 0;
   ClosestPointOnLine(pos.X(), pos.Y(), pos.Z(), x0, y0, z0);
-  pos0.SetXYZ(x0, y0, z0);
+
+  return TVector3(x0, y0, z0);
 }
 
-Double_t KBGeoLine::DistanceToLine(Double_t x, Double_t y, Double_t z)
+Double_t KBGeoLine::DistanceToLine(Double_t x, Double_t y, Double_t z) const
 {
   Double_t x0 = 0, y0 = 0, z0 = 0;
 
@@ -101,7 +108,7 @@ Double_t KBGeoLine::DistanceToLine(Double_t x, Double_t y, Double_t z)
   return std::sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0));
 }
 
-Double_t KBGeoLine::DistanceToLine(TVector3 pos)
+Double_t KBGeoLine::DistanceToLine(TVector3 pos) const
 {
   Double_t x0 = 0, y0 = 0, z0 = 0;
 

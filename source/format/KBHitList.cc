@@ -12,5 +12,17 @@ void KBHitList::AddHit(KBHit* hit)
   fHitIDArray.push_back(hit->GetHitID());
 }
 
+void KBHitList::RemoveHit(KBHit* hit)
+{
+  Int_t numHits = fHitArray.size();
+  for (auto iHit = 0; iHit < numHits; iHit++) {
+    if (fHitArray[iHit] == hit) {
+      fHitArray.erase(fHitArray.begin()+iHit);
+      fHitIDArray.erase(fHitIDArray.begin()+iHit);
+      break;
+    }
+  }
+}
+
 vector<KBHit*> *KBHitList::GetHitArray() { return &fHitArray; }
 vector<Int_t> *KBHitList::GetHitIDArray() { return &fHitIDArray; }

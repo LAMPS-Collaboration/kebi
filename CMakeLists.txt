@@ -14,10 +14,11 @@ option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation 
 #---Add source directories. Directory should be under "/path/to/KEBI/"
 list(APPEND KEBI_SOURCE_DIRECTORY_LIST
   source/fit
+  source/tool
   source/base
   source/format
+  source/tracklet
   source/detector
-  source/tool
   source/reco/PSA
   source/analysis/PlotChannels
 

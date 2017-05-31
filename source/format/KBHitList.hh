@@ -13,6 +13,7 @@ class KBHitList : public TObject
     virtual ~KBHitList() {}
 
     void AddHit(KBHit* hit);
+    void RemoveHit(KBHit *hit);
 
     vector<KBHit*> *GetHitArray();
     vector<Int_t> *GetHitIDArray();

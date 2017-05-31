@@ -1,11 +1,10 @@
 #ifndef KBGEOLINE_HH
 #define KBGEOLINE_HH
 
-#include "TObject.h"
 #include "TVector3.h"
 #include "TArrow.h"
 
-class KBGeoLine : public TObject
+class KBGeoLine
 {
   public:
     KBGeoLine();
@@ -16,25 +15,27 @@ class KBGeoLine : public TObject
     void SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2);
     void SetLine(TVector3 pos1, TVector3 pos2);
 
-    Double_t GetX1();
-    Double_t GetY1();
-    Double_t GetZ1();
-    Double_t GetX2();
-    Double_t GetY2();
-    Double_t GetZ2();
+    Double_t GetX1() const;
+    Double_t GetY1() const;
+    Double_t GetZ1() const;
+    Double_t GetX2() const;
+    Double_t GetY2() const;
+    Double_t GetZ2() const;
 
-    TVector3 GetPoint1();
-    TVector3 GetPoint2();
+    TVector3 GetPoint1() const;
+    TVector3 GetPoint2() const;
 
-    Double_t Length(Double_t x, Double_t y, Double_t z);
-    Double_t Length(TVector3 position);
-    Double_t Length();
+    TVector3 Direction() const;
 
-    void ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0);
-    void ClosestPointOnLine(TVector3 pos, TVector3 &pos0);
+    Double_t Length(Double_t x, Double_t y, Double_t z) const;
+    Double_t Length(TVector3 position) const;
+    Double_t Length() const;
 
-    Double_t DistanceToLine(Double_t x, Double_t y, Double_t z);
-    Double_t DistanceToLine(TVector3 pos);
+    void ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0) const;
+    TVector3 ClosestPointOnLine(TVector3 pos) const;
+
+    Double_t DistanceToLine(Double_t x, Double_t y, Double_t z) const;
+    Double_t DistanceToLine(TVector3 pos) const;
 
     TArrow *CreateTArrowXY();
     TArrow *CreateTArrowYZ();

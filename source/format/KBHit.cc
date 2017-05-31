@@ -96,7 +96,7 @@ bool KBHit::IsEveSet() { return true; }
 TEveElement *KBHit::CreateEveElement()
 {
   auto pointSet = new TEvePointSet("Hit");
-  pointSet -> SetMarkerColor(kMagenta);
+  pointSet -> SetMarkerColor(kPink+6);
   pointSet -> SetMarkerSize(0.8);
   pointSet -> SetMarkerStyle(20);
 
