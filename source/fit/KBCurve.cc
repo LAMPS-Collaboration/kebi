@@ -35,17 +35,17 @@ void KBCurve::Push(Double_t x, Double_t y, Double_t fx, Double_t fy)
   }
 
   for (auto iPoint = 1; iPoint < fNpoints-1; ++iPoint) {
-    auto x = fX[iPoint];
-    auto y = fY[iPoint];
+    auto x0 = fX[iPoint];
+    auto y0 = fY[iPoint];
     auto xb = fX[iPoint-1];
     auto yb = fY[iPoint-1];
     auto xa = fX[iPoint+1];
     auto ya = fY[iPoint+1];
 
-    auto dxb = xb - x;
-    auto dyb = yb - y;
-    auto dxa = xa - x;
-    auto dya = ya - y;
+    auto dxb = xb - x0;
+    auto dyb = yb - y0;
+    auto dxa = xa - x0;
+    auto dya = ya - y0;
 
     auto drb = sqrt(dxb*dxb + dyb*dyb);
     auto dra = sqrt(dxa*dxa + dya*dya);
