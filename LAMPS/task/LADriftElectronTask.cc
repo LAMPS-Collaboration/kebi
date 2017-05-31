@@ -78,8 +78,9 @@ void LADriftElectronTask::Exec(Option_t*)
     auto sigmaLD = fCoefLD * sqrt(lDrift);
     auto sigmaTD = fCoefTD * sqrt(lDrift);
 
-    Int_t nElectrons = (Int_t)(edep/fEIonize);
-    for (auto iElectron = 0; iElectron < 100; iElectron++) {
+    Int_t nElectrons = Int_t(edep/fEIonize);
+
+    for (auto iElectron = 0; iElectron < nElectrons; iElectron++) {
       Double_t dr    = gRandom -> Gaus(0, sigmaTD);
       Double_t angle = gRandom -> Uniform(2*TMath::Pi());
 
