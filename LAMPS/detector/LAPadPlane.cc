@@ -376,7 +376,7 @@ TH2* LAPadPlane::GetHist(Option_t *option)
 
 void LAPadPlane::DrawFrame(Option_t *option)
 {
-  Color_t lineColor = kBlack;
+  Color_t lineColor = kPink+6;
 
   TEllipse *outerCircle = new TEllipse(0, 0, fRMax, fRMax);
             outerCircle -> SetFillStyle(0);

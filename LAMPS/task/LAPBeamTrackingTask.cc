@@ -48,7 +48,6 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   for (auto iHit = 0; iHit < nHits; iHit++) {
     auto hit = (KBHit *) fHitArray -> At(iHit);
     hitList -> AddHit(hit);
-    //fHitList kkkkkk
   }
 
   auto hitArray = hitList -> GetHitArray();
@@ -94,12 +93,10 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   }
 
   auto hitMin = hitArray -> at(idxMin);
-  TVector3 positionMin;
-  beamTrack -> ClosestPointOnLine(hitMin -> GetPosition(), positionMin);
+  TVector3 positionMin = beamTrack -> ClosestPointOnLine(hitMin -> GetPosition());
 
   auto hitMax = hitArray -> at(idxMax);
-  TVector3 positionMax;
-  beamTrack -> ClosestPointOnLine(hitMax -> GetPosition(), positionMax);
+  TVector3 positionMax = beamTrack -> ClosestPointOnLine(hitMax -> GetPosition());
 
   beamTrack -> SetLine(positionMin, positionMax);
 
@@ -108,6 +105,6 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   return;
 }
 
-void LAPBeamTrackingTask::SetHitClusterPersistency(bool persistency) { fHitClusterPersistency; } 
-void LAPBeamTrackingTask::SetLinearTrackPersistency(bool persistency) { fLinearTrackPersistency; }
-void LAPBeamTrackingTask::SetHitListPersistency(bool persistency) { fHitListPersistency; }
+void LAPBeamTrackingTask::SetHitClusterPersistency(bool persistency) { fHitClusterPersistency = persistency; }
+void LAPBeamTrackingTask::SetLinearTrackPersistency(bool persistency) { fLinearTrackPersistency = persistency; }
+void LAPBeamTrackingTask::SetHitListPersistency(bool persistency) { fHitListPersistency = persistency; }

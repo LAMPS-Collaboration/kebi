@@ -14,8 +14,6 @@ class LADriftElectronTask : public KBTask
     LADriftElectronTask();
     virtual ~LADriftElectronTask() {}
 
-    void SetTPC(KBTpc *tpc);
-
     bool Init();
     void Exec(Option_t*);
 
