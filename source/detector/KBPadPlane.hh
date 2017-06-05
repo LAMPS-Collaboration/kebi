@@ -24,6 +24,7 @@ class KBPadPlane : public KBDetectorPlane
     KBPad *GetPad(Int_t idx);
 
     void SetPadArray(TClonesArray *padArray);
+    void SetHitArray(TClonesArray *hitArray);
     Int_t GetNPads();
 
     void FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val); 
@@ -34,16 +35,18 @@ class KBPadPlane : public KBDetectorPlane
 
     void ResetHitMap();
     void AddHit(KBHit *hit);
-    KBHit *PullOutNextFreeHit();
+
+    virtual KBHit *PullOutNextFreeHit();
     void PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neighborHits);
     void PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *neighborHits);
-    void PullOutNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
+
+    void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
 
   protected:
     Int_t fEFieldAxis = -1;
     Double_t fPlaneK = -999;
 
-    Int_t fFreePadIdx = -1;
+    Int_t fFreePadIdx = 0;
 
   ClassDef(KBPadPlane, 1)
 };

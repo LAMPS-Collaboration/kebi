@@ -42,6 +42,20 @@ void KBPadPlane::SetPadArray(TClonesArray *padArray)
   }
 }
 
+void KBPadPlane::SetHitArray(TClonesArray *hitArray)
+{
+  TIter iterPads(hitArray);
+  KBHit *hit;
+  while ((hit = (KBHit *) iterPads.Next())) {
+    auto padID = hit -> GetPadID();
+    if (padID < 0)
+      continue;
+    auto pad = GetPadFast(padID);
+    pad -> AddHit(hit);
+    pad -> SetActive();
+  }
+}
+
 void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val)
 {
   Int_t id = FindPadID(i, j);
@@ -114,7 +128,7 @@ void KBPadPlane::ResetHitMap()
     pad -> LetGo();
   }
 
-  fFreePadIdx = fChannelArray -> GetEntriesFast() - 1;
+  fFreePadIdx = 0;
 }
 
 void KBPadPlane::AddHit(KBHit *hit)
@@ -125,13 +139,13 @@ void KBPadPlane::AddHit(KBHit *hit)
 
 KBHit *KBPadPlane::PullOutNextFreeHit()
 {
-  if (fFreePadIdx == 0)
+  if (fFreePadIdx == fChannelArray -> GetEntriesFast() - 1)
     return nullptr;
 
   auto pad = (KBPad *) fChannelArray -> At(fFreePadIdx);
   auto hit = pad -> PullOutNextFreeHit();
   if (hit == nullptr) {
-    fFreePadIdx--;
+    fFreePadIdx++;
     return PullOutNextFreeHit();
   }
 
@@ -165,7 +179,7 @@ void KBPadPlane::PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *ne
 
   while (range >= 0) {
     neighborsNew.clear();
-    PullOutNeighborPads(&neighborsTemp, &neighborsNew);
+    GrabNeighborPads(&neighborsTemp, &neighborsNew);
 
     for (auto neighbor : neighborsTemp)
       neighborsUsed.push_back(neighbor);
@@ -185,7 +199,7 @@ void KBPadPlane::PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *ne
     neighbor -> LetGo();
 }
 
-void KBPadPlane::PullOutNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads)
+void KBPadPlane::GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads)
 {
   for (auto pad : *pads) {
     auto neighbors = pad -> GetNeighborPadArray();
