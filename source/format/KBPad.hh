@@ -21,6 +21,10 @@ class KBPad : public KBChannel
     virtual void Print(Option_t *option = "") const;
     virtual void Draw(Option_t *option = "");
 
+    virtual Bool_t IsSortable() const;
+    virtual Int_t Compare(const TObject *obj) const;
+
+
     void SetPad(KBPad* pad);
     void CopyPadData(KBPad* pad);
 

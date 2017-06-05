@@ -1,5 +1,6 @@
 #include "KBPad.hh"
 
+#include <iomanip>
 #include <iostream>
 using namespace std;
 
@@ -13,11 +14,18 @@ void KBPad::Clear(Option_t *)
   memset(fBufferRaw, 0, sizeof(Short_t)*512);
   memset(fBufferOut, 0, sizeof(Double_t)*512);
 
+  ClearHits();
+
   fGrabed = false;
 }
 
 void KBPad::Print(Option_t *option) const
 {
+  if (TString(option) == "id") {
+    cout << "[KBPad] " << setw(6) << fID << setw(4) << fSection << setw(4) << fRow << setw(4) << fLayer << endl;
+    return;
+  }
+
   cout << "[KBPad]" << endl;
   cout << "  Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")" << endl;
   cout << "  AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
@@ -28,6 +36,28 @@ void KBPad::Print(Option_t *option) const
 
 void KBPad::Draw(Option_t *option)
 {
+}
+
+Bool_t KBPad::IsSortable() const { return true; }
+
+Int_t KBPad::Compare(const TObject *obj) const
+{
+  auto padCompare = (KBPad *) obj;
+
+       if (padCompare -> GetLayer() < fLayer) return -1;
+  else if (padCompare -> GetLayer() > fLayer) return 1;
+  else //same layer
+  {
+         if (padCompare -> GetSection() > fSection) return -1;
+    else if (padCompare -> GetSection() < fSection) return 1;
+    else // same layer, same section
+    {
+           if (padCompare -> GetRow() > fRow) return -1;
+      else if (padCompare -> GetRow() < fRow) return 1;
+      else // same pad
+        return 0;
+    }
+  }
 }
 
 void KBPad::SetPad(KBPad *pad)
