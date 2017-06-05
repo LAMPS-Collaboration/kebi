@@ -89,16 +89,25 @@ bool LAPPadPlane::Init()
         pad -> SetPosition(posRot.X(), posRot.Y());
         pad -> SetSectionRowLayer(section, row, layer);
 
-        std::vector<Int_t> key;
-        key.push_back(section);
-        key.push_back(row);
-        key.push_back(layer);
-
-        fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,padID));
         fChannelArray -> Add(pad);
         fNPadsTotal++;
       }
     }
+  }
+
+  fChannelArray -> Sort();
+
+  Int_t nPads = fChannelArray -> GetEntriesFast();
+  for (auto iPad = 0; iPad < nPads; iPad++) {
+    auto pad = (KBPad *) fChannelArray -> At(iPad);
+    pad -> SetPadID(iPad);
+
+    std::vector<Int_t> key;
+    key.push_back(pad -> GetSection());
+    key.push_back(pad -> GetRow());
+    key.push_back(pad -> GetLayer());
+
+    fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,iPad));
   }
 
   return true;

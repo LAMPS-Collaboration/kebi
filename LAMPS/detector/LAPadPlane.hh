@@ -22,12 +22,22 @@ class LAPadPlane : public KBPadPlane
 
     virtual TCanvas *GetCanvas(Option_t *optiont = "");
 
+    virtual void ResetHitMap();
+    TObjArray *GetInnerTrackerPadArray();
+    KBHit *PullOutNextFreeInnerTrackerHit();
+
+    Int_t GetNLayerDivision();
+    Int_t GetLayerDiv(Int_t idx);
+    Double_t GetRDiv(Int_t idx);
+
   private:
-    void AddPad(Int_t section, Int_t layer, Int_t row, Double_t i, Double_t j);
+    void AddPad(Int_t section, Int_t layer, Int_t row, Double_t i, Double_t j, bool innerTrackerPad);
+    void MapPad(KBPad *pad);
     Int_t FindSection(Double_t i, Double_t j);
     Int_t FindDivisionIndex(Int_t layer);
     Int_t FindDivisionIndex(Double_t r);
 
+  private:
     TF1* fFuncXRightBound = nullptr;
 
     Double_t fRMin = 0;
@@ -52,9 +62,11 @@ class LAPadPlane : public KBPadPlane
     std::vector<Int_t> fLayerDivI;
     std::vector<Double_t> fRDivI;
 
-    Int_t fNPadsTotal = 0;
-
     std::map<std::vector<Int_t>, Int_t> fPadMap;
+
+    Int_t fITDivisionIndex = 0;
+    TObjArray *fITPadArray = nullptr;
+    Int_t fFreeITPadIdx = 0;
 
   ClassDef(LAPadPlane, 1)
 };

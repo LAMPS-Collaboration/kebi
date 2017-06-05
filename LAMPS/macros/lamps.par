@@ -23,6 +23,7 @@ tpcEFieldAxis  s z  # axis of field direction: (x, y, z)
 tpcDriftAxis   i 3  # direction of electric field (1:x, 2:y, 3:z)
 
 ppNLayerDivision  i 2
+  innerTrackerDivisionIndex i 0
   ppArcLength0    d 3.
   ppArcLength1    d 4.
   ppRadius0       d 10.

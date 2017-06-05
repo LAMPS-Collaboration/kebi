@@ -21,6 +21,8 @@ LAPadPlane::LAPadPlane()
 
 bool LAPadPlane::Init()
 {
+  fITPadArray = new TObjArray();
+
   fFuncXRightBound = new TF1("RightBound","1/(TMath::Tan(TMath::Pi()*3/8))*x",10,55);
 
   fPar -> GetParDouble("rMinTPC", fRMin);
@@ -28,7 +30,8 @@ bool LAPadPlane::Init()
 
   fPar -> GetParInt("ppNLayerDivision", fNLayerDivision);
 
-  fArcLength = new Double_t[fNLayerDivision]; fRadius = new Double_t[fNLayerDivision];
+  fArcLength = new Double_t[fNLayerDivision];
+  fRadius = new Double_t[fNLayerDivision];
   fNLayers = new Int_t[fNLayerDivision];
 
   for (Int_t iDiv = 0; iDiv < fNLayerDivision; iDiv++) {
@@ -36,6 +39,8 @@ bool LAPadPlane::Init()
     fPar -> GetParDouble(Form("ppRadius%d",iDiv), fRadius[iDiv]);
     fPar -> GetParInt(Form("ppNLayers%d",iDiv), fNLayers[iDiv]);
   }
+
+  fPar -> GetParInt("innerTrackerDivisionIndex",fITDivisionIndex);
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);
@@ -64,10 +69,16 @@ bool LAPadPlane::Init()
       fNLayersTotal++;
     }
   }
+  fLayerDivI.push_back(fNLayersTotal);
+  fRDivI.push_back(rMinLayer);
 
   for (Int_t iSection = 0; iSection < 8; iSection++) {
-    for (Int_t iLayer = 0; iLayer < fNLayersTotal; iLayer++) {
+    for (Int_t iLayer = 0; iLayer < fNLayersTotal; iLayer++) 
+    {
       Int_t idx = FindDivisionIndex(iLayer);
+      bool addToITPad = false;
+      if (idx <= fITDivisionIndex)
+        addToITPad = true;
 
       rMinLayer = fRDivI.at(idx) + (iLayer - fLayerDivI.at(idx)) * fRadius[idx];
       rMaxLayer = rMinLayer + fRadius[idx];
@@ -83,12 +94,22 @@ bool LAPadPlane::Init()
         pos.SetMagPhi(rMid, phiSection);
 
         TVector2 posL = pos.Rotate(phiPadMid);
-        AddPad(iSection, -iRow, iLayer, posL.X(), posL.Y());
+        AddPad(iSection, -iRow, iLayer, posL.X(), posL.Y(), addToITPad);
 
         TVector2 posR = pos.Rotate(-phiPadMid);
-        AddPad(iSection,  iRow, iLayer, posR.X(), posR.Y());
+        AddPad(iSection,  iRow, iLayer, posR.X(), posR.Y(), addToITPad);
       }
     }
+  }
+
+  fChannelArray -> Sort();
+  fITPadArray -> Sort();
+
+  Int_t nPads = fChannelArray -> GetEntriesFast();
+  for (auto iPad = 0; iPad < nPads; iPad++) {
+    auto pad = (KBPad *) fChannelArray -> At(iPad);
+    pad -> SetPadID(iPad);
+    MapPad(pad);
   }
 
   for (Int_t iSection = 0; iSection < 8; iSection++) {
@@ -440,23 +461,24 @@ TCanvas *LAPadPlane::GetCanvas(Option_t *option)
   return fCanvas;
 }
 
-void LAPadPlane::AddPad(Int_t section, Int_t row, Int_t layer, Double_t i, Double_t j)
+void LAPadPlane::AddPad(Int_t section, Int_t row, Int_t layer, Double_t i, Double_t j, bool innerTrackerPad = false)
 {
-  std::vector<Int_t> key;
-  key.push_back(section);
-  key.push_back(row);
-  key.push_back(layer);
-
-  Int_t id = fChannelArray -> GetEntriesFast();
-
   KBPad *pad = new KBPad();
-  pad -> SetID(id);
   pad -> SetPosition(i, j);
   pad -> SetSectionRowLayer(section, row, layer);
-
-  fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,id));
   fChannelArray -> Add(pad);
-  fNPadsTotal++;
+
+  if (innerTrackerPad)
+    fITPadArray -> Add(pad);
+}
+
+void LAPadPlane::MapPad(KBPad *pad)
+{
+  std::vector<Int_t> key;
+  key.push_back(pad -> GetSection());
+  key.push_back(pad -> GetRow());
+  key.push_back(pad -> GetLayer());
+  fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,pad->GetPadID()));
 }
 
 Int_t LAPadPlane::FindSection(Double_t i, Double_t j)
@@ -501,3 +523,31 @@ Int_t LAPadPlane::FindDivisionIndex(Double_t r)
   }
   return idx;
 }
+
+void LAPadPlane::ResetHitMap()
+{
+  KBPadPlane::ResetHitMap();
+
+  fFreeITPadIdx = 0;
+}
+
+TObjArray *LAPadPlane::GetInnerTrackerPadArray() { return fITPadArray; }
+
+KBHit *LAPadPlane::PullOutNextFreeInnerTrackerHit()
+{
+  if (fFreeITPadIdx == fITPadArray -> GetEntriesFast() - 1)
+    return nullptr;
+
+  auto pad = (KBPad *) fITPadArray -> At(fFreeITPadIdx);
+  auto hit = pad -> PullOutNextFreeHit();
+  if (hit == nullptr) {
+    fFreeITPadIdx++;
+    return PullOutNextFreeInnerTrackerHit();
+  }
+
+  return hit;
+}
+
+Int_t LAPadPlane::GetNLayerDivision() { return fNLayerDivision; }
+Int_t LAPadPlane::GetLayerDiv(Int_t idx) { return fLayerDivI.at(idx); }
+Double_t LAPadPlane::GetRDiv(Int_t idx) { return fRDivI.at(idx); }

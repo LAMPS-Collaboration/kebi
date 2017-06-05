@@ -33,7 +33,7 @@ class KBPadPlane : public KBDetectorPlane
     void SetPlaneK(Double_t k);
     Double_t GetPlaneK();
 
-    void ResetHitMap();
+    virtual void ResetHitMap();
     void AddHit(KBHit *hit);
 
     virtual KBHit *PullOutNextFreeHit();
