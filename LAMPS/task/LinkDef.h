@@ -11,4 +11,7 @@
 #pragma link C++ class LADriftElectronTask+;
 #pragma link C++ class LAElectronicsTask+;
 
+#pragma link C++ class LATrackFindingTask+;
+#pragma link C++ class LATrackFinder+;
+
 #endif
