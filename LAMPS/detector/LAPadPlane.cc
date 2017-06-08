@@ -21,7 +21,7 @@ LAPadPlane::LAPadPlane()
 
 bool LAPadPlane::Init()
 {
-  fITPadArray = new TObjArray();
+  fInPadArray = new TObjArray();
 
   fFuncXRightBound = new TF1("RightBound","1/(TMath::Tan(TMath::Pi()*3/8))*x",10,55);
 
@@ -40,7 +40,7 @@ bool LAPadPlane::Init()
     fPar -> GetParInt(Form("ppNLayers%d",iDiv), fNLayers[iDiv]);
   }
 
-  fPar -> GetParInt("innerTrackerDivisionIndex",fITDivisionIndex);
+  fPar -> GetParInt("innerTrackerDivisionIndex",fInDivisionIndex);
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);
@@ -76,9 +76,9 @@ bool LAPadPlane::Init()
     for (Int_t iLayer = 0; iLayer < fNLayersTotal; iLayer++) 
     {
       Int_t idx = FindDivisionIndex(iLayer);
-      bool addToITPad = false;
-      if (idx <= fITDivisionIndex)
-        addToITPad = true;
+      bool addToInPad = false;
+      if (idx <= fInDivisionIndex)
+        addToInPad = true;
 
       rMinLayer = fRDivI.at(idx) + (iLayer - fLayerDivI.at(idx)) * fRadius[idx];
       rMaxLayer = rMinLayer + fRadius[idx];
@@ -94,16 +94,16 @@ bool LAPadPlane::Init()
         pos.SetMagPhi(rMid, phiSection);
 
         TVector2 posL = pos.Rotate(phiPadMid);
-        AddPad(iSection, -iRow, iLayer, posL.X(), posL.Y(), addToITPad);
+        AddPad(iSection, -iRow, iLayer, posL.X(), posL.Y(), addToInPad);
 
         TVector2 posR = pos.Rotate(-phiPadMid);
-        AddPad(iSection,  iRow, iLayer, posR.X(), posR.Y(), addToITPad);
+        AddPad(iSection,  iRow, iLayer, posR.X(), posR.Y(), addToInPad);
       }
     }
   }
 
   fChannelArray -> Sort();
-  fITPadArray -> Sort();
+  fInPadArray -> Sort();
 
   Int_t nPads = fChannelArray -> GetEntriesFast();
   for (auto iPad = 0; iPad < nPads; iPad++) {
@@ -395,7 +395,7 @@ TH2* LAPadPlane::GetHist(Option_t *option)
   return fH2Plane;
 }
 
-void LAPadPlane::DrawFrame(Option_t *option)
+void LAPadPlane::DrawFrame(Option_t *)
 {
   Color_t lineColor = kPink+6;
 
@@ -453,7 +453,7 @@ void LAPadPlane::DrawFrame(Option_t *option)
   line8 -> Draw("samel");
 }
 
-TCanvas *LAPadPlane::GetCanvas(Option_t *option)
+TCanvas *LAPadPlane::GetCanvas(Option_t *)
 {
   if (fCanvas == nullptr)
     fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,800,800);
@@ -469,7 +469,7 @@ void LAPadPlane::AddPad(Int_t section, Int_t row, Int_t layer, Double_t i, Doubl
   fChannelArray -> Add(pad);
 
   if (innerTrackerPad)
-    fITPadArray -> Add(pad);
+    fInPadArray -> Add(pad);
 }
 
 void LAPadPlane::MapPad(KBPad *pad)
@@ -528,24 +528,74 @@ void LAPadPlane::ResetHitMap()
 {
   KBPadPlane::ResetHitMap();
 
-  fFreeITPadIdx = 0;
+  fFreeInPadIdx = 0;
 }
 
-TObjArray *LAPadPlane::GetInnerTrackerPadArray() { return fITPadArray; }
+TObjArray *LAPadPlane::GetInPadArray() { return fInPadArray; }
 
-KBHit *LAPadPlane::PullOutNextFreeInnerTrackerHit()
+KBHit *LAPadPlane::PullOutNextFreeHitIn()
 {
-  if (fFreeITPadIdx == fITPadArray -> GetEntriesFast() - 1)
+  if (fFreeInPadIdx == fInPadArray -> GetEntriesFast() - 1)
     return nullptr;
 
-  auto pad = (KBPad *) fITPadArray -> At(fFreeITPadIdx);
+  auto pad = (KBPad *) fChannelArray -> At(fFreeInPadIdx);
   auto hit = pad -> PullOutNextFreeHit();
   if (hit == nullptr) {
-    fFreeITPadIdx++;
-    return PullOutNextFreeInnerTrackerHit();
+    fFreeInPadIdx++;
+    return PullOutNextFreeHitIn();
   }
 
   return hit;
+}
+
+void LAPadPlane::PullOutNeighborHitsIn(vector<KBHit*> *hits, vector<KBHit*> *neighborHits)
+{
+  for (auto hit : *hits) {
+    auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
+    auto neighbors = pad -> GetNeighborPadArray();
+    for (auto neighbor : *neighbors) {
+      if (FindDivisionIndex(neighbor->GetLayer()) <= fInDivisionIndex)
+        neighbor -> PullOutHits(neighborHits);
+    }
+  }
+}
+
+void LAPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, vector<KBHit*> *neighborHits)
+{
+  vector<KBPad *> neighborsUsed;
+  vector<KBPad *> neighborsTemp;
+  vector<KBPad *> neighborsNew;
+
+  Int_t id = FindPadID(p.X(), p.Y());
+  if (id < 0)
+    return;
+
+  auto pad = (KBPad *) fInPadArray -> At(id);
+
+  neighborsTemp.push_back(pad);
+  pad -> Grab();
+
+  while (range >= 0) {
+    neighborsNew.clear();
+    GrabNeighborPads(&neighborsTemp, &neighborsNew);
+
+    for (auto neighbor : neighborsTemp)
+      neighborsUsed.push_back(neighbor);
+    neighborsTemp.clear();
+
+    for (auto neighbor : neighborsNew) {
+      if (FindDivisionIndex(neighbor->GetLayer()) <= fInDivisionIndex)
+        neighbor -> PullOutHits(neighborHits);
+      neighborsTemp.push_back(neighbor);
+    }
+    range--;
+  }
+
+  for (auto neighbor : neighborsUsed)
+    neighbor -> LetGo();
+
+  for (auto neighbor : neighborsNew)
+    neighbor -> LetGo();
 }
 
 Int_t LAPadPlane::GetNLayerDivision() { return fNLayerDivision; }

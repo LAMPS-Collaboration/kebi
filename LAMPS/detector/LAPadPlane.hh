@@ -4,6 +4,8 @@
 #include "KBPadPlane.hh"
 #include "TF1.h"
 
+typedef vector<KBHit*> KBHits;
+
 class LAPadPlane : public KBPadPlane
 {
   public:
@@ -23,8 +25,10 @@ class LAPadPlane : public KBPadPlane
     virtual TCanvas *GetCanvas(Option_t *optiont = "");
 
     virtual void ResetHitMap();
-    TObjArray *GetInnerTrackerPadArray();
-    KBHit *PullOutNextFreeInnerTrackerHit();
+    TObjArray *GetInPadArray();
+    KBHit *PullOutNextFreeHitIn();
+    void PullOutNeighborHitsIn(KBHits *hits, KBHits *nbHits);
+    void PullOutNeighborHitsIn(TVector3 p, Int_t range, KBHits *nbHits);
 
     Int_t GetNLayerDivision();
     Int_t GetLayerDiv(Int_t idx);
@@ -64,9 +68,9 @@ class LAPadPlane : public KBPadPlane
 
     std::map<std::vector<Int_t>, Int_t> fPadMap;
 
-    Int_t fITDivisionIndex = 0;
-    TObjArray *fITPadArray = nullptr;
-    Int_t fFreeITPadIdx = 0;
+    Int_t fInDivisionIndex = 0;
+    TObjArray *fInPadArray = nullptr;
+    Int_t fFreeInPadIdx = 0;
 
   ClassDef(LAPadPlane, 1)
 };
