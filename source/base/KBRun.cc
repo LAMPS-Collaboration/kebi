@@ -23,7 +23,6 @@
 
 #include "KBHit.hh"
 #include "KBContainer.hh"
-#include "KBHelixTrack.hh"
 #include "KBMCStep.hh"
 #include "TEvePointSet.h"
 #include "TEveLine.h"
@@ -157,6 +156,8 @@ void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 
 bool KBRun::Init()
 {
+  cout << "[KBRun] Initializing" << endl;
+
   Int_t idxInput = 0;
   if (fInputFileName.IsNull() && fInputFileNameArray.size() != 0) {
     fInputFileName = fInputFileNameArray[0];
@@ -230,7 +231,7 @@ bool KBRun::Init()
     fDetector -> SetParameterContainer(fPar);
     fDetector -> Init();
     cout << endl;
-    cout << fDetector -> GetName() << " initialized" << endl;
+    cout << "[KBRun] " << fDetector -> GetName() << " initialized" << endl;
   }
 
   if (fOutputFileName.IsNull() == false) {
@@ -504,6 +505,13 @@ void KBRun::RunEve(Long64_t eventID)
 
   this -> GetEntry(eventID);
 
+  Int_t nEveElements = fEveElementList.size();
+  for (auto iEl = 0; iEl < nEveElements; ++iEl) {
+    auto el = fEveElementList.back();
+    gEve -> RemoveElement(el,gEve->GetCurrentEvent());
+    fEveElementList.pop_back();
+  }
+
   for (auto iBranch = 0; iBranch < fNBranches; ++iBranch)
   {
     auto branch = (TClonesArray *) fBranchPtr[iBranch];
@@ -526,13 +534,16 @@ void KBRun::RunEve(Long64_t eventID)
         eveObj -> AddToEveSet(eveSet);
       }
       gEve -> AddElement(eveSet);
+      fEveElementList.push_back(eveSet);
     }
     else {
       auto nObjects = branch -> GetEntriesFast();
       for (auto iObject = 0; iObject < nObjects; ++iObject) {
         eveObj = (KBContainer *) branch -> At(iObject);
         auto eveElement = eveObj -> CreateEveElement();
+        eveObj -> SetEveElement(eveElement);
         gEve -> AddElement(eveElement);
+        fEveElementList.push_back(eveElement);
       }
     }
   }
@@ -542,15 +553,31 @@ void KBRun::RunEve(Long64_t eventID)
   auto tpc = (KBTpc *) fDetector;
   auto padplane = tpc -> GetPadPlane(0);
   auto hist_padplane = padplane -> GetHist();
+  hist_padplane -> Reset();
 
+  auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
   auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
-  padplane -> SetPadArray(padArray);
-  padplane -> FillBufferToHist("out");
+
+  if (hitArray != nullptr)
+  {
+    padplane -> Clear();
+    padplane -> SetHitArray(hitArray);
+    padplane -> FillDataToHist("hit");
+  }
+  else if (padArray != nullptr)
+  {
+    padplane -> Clear();
+    padplane -> SetPadArray(padArray);
+    padplane -> FillDataToHist("out");
+  }
+  else
+    return;
 
   gStyle -> SetPalette(kBird); // @todo palette is changed when Drawing top node
-
   auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
   cvs -> cd();
+  hist_padplane -> SetMaximum(5000);
+  hist_padplane -> SetMinimum(1);
   hist_padplane -> Draw("colz");
   padplane -> DrawFrame();
 }

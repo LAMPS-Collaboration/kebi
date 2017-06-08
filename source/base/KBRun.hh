@@ -23,6 +23,7 @@
 #include "TEveEventManager.h"
 
 #include <map>
+#include <vector>
 
 class KBRun : public KBTask
 {
@@ -156,6 +157,8 @@ class KBRun : public KBTask
     TCanvas *fCvsChannelBuffer = nullptr;
     TH1D *fHistChannelBuffer = nullptr;
     TGraph *fGraphChannelBoundary = nullptr;
+
+    std::vector<TEveElement *> fEveElementList;
 
   private:
     static KBRun *fInstance;

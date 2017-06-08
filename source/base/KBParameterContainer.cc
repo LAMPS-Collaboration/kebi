@@ -50,10 +50,10 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
     fileNameFull = TString(gSystem -> Getenv("PWD")) + "/" + fileName;
 
   if (TString(gSystem -> Which(".", fileNameFull.Data())).IsNull()) {
-    cout << "Parameter file " << fileNameFull << " does not exist!" << endl;
+    cout << "[KBParameterContainer] Parameter file " << fileNameFull << " does not exist!" << endl;
     return 0;
   }
-  cout << "Adding parameter file " << fileNameFull << endl;
+  cout << "[KBParameterContainer] Adding parameter file " << fileNameFull << endl;
 
   if (parNameForFile.IsNull())
     parNameForFile = Form("INPUT_PARAMETER_FILE%d", fNumInputFiles);
