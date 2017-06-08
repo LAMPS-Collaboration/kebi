@@ -28,7 +28,7 @@ class KBPadPlane : public KBDetectorPlane
     Int_t GetNPads();
 
     void FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val); 
-    void FillBufferToHist(Option_t *option = "out");
+    void FillDataToHist(Option_t *option = "out");
 
     void SetPlaneK(Double_t k);
     Double_t GetPlaneK();

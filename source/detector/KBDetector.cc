@@ -10,9 +10,14 @@ KBDetector::KBDetector(const char *name, const char *title)
 {
 }
 
-void KBDetector::Print(Option_t *) const
+void KBDetector::Print(Option_t *option) const
 {
   cout << "[" << ClassName() << "] " << fName << ", " << fTitle << endl;
+
+  for (auto iPlane = 0; iPlane < fNPlanes; ++iPlane) {
+    auto plane = (KBDetectorPlane *) fDetectorPlaneArray -> At(iPlane);
+    plane -> Print("child");
+  }
 }
 
 

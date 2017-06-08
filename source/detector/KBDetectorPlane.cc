@@ -18,9 +18,12 @@ void KBDetectorPlane::Clear(Option_t *)
     channel -> Clear();
 }
 
-void KBDetectorPlane::Print(Option_t *) const
+void KBDetectorPlane::Print(Option_t *option) const
 {
-  cout << "Detector plane containing " << fChannelArray -> GetEntries() << " channels" << endl;
+  if (TString(option) == "child")
+    cout << "  ";
+
+  cout << "  [" << fName << "] " << "Detector plane containing " << fChannelArray -> GetEntries() << " channels" << endl;
 }
 
 KBChannel *KBDetectorPlane::GetChannelFast(Int_t idx) { return (KBChannel *) fChannelArray -> At(idx); }
@@ -41,7 +44,7 @@ Int_t KBDetectorPlane::GetNChannels() { return fChannelArray -> GetEntriesFast()
 
 TObjArray *KBDetectorPlane::GetChannelArray() { return fChannelArray; }
 
-TCanvas *KBDetectorPlane::GetCanvas(Option_t *option)
+TCanvas *KBDetectorPlane::GetCanvas(Option_t *)
 {
   if (fCanvas == nullptr)
     fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,800,800);
