@@ -33,7 +33,8 @@ bool KBPSATask::Init()
   fHitArray = new TClonesArray("KBHit", 5000);
   run -> RegisterBranch("Hit", fHitArray, true);
 
-  fPSA = new KBPSA();
+  if (fPSA == nullptr)
+    fPSA = new KBPSA();
   fPSA -> SetParameters(par);
 
   return true;
