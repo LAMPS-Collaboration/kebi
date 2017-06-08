@@ -20,6 +20,7 @@ list(APPEND KEBI_SOURCE_DIRECTORY_LIST
   source/tracklet
   source/detector
   source/reco/PSA
+  source/reco/TrackFinder
   source/analysis/PlotChannels
 
   GETDecoder/source/GETCore
