@@ -21,7 +21,7 @@ void KBPad::Clear(Option_t *)
 
 void KBPad::Print(Option_t *option) const
 {
-  if (TString(option) == "id") {
+  if (TString(option) == "s") {
     cout << "[KBPad] " << setw(6) << fID << setw(4) << fSection << setw(4) << fRow << setw(4) << fLayer << endl;
     return;
   }
@@ -161,6 +161,7 @@ vector<KBPad *> *KBPad::GetNeighborPadArray() { return &fNeighborPadArray; }
 
 void KBPad::AddHit(KBHit *hit) { fHitArray.push_back(hit); }
 Int_t KBPad::GetNumHits() const { return fHitArray.size(); }
+KBHit *KBPad::GetHit(Int_t idx) { return fHitArray.at(idx); }
 void KBPad::ClearHits() { fHitArray.clear(); }
 
 KBHit *KBPad::PullOutNextFreeHit()
@@ -171,7 +172,7 @@ KBHit *KBPad::PullOutNextFreeHit()
 
   for (auto i = 0; i < n; i++) {
     auto hit = fHitArray[i];
-    if (hit -> GetNTrackCands() == 0) {
+    if (hit -> GetNumTrackCands() == 0) {
       fHitArray.erase(fHitArray.begin()+i);
       return hit;
     }

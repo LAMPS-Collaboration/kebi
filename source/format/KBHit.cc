@@ -8,6 +8,16 @@ ClassImp(KBHit)
 
 void KBHit::Print(Option_t *option) const
 {
+  if (TString(option) == "s") {
+    cout << "[KBHit] "
+         << setw(6) << fHitID
+         << setw(4) << fRow
+         << setw(4) << fLayer
+         << setw(12) << fTb
+         << setw(12) << fCharge << endl;
+    return;
+  }
+
   cout << "[KBHit]" << endl;
   cout << "  Hit-ID           : " << fHitID << endl;
   cout << "  Pad-ID           : " << fPadID << endl;
@@ -58,7 +68,7 @@ Double_t KBHit::GetTb() const { return fTb; }
 Double_t KBHit::GetCharge() const { return fCharge; }
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }
-Int_t KBHit::GetNTrackCands() { return fTrackCandArray.size(); }
+Int_t KBHit::GetNumTrackCands() { return fTrackCandArray.size(); }
 void KBHit::AddTrackCand(Int_t id) { fTrackCandArray.push_back(id); }
 void KBHit::RemoveTrackCand(Int_t trackID)
 {
@@ -96,9 +106,9 @@ bool KBHit::IsEveSet() { return true; }
 TEveElement *KBHit::CreateEveElement()
 {
   auto pointSet = new TEvePointSet("Hit");
-  pointSet -> SetMarkerColor(kPink+6);
-  pointSet -> SetMarkerSize(0.8);
-  pointSet -> SetMarkerStyle(20);
+  pointSet -> SetMarkerColor(kAzure-8);
+  pointSet -> SetMarkerSize(0.4);
+  pointSet -> SetMarkerStyle(38);
 
   return pointSet;
 }

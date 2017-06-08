@@ -1,5 +1,5 @@
-#ifndef KBHELIXFITTER_HH
-#define KBHELIXFITTER_HH
+#ifndef KBHELIXTRACKFITTER_HH
+#define KBHELIXTRACKFITTER_HH
 
 #include <vector>
 #include "KBHit.hh"

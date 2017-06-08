@@ -1,7 +1,7 @@
 #ifndef KBTRACKLET_HH
 #define KBTRACKLET_HH
 
-#include "TObject.h" 
+#include "KBContainer.hh"
 
 #include "KBHitList.hh"
 #include "KBHit.hh"
@@ -9,7 +9,7 @@
 
 class KBTrackFitter;
 
-class KBTracklet : public TObject
+class KBTracklet : public KBContainer
 {
   protected:
     Int_t fTrackID;
@@ -47,6 +47,13 @@ class KBTracklet : public TObject
     virtual TVector3 ExtrapolateByLength(Double_t l) const = 0; ///< Extrapolate by length (tail:0), returns extrapolated position
 
     virtual Double_t LengthAt(TVector3 point) const = 0; ///< Length at POCA from point, where tail=0, head=TrackLength
+
+
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *);
+    virtual void AddToEveSet(TEveElement *eveSet);
 
   ClassDef(KBTracklet, 1)
 };

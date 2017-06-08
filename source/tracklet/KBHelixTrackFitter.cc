@@ -75,6 +75,8 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
   Double_t xCov  = track -> GetXCov();
   Double_t zCov  = track -> GetZCov();
   Double_t RSR = 2 * sqrt(xCov + zCov);
+  xMean = 0;
+  zMean = 0;
 
   Double_t xMapMean = 0;
   Double_t yMapMean = 0;

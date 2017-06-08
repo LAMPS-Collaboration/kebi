@@ -52,7 +52,7 @@ class KBHit : public KBContainer
     Double_t GetCharge() const;
 
     vector<Int_t> *GetTrackCandArray();
-    Int_t GetNTrackCands();
+    Int_t GetNumTrackCands();
     void AddTrackCand(Int_t id);
     void RemoveTrackCand(Int_t trackID);
 

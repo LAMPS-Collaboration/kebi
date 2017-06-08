@@ -81,6 +81,7 @@ class KBPad : public KBChannel
 
     void AddHit(KBHit *hit);
     Int_t GetNumHits() const;
+    KBHit *GetHit(Int_t idx);
 
     void ClearHits();
     KBHit *PullOutNextFreeHit();
