@@ -335,7 +335,7 @@ void KBRun::Run()
 
   if (fStartEventID == -1 && fEndEventID == -1) {
     fStartEventID = 0;
-    fEndEventID = fNumEntries;
+    fEndEventID = fNumEntries-1;
   }
 
   fEventCount = 0;
@@ -369,7 +369,7 @@ void KBRun::Run()
 
   if (fOutputTree != nullptr) {
     fOutputFile -> Close();
-    TString linkName = TString(KEBI_PATH) + "/log/LAST_OUTPUT";
+    TString linkName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
     symlink(fOutputFileName.Data(), linkName.Data());
   }
 
