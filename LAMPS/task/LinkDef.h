@@ -14,4 +14,6 @@
 #pragma link C++ class LATrackFindingTask+;
 #pragma link C++ class LATrackFinder+;
 
+#pragma link C++ class LAVertexFindingTask+;
+
 #endif

@@ -17,4 +17,7 @@
 
 #pragma link C++ class KBHitList+;
 
+#pragma link C++ class KBVertex+;
+#pragma link C++ class KBVSSet+;
+
 #endif
