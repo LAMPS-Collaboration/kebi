@@ -80,6 +80,7 @@ void KBPSATask::Exec(Option_t*)
       hit -> SetSection(pad -> GetSection());
       hit -> SetRow(pad -> GetRow());
       hit -> SetLayer(pad -> GetLayer());
+      hit -> Change();
 
       idx++;
     }

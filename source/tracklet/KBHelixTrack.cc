@@ -68,8 +68,9 @@ void KBHelixTrack::Print(Option_t *) const
 
   cout << left << " KBHelixTrack, units in [mm] [radian] [ADC]" << endl;
   cout << " - " << setw(13) << "Track ID"     << " : " << fTrackID << endl;
-  cout << " - " << setw(13) << "Parent ID"    << " : " << fParentID << endl;
+  //cout << " - " << setw(13) << "Parent ID"    << " : " << fParentID << endl;
   cout << " - " << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
+  cout << " - " << setw(13) << "# of Hits"    << " : " << fMainHits.size() << endl;
 
   if (fFitStatus != KBHelixTrack::kHelix && fFitStatus != KBHelixTrack::kGenfitTrack)
     return;
@@ -881,6 +882,7 @@ KBHelixTrack::ExtrapolateByMap(TVector3 p, TVector3 &q, TVector3 &m) const
 Double_t 
 KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 {
+  /*
   Int_t numHits = fMainHits.size();
   if (numHits < 2) 
     return -1;
@@ -907,11 +909,14 @@ KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
   continuousLength = continuous;
 
   return continuous/total;
+  */
+  return 1;
 }
 
 Double_t 
 KBHelixTrack::Continuity()
 {
+  /* TODO
   Int_t numHits = fMainHits.size();
   if (numHits < 2) 
     return -1;
@@ -935,6 +940,8 @@ KBHelixTrack::Continuity()
   }
 
   return continuous/total;
+  */
+  return 1;
 }
 
 Double_t 
