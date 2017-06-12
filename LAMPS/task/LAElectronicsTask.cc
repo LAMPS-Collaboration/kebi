@@ -20,12 +20,13 @@ bool LAElectronicsTask::Init()
 
   fNPlanes = det -> GetNPlanes();
   par -> GetParInt("nTbs", fNTbs);
+  par -> GetParDouble("eVToADC", feVToADC);
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 
   auto pulseGen = new KBPulseGenerator();
   fPulseFunction = pulseGen -> GetPulseFunction();
-  fPulseFunction -> SetParameters(0.0001,0);
+  fPulseFunction -> SetParameters(feVToADC,0);
 
   return true;
 }

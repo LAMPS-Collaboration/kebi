@@ -23,6 +23,7 @@ class LAElectronicsTask : public KBTask
 
     Int_t fNPlanes;
     Int_t fNTbs;
+    Double_t feVToADC;
 
     TF1 *fPulseFunction;
 
