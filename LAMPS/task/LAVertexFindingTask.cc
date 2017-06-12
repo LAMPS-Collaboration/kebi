@@ -40,25 +40,24 @@ void LAVertexFindingTask::Exec(Option_t*)
   auto vertex = new ((*fVertexArray)[0]) KBVertex();
 
   auto tracks = fTrackArray;
-  auto TestVertexAtZ = [tracks, vertex](Int_t itID, TVector3 &v, bool last = false)
+  auto TestVertexAtK = [tracks, vertex](Int_t itID, TVector3 &v, bool last = false)
   {
     Double_t s = 0;
     Int_t numUsedTracks = 0;
 
     v.SetX(0);
-    v.SetY(0);
+    v.SetZ(0);
 
     auto numTracks = tracks -> GetEntriesFast();
     for (auto iTrack = 0; iTrack < numTracks; iTrack++) {
       auto track = (KBHelixTrack *) tracks -> At(iTrack);
 
       TVector3 p;
-      bool extrapolated = track -> ExtrapolateToZ(v.Z(), p);
-      if (extrapolated == false)
-        continue;
+      Double_t alpha;
+      track -> ExtrapolateToPointY(TVector3(0,v.Y(),0), p, alpha);
 
       v.SetX((numUsedTracks*v.X() + p.X())/(numUsedTracks+1));
-      v.SetY((numUsedTracks*v.Y() + p.Y())/(numUsedTracks+1));
+      v.SetZ((numUsedTracks*v.Z() + p.Z())/(numUsedTracks+1));
 
       if (numUsedTracks != 0)
         s = (double)numUsedTracks/(numUsedTracks+1)*s + (v-p).Mag()/numUsedTracks;
@@ -71,56 +70,57 @@ void LAVertexFindingTask::Exec(Option_t*)
       }
     }
 
-    vertex -> AddSSet(KBVSSet(itID, v.Z(), s, numUsedTracks));
+    vertex -> AddSSet(KBVSSet(itID, v.Y(), s, numUsedTracks));
 
     return s;
   };
 
-  Double_t z0 = 300;
-  Double_t dz = 100;
+  Double_t y0 = 300;
+  Double_t dy = 100;
   Double_t s0 = 1.e8;
 
   const Int_t numSamples = 9;
 
   Int_t halfOfSamples = (numSamples)/2;
 
-  Double_t zArray[numSamples] = {0};
+  Double_t yArray[numSamples] = {0};
   for (Int_t iSample = 0; iSample <= numSamples; iSample++)
-    zArray[iSample] = (iSample - halfOfSamples) * dz + z0;
+    yArray[iSample] = (iSample - halfOfSamples) * dy + y0;
 
   Int_t nIterations = 4;
 
-  for (auto z : zArray) {
-    TVector3 v(0, 0, z);
-    Double_t s = TestVertexAtZ(nIterations, v);
+  for (auto y : yArray) {
+    TVector3 v(0, y, 0);
+    Double_t s = TestVertexAtK(nIterations, v);
 
     if (s < s0) {
       s0 = s;
-      z0 = z;
+      y0 = y;
     }
   }
 
   while (nIterations > 0) {
-    dz = dz/halfOfSamples;
+    dy = dy/halfOfSamples;
     for (Int_t iSample = 0; iSample <= numSamples; iSample++)
-      zArray[iSample] = (iSample - halfOfSamples) * dz + z0;
+      yArray[iSample] = (iSample - halfOfSamples) * dy + y0;
 
-    for (auto z : zArray) {
-      TVector3 v(0, 0, z);
-      Double_t s = TestVertexAtZ(nIterations, v);
+    for (auto y : yArray) {
+      TVector3 v(0, y, 0);
+      Double_t s = TestVertexAtK(nIterations, v);
 
       if (s < s0) {
         s0 = s;
-        z0 = z;
+        y0 = y;
       }
     }
 
     nIterations--;
   }
 
-  TVector3 v(0, 0, z0);
-  TestVertexAtZ(0, v, true);
+  TVector3 v(0, y0, 0);
+  TestVertexAtK(0, v, true);
 
+  vertex -> SetPosition(v);
 
   auto numTracks = fTrackArray -> GetEntriesFast();
   for (auto iTrack = 0; iTrack < numTracks; iTrack++) {
