@@ -283,6 +283,19 @@ Int_t LAPadPlane::FindPadID(Double_t i, Double_t j)
   return id;
 }
 
+Double_t LAPadPlane::PadDisplacement() const
+{
+  auto max = 0;
+  for (auto div = 0; div < fNLayerDivision; ++div) {
+    if (max < fRadius[div])
+      max = fRadius[div];
+    if (max < fArcLength[div])
+      max = fArcLength[div];
+  }
+
+  return max;
+}
+
 bool LAPadPlane::IsInBoundary(Double_t i, Double_t j)
 {
   Double_t r = TMath::Sqrt(i*i+j*j);
@@ -399,15 +412,12 @@ void LAPadPlane::DrawFrame(Option_t *)
 {
   Color_t lineColor = kPink+6;
 
-  TEllipse *outerCircle = new TEllipse(0, 0, fRMax, fRMax);
-            outerCircle -> SetFillStyle(0);
-            outerCircle -> SetLineColor(lineColor);
-            outerCircle -> Draw("samel");
-
-  TEllipse *innerCircle = new TEllipse(0, 0, fRMin, fRMin);
-            innerCircle -> SetFillStyle(0);
-            innerCircle -> SetLineColor(lineColor);
-            innerCircle -> Draw("samel");
+  for (auto iDiv = 0; iDiv <= fNLayerDivision; ++iDiv) {
+    auto circle = new TEllipse(0, 0, fRDivI[iDiv], fRDivI[iDiv]);
+    circle -> SetFillStyle(0);
+    circle -> SetLineColor(lineColor);
+    circle -> Draw("samel");
+  }
 
   TLine* line1 
     = new TLine(fRMax*TMath::Cos(TMath::Pi()*1/8),  fRMax*TMath::Sin(TMath::Pi()*1/8),

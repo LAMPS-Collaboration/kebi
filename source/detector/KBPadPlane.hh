@@ -19,6 +19,8 @@ class KBPadPlane : public KBDetectorPlane
     virtual Int_t FindPadID(Double_t i, Double_t j) = 0;
     virtual Int_t FindPadID(Int_t section, Int_t row, Int_t layer) = 0;
 
+    virtual Double_t PadDisplacement() const = 0; ///< Rough (maximum) value of displacements between pads
+
   public:
     KBPad *GetPadFast(Int_t idx);
     KBPad *GetPad(Int_t idx);

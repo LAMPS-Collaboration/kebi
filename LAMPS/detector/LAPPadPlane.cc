@@ -180,6 +180,19 @@ Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
   return id;
 }
 
+Double_t LAPPadPlane::PadDisplacement() const
+{
+  auto max = 0;
+  for (auto section = 0; section < 4; ++section) {
+    if (max < fDR[section])
+      max = fDR[section];
+    if (max < fDW[section])
+      max = fDW[section];
+  }
+
+  return max;
+}
+
 bool LAPPadPlane::IsInBoundary(Double_t i, Double_t j)
 {
   if (TMath::Sqrt(i*i+j*j) < 300.)
