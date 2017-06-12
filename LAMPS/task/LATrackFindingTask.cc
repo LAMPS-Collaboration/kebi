@@ -20,7 +20,7 @@ bool LATrackFindingTask::Init()
   fHitArray = (TClonesArray *) run -> GetBranch("Hit");
 
   fTrackArray = new TClonesArray("KBHelixTrack");
-  run -> RegisterBranch("HelixTrack", fTrackArray, fPersistency);
+  run -> RegisterBranch("Tracklet", fTrackArray, fPersistency);
 
   fTrackFinder = new LATrackFinder();
   fTrackFinder -> SetParameterContainer(par);

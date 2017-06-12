@@ -1,5 +1,6 @@
 //#define PRINT_PROCESS
 //#define PRINT_INIT
+//#define PULLIN
 
 #include "LATrackFinder.hh"
 
@@ -88,6 +89,12 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
   }
 
   fTrackArray -> Compress();
+
+  auto numTracks = fTrackArray -> GetEntriesFast();
+  for (auto iTrack = 0; iTrack < numTracks; ++iTrack) {
+    auto track = (KBHelixTrack *) fTrackArray -> At(iTrack);
+    track -> FinalizeHits();
+  }
 }
 
 KBHelixTrack *LATrackFinder::NewTrack()
@@ -107,7 +114,11 @@ KBHelixTrack *LATrackFinder::NewTrack()
 
 bool LATrackFinder::InitTrack(KBHelixTrack *track)
 {
+#ifdef PULLIN
   fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
+#else
+  fPadPlane -> PullOutNeighborHits(fGoodHits, fCandHits);
+#endif
   fGoodHits -> clear();
 
   Int_t numCandHits = fCandHits -> size();;
@@ -146,7 +157,11 @@ bool LATrackFinder::InitTrack(KBHelixTrack *track)
         fBadHits -> push_back(candHit);
     }
 
+#ifdef PULLIN
     fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
+#else
+    fPadPlane -> PullOutNeighborHits(fGoodHits, fCandHits);
+#endif
     fGoodHits -> clear();
 
     numCandHits = fCandHits -> size();
@@ -161,7 +176,11 @@ bool LATrackFinder::InitTrack(KBHelixTrack *track)
 
 bool LATrackFinder::TrackContinuum(KBHelixTrack *track)
 {
+#ifdef PULLIN
   fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
+#else
+  fPadPlane -> PullOutNeighborHits(fGoodHits, fCandHits);
+#endif
   fGoodHits -> clear();
 
   Int_t numCandHits = fCandHits -> size();
@@ -186,7 +205,11 @@ bool LATrackFinder::TrackContinuum(KBHelixTrack *track)
         fBadHits -> push_back(candHit);
     }
 
+#ifdef PULLIN
     fPadPlane -> PullOutNeighborHitsIn(fGoodHits, fCandHits);
+#else
+    fPadPlane -> PullOutNeighborHits(fGoodHits, fCandHits);
+#endif
     fGoodHits -> clear();
 
     numCandHits = fCandHits -> size();
@@ -288,7 +311,6 @@ Double_t LATrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rSca
 
   auto pos = hit -> GetPosition();
 
-  /*
   auto LengthAlphaCut = [track](Double_t dLength) {
     if (dLength > 0) {
       if (dLength > .5*track -> TrackLength()) {
@@ -307,7 +329,6 @@ Double_t LATrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rSca
     if (LengthAlphaCut(q.Z() - qTail.Z())) return 0;
     if (LengthAlphaCut(qHead.Z() - q.Z())) return 0;
   }
-  */
 
   Double_t dr = abs(q.X());
   Double_t quality = 0;

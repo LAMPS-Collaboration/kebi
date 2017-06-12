@@ -225,9 +225,9 @@ void KBHelixTrack::DetermineParticleCharge(TVector3 vertex)
   Double_t lVertex = ExtrapolateToPointAlpha(vertex, q, alpha);
 
   if (std::abs(lVertex-lTail) > std::abs(lVertex - lHead))
-    fIsPositiveChargeParticle = true;
-  else
     fIsPositiveChargeParticle = false;
+  else
+    fIsPositiveChargeParticle = true;
 }
 
 void KBHelixTrack::SetIsPositiveChargeParticle(Bool_t val)  { fIsPositiveChargeParticle = val; }

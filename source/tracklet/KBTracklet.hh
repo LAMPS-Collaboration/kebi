@@ -12,8 +12,8 @@ class KBTrackFitter;
 class KBTracklet : public KBContainer
 {
   protected:
-    Int_t fTrackID;
-    Int_t fParentID;  ///< Vertex ID
+    Int_t fTrackID = -1;
+    Int_t fParentID = -1;  ///< Vertex ID
 
     KBHitList *fHitList = nullptr;  //!
 
