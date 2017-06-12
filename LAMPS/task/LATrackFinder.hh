@@ -63,6 +63,8 @@ class LATrackFinder : public KBTrackFinder
     Double_t fTrackHCutLL;  ///< Track height cut low limit
     Double_t fTrackHCutHL;  ///< Track height cut high limit
 
+    Double_t fPadD;
+
   ClassDef(LATrackFinder, 1)
 };
 
