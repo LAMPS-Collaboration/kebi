@@ -1,4 +1,4 @@
-/run/AddParFile        $KEBIPATH/LAMPS/macros/lamps.par
+/run/AddParFile        $KEBIPATH/LAMPS/macros/lamps_tpc/lamps.par
 /run/SetOutputFile     $KEBIPATH/data/tpc.mc.root
 #/run/SetGeneratorFile  $KEBIPATH/LAMPS/macros/proton.gen
 /run/SetGeneratorFile  $KEBIPATH/input/IQMD_short.gen

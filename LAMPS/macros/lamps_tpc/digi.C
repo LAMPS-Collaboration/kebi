@@ -1,6 +1,6 @@
 void digi()
 {
-  auto run = new KBRun();
+  auto run = KBRun::GetRun();
   run -> SetInputFile("/Users/ejungwoo/KEBI/data/tpc.mc.root");
   run -> SetOutputFile("/Users/ejungwoo/KEBI/data/tpc.digi.root");
   run -> AddDetector(new LATpc());
@@ -14,10 +14,11 @@ void digi()
   auto psa = new KBPSATask();
   psa -> SetPSA(new KBPSAFastFit());
 
+  auto track = new LATrackFindingTask();
+
   run -> Add(drift);
   run -> Add(electronics);
-  run -> Add(psa);
 
   run -> Init();
-  run -> RunSingle(0);
+  run -> Run();
 }
