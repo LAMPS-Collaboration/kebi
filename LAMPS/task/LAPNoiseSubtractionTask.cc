@@ -34,8 +34,8 @@ void LAPNoiseSubtractionTask::Exec(Option_t*)
     return;
   }
 
-  auto padRef = (KBPad *) fPadArray -> At(fIdxPadRef);
-  auto rawRef = padRef -> GetBufferRaw(); 
+  KBPad *padRef = (KBPad *) fPadArray -> At(fIdxPadRef);
+  Short_t *rawRef = padRef -> GetBufferRaw(); 
 
   Double_t outRef[512] = {0};
   padRef -> SetBufferOut(outRef);
@@ -48,12 +48,12 @@ void LAPNoiseSubtractionTask::Exec(Option_t*)
 
 
 
-  for (auto iPad = 0; iPad < nPads; iPad++) {
+  for (Int_t iPad = 0; iPad < nPads; iPad++) {
     if (iPad == fIdxPadRef)
       continue;
 
-    auto pad = (KBPad *) fPadArray -> At(iPad);
-    auto raw = pad -> GetBufferRaw(); 
+    KBPad *pad = (KBPad *) fPadArray -> At(iPad);
+    Short_t *raw = pad -> GetBufferRaw(); 
     Double_t out[512] = {0};
 
     CopyRaw(raw, out);
@@ -79,24 +79,24 @@ void LAPNoiseSubtractionTask::SetNoiseRange(Int_t tbi, Int_t tbf)
 
 void LAPNoiseSubtractionTask::FindReferencePad()
 {
-  auto yDiffMax = 0;
-  auto yDiffMin = DBL_MAX;
+  Double_t yDiffMax = 0.;
+  Double_t yDiffMin = DBL_MAX;
 
   Int_t nPads = fPadArray -> GetEntries();
 
-  for (auto iPad = 0; iPad < nPads; iPad++) {
-    auto pad = (KBPad *) fPadArray -> At(iPad);
-    auto raw = pad -> GetBufferRaw(); 
+  for (Int_t iPad = 0; iPad < nPads; iPad++) {
+    KBPad *pad = (KBPad *) fPadArray -> At(iPad);
+    Short_t *raw = pad -> GetBufferRaw(); 
 
-    auto yMax = 0.;
-    auto yMin = DBL_MAX;
-    for (auto tb = 1; tb < 510; tb++) {
-      auto val = Double_t(raw[tb]);
+    Double_t yMax = 0.;
+    Double_t yMin = DBL_MAX;
+    for (Int_t tb = 1; tb < 510; tb++) {
+      Double_t val = Double_t(raw[tb]);
       if (val > yMax) yMax = val;
       if (val < yMin) yMin = val;
     }
 
-    auto yDiff = yMax - yMin;
+    Double_t yDiff = yMax - yMin;
 
     if (TMath::Abs(pad -> GetRow()) < 8)
       continue;
@@ -114,18 +114,18 @@ void LAPNoiseSubtractionTask::FindReferencePad()
 
 void LAPNoiseSubtractionTask::CopyRaw(Short_t *in, Double_t *out)
 {
-  for (auto tb = 0; tb < 512; tb++)
+  for (Int_t tb = 0; tb < 512; tb++)
     out[tb] = Double_t(in[tb]);
 }
 
 Double_t LAPNoiseSubtractionTask::BaseLineCorrection(Double_t *out, Int_t tbi, Int_t tbf)
 {
   Double_t baseLine = 0.;
-  for (auto tb = tbi; tb < tbf; tb++)
+  for (Int_t tb = tbi; tb < tbf; tb++)
     baseLine +=  out[tb];
 
   baseLine = baseLine/(tbf - tbi + 1);
-  for (auto tb = 0; tb < 512; tb++)
+  for (Int_t tb = 0; tb < 512; tb++)
     out[tb] = out[tb] - baseLine;
 
   return baseLine;
@@ -136,9 +136,9 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
   Double_t sum1 = 0.;
   Double_t sum2 = 0.;
 
-  for (auto tb = tbi; tb < tbf; tb++) {
-    auto valRef = ref[tb];
-    auto val = out[tb];
+  for (Int_t tb = tbi; tb < tbf; tb++) {
+    Double_t valRef = ref[tb];
+    Double_t val = out[tb];
     if (val == 0)
       continue;
     sum1 += valRef * val;
@@ -147,7 +147,7 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
 
   Double_t amp = sum1/sum2;
 
-  for (auto tb = 0; tb < 512; tb++)
+  for (Int_t tb = 0; tb < 512; tb++)
     out[tb] = out[tb] - ref[tb]*amp;
 
   return amp;
@@ -156,7 +156,7 @@ Double_t LAPNoiseSubtractionTask::NoiseAmplitudeCorrection(Double_t *out, Double
 void LAPNoiseSubtractionTask::SaturationCorrection(Double_t *out, Short_t *raw, Double_t baseLine)
 {
   Double_t saturationHigh = 4095 - baseLine;
-  for (auto tb = 0; tb < 512; tb++) {
+  for (Int_t tb = 0; tb < 512; tb++) {
     if (raw[tb] == 0)
       out[tb] = 0;
     else if (raw[tb] == 4095)

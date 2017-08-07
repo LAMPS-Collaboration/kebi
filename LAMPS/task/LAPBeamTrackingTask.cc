@@ -15,7 +15,7 @@ LAPBeamTrackingTask::LAPBeamTrackingTask()
 
 bool LAPBeamTrackingTask::Init()
 {
-  auto run = KBRun::GetRun();
+  KBRun *run = KBRun::GetRun();
 
   fHitArray = (TClonesArray *) run -> GetBranch("Hit");
 
@@ -39,20 +39,21 @@ void LAPBeamTrackingTask::Exec(Option_t*)
 
   fODRFitter -> Reset();
 
-  auto hitList = new ((*fHitListArray)[0]) KBHitList();
+  KBHitList *hitList = new ((*fHitListArray)[0]) KBHitList();
 
   Int_t nHits = fHitArray -> GetEntries();
   if (nHits < 4)
     return;
 
-  for (auto iHit = 0; iHit < nHits; iHit++) {
-    auto hit = (KBHit *) fHitArray -> At(iHit);
+  for (Int_t iHit = 0; iHit < nHits; iHit++) {
+    KBHit *hit = (KBHit *) fHitArray -> At(iHit);
     hitList -> AddHit(hit);
   }
 
-  auto hitArray = hitList -> GetHitArray();
+  vector<KBHit*> *hitArray = hitList -> GetHitArray();
   Double_t xMean = 0, yMean = 0, zMean = 0, chargeSum = 0;
-  for (auto hit : *hitArray) {
+  for (UInt_t iHit = 0; iHit < hitArray -> size(); ++iHit) {
+    KBHit *hit = hitArray -> at(iHit);
     xMean += hit -> GetCharge() * hit -> GetX(); 
     yMean += hit -> GetCharge() * hit -> GetY(); 
     zMean += hit -> GetCharge() * hit -> GetZ(); 
@@ -64,14 +65,16 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   zMean = zMean / chargeSum;
 
   fODRFitter -> SetCentroid(xMean, yMean, zMean);
-  for (auto hit : *hitArray)
+  for (UInt_t iHit = 0; iHit < hitArray -> size(); ++iHit) {
+    KBHit *hit = hitArray -> at(iHit);
     fODRFitter -> AddPoint(hit -> GetX(), hit -> GetY(), hit -> GetZ(), hit -> GetCharge());
+  }
 
   fODRFitter -> FitLine();
-  auto centroid = fODRFitter -> GetCentroid();
-  auto direction = fODRFitter -> GetDirection();
+  TVector3 centroid = fODRFitter -> GetCentroid();
+  TVector3 direction = fODRFitter -> GetDirection();
 
-  auto beamTrack = new ((*fLinearTrackArray)[0]) KBLinearTrack(centroid, centroid+direction);
+  KBLinearTrack *beamTrack = new ((*fLinearTrackArray)[0]) KBLinearTrack(centroid, centroid+direction);
 
   Int_t idxMin = -1;
   Int_t idxMax = -1;
@@ -79,9 +82,9 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   Double_t lengthMax = 0;
 
   Int_t nHitsBeam = hitArray -> size();
-  for (auto iHit = 0; iHit < nHitsBeam; iHit++) {
-    auto hit = hitArray -> at(iHit);
-    auto length = beamTrack -> Length(hit -> GetPosition());
+  for (Int_t iHit = 0; iHit < nHitsBeam; iHit++) {
+    KBHit *hit = hitArray -> at(iHit);
+    Double_t length = beamTrack -> Length(hit -> GetPosition());
     if (length > lengthMax) {
       lengthMax = length;
       idxMax = iHit;
@@ -92,10 +95,10 @@ void LAPBeamTrackingTask::Exec(Option_t*)
     }
   }
 
-  auto hitMin = hitArray -> at(idxMin);
+  KBHit *hitMin = hitArray -> at(idxMin);
   TVector3 positionMin = beamTrack -> ClosestPointOnLine(hitMin -> GetPosition());
 
-  auto hitMax = hitArray -> at(idxMax);
+  KBHit *hitMax = hitArray -> at(idxMax);
   TVector3 positionMax = beamTrack -> ClosestPointOnLine(hitMax -> GetPosition());
 
   beamTrack -> SetLine(positionMin, positionMax);

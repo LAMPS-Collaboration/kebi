@@ -15,7 +15,7 @@ LATrackFindingTask::LATrackFindingTask()
 bool LATrackFindingTask::Init()
 {
   KBRun *run = KBRun::GetRun();
-  auto par = run -> GetParameterContainer();
+  KBParameterContainer *par = run -> GetParameterContainer();
 
   fHitArray = (TClonesArray *) run -> GetBranch("Hit");
 
@@ -24,7 +24,7 @@ bool LATrackFindingTask::Init()
 
   fTrackFinder = new LATrackFinder();
   fTrackFinder -> SetParameterContainer(par);
-  auto tpc = (LATpc *) run -> GetDetector();
+  LATpc *tpc = (LATpc *) run -> GetDetector();
   fTrackFinder -> SetTpc(tpc);
   fTrackFinder -> Init();
 

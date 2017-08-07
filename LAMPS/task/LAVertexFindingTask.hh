@@ -3,6 +3,7 @@
 
 #include "KBTask.hh"
 #include "KBHelixTrackFitter.hh"
+#include "KBVertex.hh"
 
 #include "TClonesArray.h"
 
@@ -14,6 +15,8 @@ class LAVertexFindingTask : public KBTask
 
     bool Init();
     void Exec(Option_t*);
+
+    Double_t TestVertexAtK(KBVertex *vertex, Int_t itID, TVector3 &v, bool last = false);
 
     void SetVertexPersistency(bool val);
 

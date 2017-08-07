@@ -40,6 +40,7 @@ class LATrackFinder : public KBTrackFinder
     Int_t CheckHitOwner(KBHit *hit);
     Double_t Correlate(KBHelixTrack *track, KBHit *hit, Double_t scale=1);
     Double_t CorrelateSimple(KBHelixTrack *track, KBHit *hit);
+    bool LengthAlphaCut(KBHelixTrack *track, Double_t dLength);
 
     bool ConfirmHits(KBHelixTrack* track, bool &tailToHead);
     bool AutoBuildByExtrapolation(KBHelixTrack *track, bool &buildHead, Double_t &extrapolationLength);

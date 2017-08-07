@@ -21,10 +21,10 @@ bool LAPDecoderTask::Init()
 {
   KBRun *run = KBRun::GetRun();
 
-  auto tpc = (KBTpc *) run -> GetDetector();
+  KBTpc *tpc = (KBTpc *) run -> GetDetector();
   fPadPlane = tpc -> GetPadPlane();
 
-  auto par = run -> GetParameterContainer();
+  KBParameterContainer *par = run -> GetParameterContainer();
 
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);
@@ -57,15 +57,14 @@ void LAPDecoderTask::Exec(Option_t*)
   Long64_t currentEntry = KBRun::GetRun() -> GetCurrentEventID();
   Int_t idx = 0;
 
-  Int_t nChannels = 68;
+  GETCoboFrame *cobo = fDecoder -> GetCoboFrame(currentEntry);
 
-  auto cobo = fDecoder -> GetCoboFrame(currentEntry);
-
-  for (auto iAsAd = 0; iAsAd < 4; iAsAd++) {
-    auto frame = cobo -> GetFrame(iAsAd);
-    for (auto iAGET = 0; iAGET < 4; iAGET++) {
-      for (auto iChannel = 0; iChannel < 68; iChannel++) {
-        if (iAsAd == 0 && iAGET == 2)
+  for (Int_t iAsAd = 0; iAsAd < 4; iAsAd++) {
+    GETBasicFrame *frame = cobo -> GetFrame(iAsAd);
+    Int_t AsAdID = frame -> GetAsadID();
+    for (Int_t iAGET = 0; iAGET < 4; iAGET++) {
+      for (Int_t iChannel = 0; iChannel < 68; iChannel++) {
+        if (AsAdID == 0 && iAGET == 2)
           continue;
 
         Int_t asad, aget, channel, padID;
@@ -73,7 +72,7 @@ void LAPDecoderTask::Exec(Option_t*)
         fPadMap.clear();
         fPadMap.seekg(0, ios::beg);
         while (fPadMap >> asad >> aget >> channel >> padID) {
-          if (asad == iAsAd && aget == iAGET && channel == iChannel) {
+          if (asad == AsAdID && aget == iAGET && channel == iChannel) {
             foundPad = true;
             break;
           }
@@ -85,18 +84,21 @@ void LAPDecoderTask::Exec(Option_t*)
         Int_t *sample = frame -> GetSample(iAGET, iChannel);
 
         Short_t copy[512] = {0};
-        for (auto iTb = 0; iTb < 512; iTb++) {
+        Double_t copy2[512] = {0};
+        for (Int_t iTb = 0; iTb < 512; iTb++) {
           Short_t value = sample[iTb];
           copy[iTb] = value;
+          copy2[iTb] = (Double_t) value;
         }
 
-        auto pad = fPadPlane -> GetPad(padID);
+        KBPad *pad = fPadPlane -> GetPad(padID);
         if (pad == nullptr)
           continue;
 
-        auto padSave = new ((*fPadArray)[idx]) KBPad();
+        KBPad *padSave = new ((*fPadArray)[idx]) KBPad();
         padSave -> SetPad(pad);
         padSave -> SetBufferRaw(copy);
+        padSave -> SetBufferOut(copy2);
         idx++;
       }
     }
@@ -111,11 +113,12 @@ void LAPDecoderTask::SetPadPersistency(bool persistence) { fPersistency = persis
 
 void LAPDecoderTask::ReadDirectory(TString directoryName)
 {
+  Bool_t foundMeta = false;
+
   if (directoryName[directoryName.Sizeof()-2] != '/')
     directoryName = directoryName + "/";
 
-  auto runID = KBRun::GetRun() -> GetRunID();
-  Int_t nEvents = 0; 
+  Int_t runID = KBRun::GetRun() -> GetRunID();
   DIR *dir;
   struct dirent *ent;
 
@@ -129,27 +132,42 @@ void LAPDecoderTask::ReadDirectory(TString directoryName)
       if (fileName.Index(".root") >= 0) {
         cout << "Meta data : " << directoryName+fileName << endl;
         LoadMetaData(directoryName+fileName);
-        continue;
+        foundMeta = true;
       } else if (fileName.Index(".numEvents") >= 0) {
-        ifstream tempFile(directoryName+fileName);
-        tempFile >> nEvents;
-        continue;
-      }
-      AddData(directoryName+fileName);
+        //ifstream tempFile(directoryName+fileName);
+        //tempFile >> nEvents;
+        //continue;
+      } else
+        AddData(directoryName+fileName);
     }
     closedir (dir);
   }
   else
     cout << "Cannot read directory " << directoryName << endl;
 
-  if (nEvents != 0)
-    SetNumEvents(nEvents);
+  if (!foundMeta) {
+    directoryName = directoryName + Form("run_%04d/metadata/",runID);
+    if ((dir = opendir (directoryName.Data())) != NULL) {
+      while ((ent = readdir (dir)) != NULL) {
+        TString fileName = ent -> d_name;
+        if (fileName.Index(Form("run_%04d",runID)) >= 0 && fileName.Index(".root") >= 0) {
+          cout << "Meta data : " << directoryName+fileName << endl;
+          LoadMetaData(directoryName+fileName);
+          foundMeta = true;
+          continue;
+        }
+      }
+      closedir (dir);
+    }
+  }
 }
 
 void LAPDecoderTask::LoadMetaData(TString name)
 {
   fDecoder -> SetData(0);
-  fDecoder -> LoadMetaData(name);
+  if (fNEvents == -1)
+    fNEvents = 0;
+  fNEvents += fDecoder -> LoadMetaData(name);
 }
 
 void LAPDecoderTask::AddData(TString name) { fDecoder -> AddData(name); }

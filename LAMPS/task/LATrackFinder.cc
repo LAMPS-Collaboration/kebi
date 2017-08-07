@@ -41,7 +41,7 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 
   while(1)
   {
-    auto track = NewTrack();
+    KBHelixTrack *track = NewTrack();
     if (track == nullptr)
       break;
 
@@ -63,24 +63,26 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
         }
 #endif
 
-    for (auto hit : *fBadHits)
-      fPadPlane -> AddHit(hit);
+    for (Int_t iHit = 0; iHit < fBadHits -> size(); ++iHit)
+      fPadPlane -> AddHit(fBadHits -> at(iHit));
     fBadHits -> clear();
 
     if (track -> GetNumHits() < 10)
       survive = false;
 
     if (survive) {
-      auto trackHits = track -> GetHitArray();
-      auto trackID = track -> GetTrackID();
-      for (auto trackHit : *trackHits) {
+      vector<KBHit *> *trackHits = track -> GetHitArray();
+      Int_t trackID = track -> GetTrackID();
+      for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+        KBHit *trackHit = trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(trackID);
         fPadPlane -> AddHit(trackHit);
       }
     }
     else {
-      auto trackHits = track -> GetHitArray();
-      for (auto trackHit : *trackHits) {
+      vector<KBHit *> *trackHits = track -> GetHitArray();
+      for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+        KBHit *trackHit = trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(-1);
         fPadPlane -> AddHit(trackHit);
       }
@@ -90,21 +92,21 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
 
   fTrackArray -> Compress();
 
-  auto numTracks = fTrackArray -> GetEntriesFast();
-  for (auto iTrack = 0; iTrack < numTracks; ++iTrack) {
-    auto track = (KBHelixTrack *) fTrackArray -> At(iTrack);
+  Int_t numTracks = fTrackArray -> GetEntriesFast();
+  for (Int_t iTrack = 0; iTrack < numTracks; ++iTrack) {
+    KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
     track -> FinalizeHits();
   }
 }
 
 KBHelixTrack *LATrackFinder::NewTrack()
 {
-  auto hit = fPadPlane -> PullOutNextFreeHit();
+  KBHit *hit = fPadPlane -> PullOutNextFreeHit();
   if (hit == nullptr)
     return nullptr;
 
   Int_t idx = fTrackArray -> GetEntries();
-  auto track = new ((*fTrackArray)[idx]) KBHelixTrack(idx);
+  KBHelixTrack *track = new ((*fTrackArray)[idx]) KBHelixTrack(idx);
   track -> AddHit(hit);
 
   fGoodHits -> push_back(hit);
@@ -139,8 +141,8 @@ bool LATrackFinder::InitTrack(KBHelixTrack *track)
         track -> AddHit(candHit);
 
         if (track -> GetNumHits() > 15) {
-          for (auto candHit2 : *fCandHits)
-            fPadPlane -> AddHit(candHit2);
+          for (UInt_t iCand = 0; iCand < fCandHits -> size(); ++iCand)
+            fPadPlane -> AddHit(fCandHits -> at(iCand));
           fCandHits -> clear();
           break;
         }
@@ -167,8 +169,8 @@ bool LATrackFinder::InitTrack(KBHelixTrack *track)
     numCandHits = fCandHits -> size();
   }
 
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
 
   return false;
@@ -220,8 +222,8 @@ bool LATrackFinder::TrackContinuum(KBHelixTrack *track)
 
 bool LATrackFinder::TrackExtrapolation(KBHelixTrack *track)
 {
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
 
   Int_t count = 0;
@@ -240,8 +242,8 @@ bool LATrackFinder::TrackExtrapolation(KBHelixTrack *track)
       break;
   }
 
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
 
   return TrackQualityCheck(track);
@@ -249,24 +251,24 @@ bool LATrackFinder::TrackExtrapolation(KBHelixTrack *track)
 
 bool LATrackFinder::TrackConfirmation(KBHelixTrack *track)
 {
-  auto tailToHead = false;
+  bool tailToHead = false;
   if (track -> PositionAtTail().Z() > track -> PositionAtHead().Z())
     tailToHead = true;
 
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
   ConfirmHits(track, tailToHead);
 
   tailToHead = !tailToHead; 
 
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
   ConfirmHits(track, tailToHead);
 
-  for (auto badHit : *fBadHits)
-    fPadPlane -> AddHit(badHit);
+  for (UInt_t iBad = 0; iBad < fBadHits -> size(); ++iBad)
+    fPadPlane -> AddHit(fBadHits -> at(iBad));
   fBadHits -> clear();
 
   return true;
@@ -274,12 +276,13 @@ bool LATrackFinder::TrackConfirmation(KBHelixTrack *track)
 
 Int_t LATrackFinder::CheckHitOwner(KBHit *hit)
 {
-  auto candTracks = hit -> GetTrackCandArray();
+  vector<Int_t> *candTracks = hit -> GetTrackCandArray();
   if (candTracks -> size() == 0)
     return -2;
 
   Int_t trackID = -1;
-  for (auto candTrackID : *candTracks) {
+  for (UInt_t iCand = 0; iCand < candTracks -> size(); ++iCand) {
+    Int_t candTrackID = candTracks -> at(iCand);
     if (candTrackID != -1) {
       trackID = candTrackID;
     }
@@ -305,29 +308,18 @@ Double_t LATrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rSca
   if (rmsHCut > fTrackHCutHL) rmsHCut = fTrackHCutHL;
   rmsHCut = scale * rmsHCut;
 
-  auto qHead = track -> Map(track -> PositionAtHead());
-  auto qTail = track -> Map(track -> PositionAtTail());
-  auto q = track -> Map(hit -> GetPosition());
+  TVector3 qHead = track -> Map(track -> PositionAtHead());
+  TVector3 qTail = track -> Map(track -> PositionAtTail());
+  TVector3 q = track -> Map(hit -> GetPosition());
 
-  auto pos = hit -> GetPosition();
-
-  auto LengthAlphaCut = [track](Double_t dLength) {
-    if (dLength > 0) {
-      if (dLength > .5*track -> TrackLength()) {
-        if (abs(track -> AlphaByLength(dLength)) > .5*TMath::Pi()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
+  TVector3 pos = hit -> GetPosition();
 
   if (qHead.Z() > qTail.Z()) {
-    if (LengthAlphaCut(q.Z() - qHead.Z())) return 0;
-    if (LengthAlphaCut(qTail.Z() - q.Z())) return 0;
+    if (LengthAlphaCut(track, q.Z() - qHead.Z())) return 0;
+    if (LengthAlphaCut(track, qTail.Z() - q.Z())) return 0;
   } else {
-    if (LengthAlphaCut(q.Z() - qTail.Z())) return 0;
-    if (LengthAlphaCut(qHead.Z() - q.Z())) return 0;
+    if (LengthAlphaCut(track, q.Z() - qTail.Z())) return 0;
+    if (LengthAlphaCut(track, qHead.Z() - q.Z())) return 0;
   }
 
   Double_t dr = abs(q.X());
@@ -336,6 +328,18 @@ Double_t LATrackFinder::Correlate(KBHelixTrack *track, KBHit *hit, Double_t rSca
     quality = sqrt((dr-rmsWCut)*(dr-rmsWCut)) / rmsWCut;
 
   return quality;
+}
+
+bool LATrackFinder::LengthAlphaCut(KBHelixTrack *track, Double_t dLength)
+{
+  if (dLength > 0) {
+    if (dLength > .5*track -> TrackLength()) {
+      if (abs(track -> AlphaByLength(dLength)) > .5*TMath::Pi()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 Double_t LATrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
@@ -348,16 +352,17 @@ Double_t LATrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
   Int_t row = hit -> GetRow();
   Int_t layer = hit -> GetLayer();
 
-  auto trackHits = track -> GetHitArray();
+  vector<KBHit *> *trackHits = track -> GetHitArray();
   bool ycut = false;
-  for (auto trackHit : *trackHits) {
+  for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+    KBHit *trackHit = trackHits -> at(iTrackHit);
     if (row == trackHit -> GetRow() && layer == trackHit -> GetLayer())
       return 0;
-    auto tp = trackHit -> GetPosition();
+    TVector3 tp = trackHit -> GetPosition();
 #ifdef PRINT_INIT
     cout << "Z-cut: " << abs(hit->GetY()-tp.Y()) << " <? " << 1.2 * fPadD*abs(tp.Y())/sqrt(tp.X()*tp.X()+tp.Z()*tp.Z()) << endl;
 #endif
-    auto ycutv = 1.2 * fPadD*abs(tp.Y())/sqrt(tp.X()*tp.X()+tp.Z()*tp.Z());
+    Double_t ycutv = 1.2 * fPadD*abs(tp.Y())/sqrt(tp.X()*tp.X()+tp.Z()*tp.Z());
     if (ycutv < 4)
       ycutv = 4;
     if (abs(hit->GetY()-tp.Y()) < ycutv) {
@@ -378,7 +383,7 @@ Double_t LATrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
     quality = 1;
   }
   else if (track -> IsLine()) {
-    auto perp = track -> PerpLine(hit -> GetPosition());
+    TVector3 perp = track -> PerpLine(hit -> GetPosition());
 
     Double_t rmsCut = track -> GetRMSH();
     if (rmsCut < fTrackHCutLL) rmsCut = fTrackHCutLL;
@@ -412,30 +417,30 @@ Double_t LATrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
 bool LATrackFinder::ConfirmHits(KBHelixTrack *track, bool &tailToHead)
 {
   track -> SortHits(!tailToHead);
-  auto trackHits = track -> GetHitArray();
+  vector<KBHit *> *trackHits = track -> GetHitArray();
   Int_t numHits = trackHits -> size();
 
   TVector3 q, m;
-  auto lPre = track -> ExtrapolateByMap(trackHits->at(numHits-1)->GetPosition(), q, m);
+  Double_t lPre = track -> ExtrapolateByMap(trackHits->at(numHits-1)->GetPosition(), q, m);
 
-  auto extrapolationLength = 10.;
-  for (auto iHit = 1; iHit < numHits; iHit++) 
+  Double_t extrapolationLength = 10.;
+  for (Int_t iHit = 1; iHit < numHits; iHit++) 
   {
     KBHit *trackHit = trackHits -> at(numHits-iHit-1);
-    auto lCur = track -> ExtrapolateByMap(trackHit->GetPosition(), q, m);
+    Double_t lCur = track -> ExtrapolateByMap(trackHit->GetPosition(), q, m);
 
     Double_t quality = Correlate(track, trackHit);
 
     if (quality <= 0) {
       track -> RemoveHit(trackHit);
       trackHit -> RemoveTrackCand(trackHit -> GetTrackID());
-      auto helicity = track -> Helicity();
+      Int_t helicity = track -> Helicity();
       fFitter -> Fit(track);
       if (helicity != track -> Helicity())
         tailToHead = !tailToHead;
     }
 
-    auto dLength = abs(lCur - lPre);
+    Double_t dLength = abs(lCur - lPre);
     extrapolationLength = 10;
     while(dLength > 0 && AutoBuildByInterpolation(track, tailToHead, extrapolationLength, 1)) { dLength -= 10; }
   }
@@ -469,7 +474,7 @@ bool LATrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
   if (fPadPlane -> IsInBoundary(p.X(), p.Z()) == false)
     return false;
 
-  auto helicity = track -> Helicity();
+  Int_t helicity = track -> Helicity();
 
   Double_t rms = 3*track -> GetRMSW();
   if (rms < 25) 
@@ -489,7 +494,7 @@ bool LATrackFinder::AutoBuildAtPosition(KBHelixTrack *track, TVector3 p, bool &t
     for (Int_t iHit = 0; iHit < numCandHits; iHit++) {
       KBHit *candHit = fCandHits -> back();
       fCandHits -> pop_back();
-      auto pos = candHit -> GetPosition();
+      TVector3 pos = candHit -> GetPosition();
 
       Double_t quality = 0; 
       if (CheckHitOwner(candHit) < 0) 

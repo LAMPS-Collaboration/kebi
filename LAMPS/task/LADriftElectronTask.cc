@@ -26,7 +26,7 @@ bool LADriftElectronTask::Init()
 
   fNPlanes = fTpc -> GetNPlanes();
 
-  auto par = run -> GetParameterContainer();
+  KBParameterContainer *par = run -> GetParameterContainer();
   par -> GetParDouble("gasDriftVelocity", fDriftVelocity);
   par -> GetParDouble("gasCoefLongDiff", fCoefLD);
   par -> GetParDouble("gasCoefTranDiff", fCoefTD);
@@ -35,7 +35,7 @@ bool LADriftElectronTask::Init()
 
   TString gemDataFile;
   par -> GetParString("tpcGEMDataFile", gemDataFile);
-  auto gemFile = new TFile(gemDataFile, "read");
+  TFile *gemFile = new TFile(gemDataFile, "read");
   fGainFunction = (TF1*) gemFile -> Get("gainFit");
   fGainZeroRatio = (((TObjString *) ((TList *) gemFile -> GetListOfKeys()) -> At(2)) -> GetString()).Atof();
   fDiffusionFunction = (TH2D*) ((TCanvas*) gemFile -> Get("diffusion")) -> FindObject("distHist");
@@ -52,17 +52,17 @@ bool LADriftElectronTask::Init()
 void LADriftElectronTask::Exec(Option_t*)
 {
   fPadArray -> Delete();
-  for (auto iPlane = 0; iPlane < fNPlanes; iPlane++)
+  for (Int_t iPlane = 0; iPlane < fNPlanes; iPlane++)
     fTpc -> GetPadPlane(iPlane) -> Clear();
 
   Int_t nMCSteps = fMCStepArray -> GetEntries();
   for (Int_t iStep = 0; iStep < nMCSteps; iStep++) {
     KBMCStep* step = (KBMCStep*) fMCStepArray -> At(iStep);
 
-    auto xMC = step -> GetX();
-    auto yMC = step -> GetY();
-    auto zMC = step -> GetZ();
-    auto edep = step -> GetEdep();
+    Double_t xMC = step -> GetX();
+    Double_t yMC = step -> GetY();
+    Double_t zMC = step -> GetZ();
+    Double_t edep = step -> GetEdep();
 
     Double_t iMC, jMC, kMC;
     fTpc -> XYZToIJK(xMC, yMC, zMC, iMC, jMC, kMC);
@@ -73,22 +73,22 @@ void LADriftElectronTask::Exec(Option_t*)
     if (planeID == -1)
       continue;
 
-    auto lDrift = std::abs(kPlane - kMC);
-    auto tDrift = lDrift/fDriftVelocity;
-    auto sigmaLD = fCoefLD * sqrt(lDrift);
-    auto sigmaTD = fCoefTD * sqrt(lDrift);
+    Double_t lDrift = std::abs(kPlane - kMC);
+    Double_t tDrift = lDrift/fDriftVelocity;
+    Double_t sigmaLD = fCoefLD * sqrt(lDrift);
+    Double_t sigmaTD = fCoefTD * sqrt(lDrift);
 
     Int_t nElectrons = Int_t(edep/fEIonize);
 
-    for (auto iElectron = 0; iElectron < nElectrons; iElectron++) {
+    for (Int_t iElectron = 0; iElectron < nElectrons; iElectron++) {
       Double_t dr    = gRandom -> Gaus(0, sigmaTD);
       Double_t angle = gRandom -> Uniform(2*TMath::Pi());
 
-      auto di = dr*TMath::Cos(angle);
-      auto dj = dr*TMath::Sin(angle);
-      auto dt = gRandom -> Gaus(0,sigmaLD)/fDriftVelocity;
+      Double_t di = dr*TMath::Cos(angle);
+      Double_t dj = dr*TMath::Sin(angle);
+      Double_t dt = gRandom -> Gaus(0,sigmaLD)/fDriftVelocity;
 
-      auto tDriftTotal = tDrift + std::abs(dt);
+      Double_t tDriftTotal = tDrift + std::abs(dt);
       Int_t tb = (Int_t)(tDriftTotal/fTbTime);
 
       if (tb > fNTbs) 
@@ -113,14 +113,14 @@ void LADriftElectronTask::Exec(Option_t*)
 
   Int_t idx = 0;
   Int_t idxLast = 0;
-  for (auto iPlane = 0; iPlane < fNPlanes; iPlane++) {
+  for (Int_t iPlane = 0; iPlane < fNPlanes; iPlane++) {
     KBPad *pad;
     TIter itChannel(fTpc -> GetPadPlane(iPlane) -> GetChannelArray());
     while ((pad = (KBPad *) itChannel.Next())) {
       if (pad -> IsActive() == false)
         continue;
 
-      auto padSave = new ((*fPadArray)[idx]) KBPad();
+      KBPad *padSave = new ((*fPadArray)[idx]) KBPad();
       padSave -> SetPad(pad);
       padSave -> CopyPadData(pad);
       idx++;
