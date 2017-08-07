@@ -222,3 +222,5 @@ void KBPadPlane::GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighbor
     }
   }
 }
+
+TObjArray *KBPadPlane::GetPadArray() { return fChannelArray; }

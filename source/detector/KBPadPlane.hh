@@ -43,6 +43,7 @@ class KBPadPlane : public KBDetectorPlane
     void PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *neighborHits);
 
     void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
+    TObjArray *GetPadArray();
 
   protected:
     Int_t fEFieldAxis = -1;
