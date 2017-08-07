@@ -106,8 +106,8 @@ bool LAPadPlane::Init()
   fInPadArray -> Sort();
 
   Int_t nPads = fChannelArray -> GetEntriesFast();
-  for (auto iPad = 0; iPad < nPads; iPad++) {
-    auto pad = (KBPad *) fChannelArray -> At(iPad);
+  for (Int_t iPad = 0; iPad < nPads; iPad++) {
+    KBPad *pad = (KBPad *) fChannelArray -> At(iPad);
     pad -> SetPadID(iPad);
     MapPad(pad);
   }
@@ -122,7 +122,7 @@ bool LAPadPlane::Init()
         key0.push_back(iSection);
         key0.push_back(iRow);
         key0.push_back(iLayer);
-        auto pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
+        KBPad *pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
 
         Int_t row1 = iRow+1;
         if (iRow == -1)
@@ -132,7 +132,7 @@ bool LAPadPlane::Init()
         key1.push_back(iSection);
         key1.push_back(row1);
         key1.push_back(iLayer);
-        auto pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
+        KBPad *pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
 
         pad0 -> AddNeighborPad(pad1);
         pad1 -> AddNeighborPad(pad0);
@@ -147,7 +147,7 @@ bool LAPadPlane::Init()
       key0.push_back(iSection);
       key0.push_back(nHalfRows);
       key0.push_back(iLayer);
-      auto pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
+      KBPad *pad0 = (KBPad *) fChannelArray -> At(fPadMap[key0]);
 
       Int_t section1 = iSection+1;
       if (iSection == 7)
@@ -157,7 +157,7 @@ bool LAPadPlane::Init()
       key1.push_back(section1);
       key1.push_back(-nHalfRows);
       key1.push_back(iLayer);
-      auto pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
+      KBPad *pad1 = (KBPad *) fChannelArray -> At(fPadMap[key1]);
 
       pad0 -> AddNeighborPad(pad1);
       pad1 -> AddNeighborPad(pad0);
@@ -183,7 +183,7 @@ bool LAPadPlane::Init()
         keyCurrent.push_back(iSection);
         keyCurrent.push_back(rowCurrent);
         keyCurrent.push_back(layerCurrent);
-        auto padCurrent = (KBPad *) fChannelArray -> At(fPadMap[keyCurrent]);
+        KBPad *padCurrent = (KBPad *) fChannelArray -> At(fPadMap[keyCurrent]);
 
         Int_t row0 = rowCurrent;
         Int_t layer0 = layerCurrent;
@@ -204,7 +204,7 @@ bool LAPadPlane::Init()
           keyNext.push_back(iSection);
           keyNext.push_back(rowNext);
           keyNext.push_back(layerNext);
-          auto padNext = (KBPad *) fChannelArray -> At(fPadMap[keyNext]);
+          KBPad *padNext = (KBPad *) fChannelArray -> At(fPadMap[keyNext]);
 
           row0 = rowNext;
           layer0 = layerNext;
@@ -285,8 +285,8 @@ Int_t LAPadPlane::FindPadID(Double_t i, Double_t j)
 
 Double_t LAPadPlane::PadDisplacement() const
 {
-  auto max = 0;
-  for (auto div = 0; div < fNLayerDivision; ++div) {
+  Int_t max = 0;
+  for (Int_t div = 0; div < fNLayerDivision; ++div) {
     if (max < fRadius[div])
       max = fRadius[div];
     if (max < fArcLength[div])
@@ -368,7 +368,7 @@ TH2* LAPadPlane::GetHist(Option_t *option)
     h2 -> AddBin(5, xPoints, yPoints);
     /*
     Double_t xMean = 0, yMean = 0;
-    for (auto i = 0; i < 4; i++) {
+    for (Int_t i = 0; i < 4; i++) {
       xMean += xPoints[i];
       yMean += yPoints[i];
     }
@@ -412,8 +412,8 @@ void LAPadPlane::DrawFrame(Option_t *)
 {
   Color_t lineColor = kPink+6;
 
-  for (auto iDiv = 0; iDiv <= fNLayerDivision; ++iDiv) {
-    auto circle = new TEllipse(0, 0, fRDivI[iDiv], fRDivI[iDiv]);
+  for (Int_t iDiv = 0; iDiv <= fNLayerDivision; ++iDiv) {
+    TEllipse *circle = new TEllipse(0, 0, fRDivI[iDiv], fRDivI[iDiv]);
     circle -> SetFillStyle(0);
     circle -> SetLineColor(lineColor);
     circle -> Draw("samel");
@@ -548,8 +548,8 @@ KBHit *LAPadPlane::PullOutNextFreeHitIn()
   if (fFreeInPadIdx == fInPadArray -> GetEntriesFast() - 1)
     return nullptr;
 
-  auto pad = (KBPad *) fChannelArray -> At(fFreeInPadIdx);
-  auto hit = pad -> PullOutNextFreeHit();
+  KBPad *pad = (KBPad *) fChannelArray -> At(fFreeInPadIdx);
+  KBHit *hit = pad -> PullOutNextFreeHit();
   if (hit == nullptr) {
     fFreeInPadIdx++;
     return PullOutNextFreeHitIn();
@@ -560,10 +560,12 @@ KBHit *LAPadPlane::PullOutNextFreeHitIn()
 
 void LAPadPlane::PullOutNeighborHitsIn(vector<KBHit*> *hits, vector<KBHit*> *neighborHits)
 {
-  for (auto hit : *hits) {
-    auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
-    auto neighbors = pad -> GetNeighborPadArray();
-    for (auto neighbor : *neighbors) {
+  for (UInt_t iHit = 0; iHit < hits->size(); ++iHit) {
+    KBHit *hit = hits -> at(iHit);
+    KBPad *pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
+    vector<KBPad *> *neighbors = pad -> GetNeighborPadArray();
+    for (UInt_t iNeighbor = 0; iNeighbor < neighbors->size(); ++iNeighbor) {
+      KBPad *neighbor = neighbors -> at(iNeighbor);
       if (FindDivisionIndex(neighbor->GetLayer()) <= fInDivisionIndex)
         neighbor -> PullOutHits(neighborHits);
     }
@@ -580,7 +582,7 @@ void LAPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, vector<KBHit*> *
   if (id < 0)
     return;
 
-  auto pad = (KBPad *) fInPadArray -> At(id);
+  KBPad *pad = (KBPad *) fInPadArray -> At(id);
 
   neighborsTemp.push_back(pad);
   pad -> Grab();
@@ -589,11 +591,12 @@ void LAPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, vector<KBHit*> *
     neighborsNew.clear();
     GrabNeighborPads(&neighborsTemp, &neighborsNew);
 
-    for (auto neighbor : neighborsTemp)
-      neighborsUsed.push_back(neighbor);
+    for (UInt_t iNeighbor = 0; iNeighbor < neighborsTemp.size(); ++iNeighbor)
+      neighborsUsed.push_back(neighborsTemp.at(iNeighbor));
     neighborsTemp.clear();
 
-    for (auto neighbor : neighborsNew) {
+    for (UInt_t iNeighbor = 0; iNeighbor < neighborsNew.size(); ++iNeighbor) {
+      KBPad *neighbor = neighborsNew.at(iNeighbor);
       if (FindDivisionIndex(neighbor->GetLayer()) <= fInDivisionIndex)
         neighbor -> PullOutHits(neighborHits);
       neighborsTemp.push_back(neighbor);
@@ -601,11 +604,11 @@ void LAPadPlane::PullOutNeighborHitsIn(TVector3 p, Int_t range, vector<KBHit*> *
     range--;
   }
 
-  for (auto neighbor : neighborsUsed)
-    neighbor -> LetGo();
+  for (UInt_t iNeighbor = 0; iNeighbor < neighborsUsed.size(); ++iNeighbor)
+    neighborsUsed.at(iNeighbor) -> LetGo();
 
-  for (auto neighbor : neighborsNew)
-    neighbor -> LetGo();
+  for (UInt_t iNeighbor = 0; iNeighbor < neighborsNew.size(); ++iNeighbor)
+    neighborsNew.at(iNeighbor) -> LetGo();
 }
 
 Int_t LAPadPlane::GetNLayerDivision() { return fNLayerDivision; }

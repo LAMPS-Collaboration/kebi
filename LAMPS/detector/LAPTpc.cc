@@ -47,7 +47,7 @@ bool LAPTpc::BuildGeometry()
 
 bool LAPTpc::BuildDetectorPlane()
 {
-  auto padplane = new LAPPadPlane();
+  LAPPadPlane *padplane = new LAPPadPlane();
   padplane -> SetParameterContainer(fPar);
   padplane -> SetPlaneID(0);
   padplane -> SetPlaneK(fPlaneK[0]);

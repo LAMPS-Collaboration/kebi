@@ -50,13 +50,13 @@ bool LAPPadPlane::Init()
 
   Int_t nRowsArrayTemp1[] = {17, 19, 23, 25, 27, 31, 33};
   Int_t nRowsArrayTemp2[] = {21, 23, 25, 27, 29, 33, 35, 37, 39, 43, 45};
-  for (auto nRows : nRowsArrayTemp1) {
-    fNRowsInLayer[0].push_back(nRows);
-    fNRowsInLayer[1].push_back(nRows);
+  for (Int_t idxNRows = 0; idxNRows < 7; ++idxNRows) {
+    fNRowsInLayer[0].push_back(nRowsArrayTemp1[idxNRows]);
+    fNRowsInLayer[1].push_back(nRowsArrayTemp1[idxNRows]);
   }
-  for (auto nRows : nRowsArrayTemp2) {
-    fNRowsInLayer[2].push_back(nRows);
-    fNRowsInLayer[3].push_back(nRows);
+  for (Int_t idxNRows = 0; idxNRows < 11; ++idxNRows) {
+    fNRowsInLayer[2].push_back(nRowsArrayTemp2[idxNRows]);
+    fNRowsInLayer[3].push_back(nRowsArrayTemp2[idxNRows]);
   }
 
   fRBase[0] = 105.94;
@@ -66,14 +66,14 @@ bool LAPPadPlane::Init()
 
   Int_t asadID, agetID, channelID, padID;
 
-  for (auto section = 0; section < 2; section++) {
+  for (Int_t section = 0; section < 2; section++) {
     Int_t nLayers = fNRowsInLayer[section].size();
-    for (auto layer = 0; layer < nLayers; layer++) {
+    for (Int_t layer = 0; layer < nLayers; layer++) {
       Int_t nRowsHalf = (fNRowsInLayer[section][layer]-1)/2;
-      for (auto row = nRowsHalf; row >= -nRowsHalf; row--) {
+      for (Int_t row = nRowsHalf; row >= -nRowsHalf; row--) {
 
         padMapData >> asadID >> agetID >> channelID >> padID;
-        auto pad = new KBPad();
+        KBPad *pad = new KBPad();
 
         Double_t i = row * fDW[section];
         Double_t j = fRBase[section] + layer * fDR[section];
@@ -95,11 +95,11 @@ bool LAPPadPlane::Init()
     }
   }
 
-  fChannelArray -> Sort();
+  //fChannelArray -> Sort();
 
   Int_t nPads = fChannelArray -> GetEntriesFast();
-  for (auto iPad = 0; iPad < nPads; iPad++) {
-    auto pad = (KBPad *) fChannelArray -> At(iPad);
+  for (Int_t iPad = 0; iPad < nPads; iPad++) {
+    KBPad *pad = (KBPad *) fChannelArray -> At(iPad);
     pad -> SetPadID(iPad);
 
     std::vector<Int_t> key;
@@ -137,7 +137,7 @@ Int_t LAPPadPlane::FindPadID(Int_t section, Int_t row, Int_t layer)
 
 Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
 {
-  auto section = FindSection(i, j);
+  Int_t section = FindSection(i, j);
 
   //cout << "section: " << section << endl;
   if (section == -1)
@@ -182,8 +182,8 @@ Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
 
 Double_t LAPPadPlane::PadDisplacement() const
 {
-  auto max = 0;
-  for (auto section = 0; section < 4; ++section) {
+  Int_t max = 0;
+  for (Int_t section = 0; section < 4; ++section) {
     if (max < fDR[section])
       max = fDR[section];
     if (max < fDW[section])
@@ -237,7 +237,7 @@ TH2* LAPPadPlane::GetHist(Option_t *option)
     Double_t i = pad -> GetI();
     Double_t j = pad -> GetJ();
 
-    for (auto iPoint = 0; iPoint < 5; iPoint++) {
+    for (Int_t iPoint = 0; iPoint < 5; iPoint++) {
       iPoints[iPoint] = i + iSigns[iPoint]*di;
       jPoints[iPoint] = j + jSigns[iPoint]*dj;
 
@@ -340,7 +340,7 @@ Int_t LAPPadPlane::FindSection(Double_t i, Double_t j)
 TCanvas *LAPPadPlane::GetCanvas(Option_t *option)
 {
   if (fCanvas == nullptr)
-    fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,1300,800);
+    fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,1100,600);
 
   return fCanvas;
 }
