@@ -80,7 +80,7 @@ void KBPSATask::Exec(Option_t*)
       hit -> SetSection(pad -> GetSection());
       hit -> SetRow(pad -> GetRow());
       hit -> SetLayer(pad -> GetLayer());
-      hit -> Change();
+      //hit -> Change();
 
       idx++;
     }
@@ -93,3 +93,5 @@ void KBPSATask::SetPSA(KBPSA *psa)
 {
   fPSA = psa;
 }
+
+void KBPSATask::SetHitPersistency(bool persistence) { fPersistency = persistence; }

@@ -120,6 +120,6 @@ void KBHit::SetEveElement(TEveElement *)
 void KBHit::AddToEveSet(TEveElement *eveSet)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fZ, fX, fY);
-  //pointSet -> SetNextPoint(fX, fY, fZ);
+  //pointSet -> SetNextPoint(fZ, fX, fY);
+  pointSet -> SetNextPoint(fX, fY, fZ);
 }

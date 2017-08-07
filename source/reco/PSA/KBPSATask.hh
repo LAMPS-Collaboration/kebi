@@ -19,9 +19,13 @@ class KBPSATask : public KBTask
 
     void SetPSA(KBPSA *psa);
 
+    void SetHitPersistency(bool persistence);
+
   private:
     TClonesArray* fPadArray;
     TClonesArray* fHitArray;
+
+    bool fPersistency;
 
     KBTpc *fTpc;
 
