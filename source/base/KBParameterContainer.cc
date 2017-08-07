@@ -130,26 +130,26 @@ void KBParameterContainer::Print(Option_t *) const
     TString className = obj -> ClassName();
 
     if (className == "TNamed") {
-      auto par = (TNamed *) obj;
-      auto key = par -> GetName();
-      auto value = par -> GetTitle();
+      TNamed *par = (TNamed *) obj;
+      TString key = par -> GetName();
+      TString value = par -> GetTitle();
       cout << left << "  " << setw(25) << key << "  s  " << value << endl;
     }
     else if (className == "TParameter<int>") {
-      auto par = (TParameter<Int_t> *) obj;
-      auto key = par -> GetName();
+      TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
+      TString key = par -> GetName();
       Int_t value = par -> GetVal();
       cout << left << "  " << setw(25) << key << "  i  " << value << endl;
     }
     else if (className == "TParameter<double>") {
-      auto par = (TParameter<double> *) obj;
-      auto key = par -> GetName();
+      TParameter<Double_t> *par = (TParameter<Double_t> *) obj;
+      TString key = par -> GetName();
       Double_t value = par -> GetVal();
       cout << left << "  " << setw(25) << key << "  d  " << value << endl;
     }
     else if (className == "TParameter<bool>") {
-      auto par = (TParameter<bool> *) obj;
-      auto key = par -> GetName();
+      TParameter<bool> *par = (TParameter<bool> *) obj;
+      TString key = par -> GetName();
       TString value = par -> GetVal() == true ? "true" : "false";
       cout << left << "  " << setw(25) << key << "  b  " << value << endl;
     }

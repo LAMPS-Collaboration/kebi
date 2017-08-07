@@ -29,9 +29,10 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
-ClassImp(KBRun);
+ClassImp(KBRun)
 
 KBRun* KBRun::fInstance = nullptr;
 
@@ -146,7 +147,13 @@ void KBRun::SetInputFile(TString fileName, TString treeName) {
 
 void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(ConfigureDataPath(fileName)); }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
-void KBRun::SetOutputFile(TString name) { fOutputFileName = ConfigureDataPath(name); }
+void KBRun::SetOutputFile(TString name) { fOutputFileName = name; }
+void KBRun::SetTag(TString tag) { fTag = tag; }
+void KBRun::SetSplit(Int_t split, Long64_t numSplitEntries)
+{
+  fSplit = split;
+  fNumSplitEntries = numSplitEntries;
+}
 
 void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 {
@@ -156,6 +163,8 @@ void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 
 bool KBRun::Init()
 {
+  fInitialized = false;
+
   cout << "[KBRun] Initializing" << endl;
 
   Int_t idxInput = 0;
@@ -167,6 +176,10 @@ bool KBRun::Init()
   if (fInputFileName.IsNull() == false) {
     cout << endl;
     cout << "[KBRun] Input file : " << fInputFileName << endl;
+    if (!CheckFileExistence(fInputFileName)) {
+      cout << "  Input file " << fInputFileName << " does not exist!" << endl;
+      return false;
+    }
     fInputFile = new TFile(fInputFileName, "read");
 
     if (fInputTreeName.IsNull())
@@ -176,7 +189,7 @@ bool KBRun::Init()
     fInputTree -> AddFile(fInputFileName);
 
     Int_t nInputs = fInputFileNameArray.size();
-    for (auto i = idxInput; i < nInputs; i++)
+    for (Int_t i = idxInput; i < nInputs; i++)
       fInputTree -> AddFile(fInputFileNameArray[i]);
 
     fNumEntries = fInputTree -> GetEntries();
@@ -204,7 +217,7 @@ bool KBRun::Init()
   }
 
   if (fInputFile != nullptr && fInputFile -> Get("RunHeader") != nullptr) {
-    auto runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
+    KBParameterContainer *runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
     Int_t runID;
     runHeaderIn -> GetParInt("RunID",runID);
 
@@ -234,23 +247,46 @@ bool KBRun::Init()
     cout << "[KBRun] " << fDetector -> GetName() << " initialized" << endl;
   }
 
-  if (fOutputFileName.IsNull() == false) {
-    cout << endl;
-    cout << "[KBRun] Output file : " << fOutputFileName << endl;
-    fOutputFile = new TFile(fOutputFileName, "recreate");
-    fOutputTree = new TTree("data", "");
+  if (fOutputFileName.IsNull()) {
+    if (fRunID != -1) {
+      fOutputFileName = Form("run%04d", fRunID);
+
+      if (!fTag.IsNull())
+        fOutputFileName = fOutputFileName + "." + fTag;
+      else
+        fOutputFileName = fOutputFileName + ".out";
+
+      if (!fTag.IsNull())
+        fOutputFileName = fOutputFileName + Form(".%d",fSplit);
+
+      fOutputFileName = ConfigureDataPath(fOutputFileName);
+    }
+    else {
+      cout << "[KBRun] Output file is not set!" << endl;
+      cout << "        Please set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
+      return false;
+    }
   }
+
+  if (CheckFileExistence(fOutputFileName)) {
+    cout << "  Output file " << fOutputFileName << " already exist!" << endl;
+    //return false;
+  }
+
+  cout << endl;
+  cout << "[KBRun] Output file : " << fOutputFileName << endl;
+  fOutputFile = new TFile(fOutputFileName, "recreate");
+  fOutputTree = new TTree("data", "");
 
   fInitialized = InitTasks();
 
   cout << endl;
-  if (fInitialized)
+  if (fInitialized) {
+    cout << "[KBRun] " << fNumEntries << " input entries" << endl;
     cout << "[KBRun] KBRun initialized" << endl;
-  else {
-    cout << "[KBRun] FAILED initializing tasks." << endl;
-    cout << "        Exit run." << endl;
-    Terminate(this);
   }
+  else
+    cout << "[KBRun] FAILED initializing tasks." << endl;
 
   return fInitialized;
 }
@@ -338,6 +374,15 @@ void KBRun::Run()
     fEndEventID = fNumEntries-1;
   }
 
+  if (fSplit != -1) {
+    fStartEventID = fSplit * fNumSplitEntries;
+    fEndEventID = ((fSplit+1) * fNumSplitEntries) - 1 ;
+    if (fEndEventID > fNumEntries - 1)
+      fEndEventID = fNumEntries - 1;
+  }
+
+  Int_t numRunEntries = fEndEventID - fStartEventID + 1;
+
   fEventCount = 0;
   for (Long64_t iEntry = fStartEventID; iEntry <= fEndEventID; iEntry++) {
     fCurrentEventID = iEntry;
@@ -346,12 +391,12 @@ void KBRun::Run()
       ///@todo fCurrentEventID = EventHeader -> GetEventID();
     }
 
-    cout << "[KBRun] Execute Run " << iEntry << endl;
+    cout << "[KBRun] Execute Run " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
     ExecuteTask("");
     if (fOutputTree != nullptr)
       fOutputTree -> Fill();
 
-    fEventCount++;
+    ++fEventCount;
   }
 
   if (fOutputTree != nullptr) {
@@ -370,6 +415,7 @@ void KBRun::Run()
   if (fOutputTree != nullptr) {
     fOutputFile -> Close();
     TString linkName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
+    unlink(linkName.Data());
     symlink(fOutputFileName.Data(), linkName.Data());
   }
 
@@ -425,8 +471,9 @@ void KBRun::OpenEventDisplay()
 
   {
     Int_t dummy;
-    UInt_t w, h; UInt_t wMax = 1400;
-    UInt_t hMax = 850;
+    UInt_t w, h;
+    UInt_t wMax = 1200;
+    UInt_t hMax = 720;
     Double_t r = (Double_t)wMax/hMax;
     gVirtualX -> GetWindowSize(gClient -> GetRoot() -> GetId(), dummy, dummy, w, h);
 
@@ -484,9 +531,9 @@ void KBRun::OpenEventDisplay()
   gEve -> GetBrowser() -> GetTabRight() -> SetTab(1);
   */
 
-  for (auto iPlane = 0; iPlane < fDetector -> GetNPlanes(); iPlane++) {
-    auto plane = fDetector -> GetDetectorPlane(iPlane);
-    auto cvs = plane -> GetCanvas();
+  for (Int_t iPlane = 0; iPlane < fDetector -> GetNPlanes(); iPlane++) {
+    KBDetectorPlane *plane = fDetector -> GetDetectorPlane(iPlane);
+    TCanvas *cvs = plane -> GetCanvas();
     cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
     fCvsDetectorPlaneArray -> Add(cvs);
     cvs -> cd();
@@ -506,15 +553,15 @@ void KBRun::RunEve(Long64_t eventID)
   this -> GetEntry(eventID);
 
   Int_t nEveElements = fEveElementList.size();
-  for (auto iEl = 0; iEl < nEveElements; ++iEl) {
-    auto el = fEveElementList.back();
+  for (Int_t iEl = 0; iEl < nEveElements; ++iEl) {
+    TEveElement *el = fEveElementList.back();
     gEve -> RemoveElement(el,gEve->GetCurrentEvent());
     fEveElementList.pop_back();
   }
 
-  for (auto iBranch = 0; iBranch < fNBranches; ++iBranch)
+  for (Int_t iBranch = 0; iBranch < fNBranches; ++iBranch)
   {
-    auto branch = (TClonesArray *) fBranchPtr[iBranch];
+    TClonesArray *branch = (TClonesArray *) fBranchPtr[iBranch];
     TObject *objSample = nullptr;
 
     if (branch -> GetEntriesFast() != 0) {
@@ -525,11 +572,11 @@ void KBRun::RunEve(Long64_t eventID)
     else
       continue;
 
-    auto eveObj = (KBContainer *) objSample;
+    KBContainer *eveObj = (KBContainer *) objSample;
     if (eveObj -> IsEveSet()) {
-      auto eveSet = eveObj -> CreateEveElement();
-      auto nObjects = branch -> GetEntriesFast();
-      for (auto iObject = 0; iObject < nObjects; ++iObject) {
+      TEveElement *eveSet = eveObj -> CreateEveElement();
+      Int_t nObjects = branch -> GetEntriesFast();
+      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
         eveObj = (KBContainer *) branch -> At(iObject);
         eveObj -> AddToEveSet(eveSet);
       }
@@ -537,10 +584,10 @@ void KBRun::RunEve(Long64_t eventID)
       fEveElementList.push_back(eveSet);
     }
     else {
-      auto nObjects = branch -> GetEntriesFast();
-      for (auto iObject = 0; iObject < nObjects; ++iObject) {
+      Int_t nObjects = branch -> GetEntriesFast();
+      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
         eveObj = (KBContainer *) branch -> At(iObject);
-        auto eveElement = eveObj -> CreateEveElement();
+        TEveElement *eveElement = eveObj -> CreateEveElement();
         eveObj -> SetEveElement(eveElement);
         gEve -> AddElement(eveElement);
         fEveElementList.push_back(eveElement);
@@ -550,13 +597,13 @@ void KBRun::RunEve(Long64_t eventID)
 
   gEve -> Redraw3D();
 
-  auto tpc = (KBTpc *) fDetector;
-  auto padplane = tpc -> GetPadPlane(0);
-  auto hist_padplane = padplane -> GetHist();
+  KBTpc *tpc = (KBTpc *) fDetector;
+  KBPadPlane *padplane = tpc -> GetPadPlane(0);
+  TH2 *hist_padplane = padplane -> GetHist();
   hist_padplane -> Reset();
 
-  auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
-  auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
+  TClonesArray *hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
+  TClonesArray *padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
 
   if (hitArray != nullptr)
   {
@@ -568,16 +615,17 @@ void KBRun::RunEve(Long64_t eventID)
   {
     padplane -> Clear();
     padplane -> SetPadArray(padArray);
-    padplane -> FillDataToHist("out");
+    padplane -> FillDataToHist("raw");
+    //padplane -> FillDataToHist("out");
   }
   else
     return;
 
   gStyle -> SetPalette(kBird); // @todo palette is changed when Drawing top node
-  auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
+  TCanvas *cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
   cvs -> cd();
   hist_padplane -> SetMaximum(5000);
-  hist_padplane -> SetMinimum(1);
+  //hist_padplane -> SetMinimum(1);
   hist_padplane -> Draw("colz");
   padplane -> DrawFrame();
 }
@@ -630,20 +678,21 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   }
   fGraphChannelBoundary -> Set(0);
 
-  auto tpc = (KBTpc *) fDetector;
-  auto padplane = tpc -> GetPadPlane();
-  auto id = padplane -> FindPadID(x, y);
+  KBTpc *tpc = (KBTpc *) fDetector;
+  KBPadPlane *padplane = tpc -> GetPadPlane();
+  Int_t id = padplane -> FindPadID(x, y);
   if (id < 0) {
     cout << "Could not find pad at position: " << x << ", " << y << endl;
     return;
   }
 
-  auto pad = padplane -> GetPad(id);
+  KBPad *pad = padplane -> GetPad(id);
   pad -> SetHist(fHistChannelBuffer,"pao");
   pad -> Print();
 
-  auto corners = pad -> GetPadCorners();
-  for (auto corner : *corners) {
+  vector<TVector2> *corners = pad -> GetPadCorners();
+  for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
+    TVector2 corner = corners -> at(iCorner);
     cout << "corner: " << corner.X() << ", " <<  corner.Y() << endl;
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
@@ -654,4 +703,17 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
 
   ((TCanvas *) fCvsDetectorPlaneArray -> At(0)) -> cd();
   fGraphChannelBoundary -> Draw("samel");
+}
+
+bool KBRun::CheckFileExistence(TString fileName)
+{
+  TString name = gSystem -> Which(".", fileName.Data());
+  if (name.IsNull())
+    cout << "[KBRun::CheckFileExistence] " << fileName << " IS NEW." << endl;
+  else
+    cout << "[KBRun::CheckFileExistence] " << fileName << " ALREADY EXIST!" << endl;
+
+  if (name.IsNull())
+    return false;
+  return true;
 }

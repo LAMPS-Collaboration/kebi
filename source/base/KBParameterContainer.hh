@@ -45,7 +45,7 @@ class KBParameterContainer : public TObjArray
      * If parNameForFile is not set, parameter name will be set as 
      * INPUT_PARAMETER_FILE[fNumInputFiles]
     */
-    Int_t AddFile(TString fileName, TString parNameForFile = "");
+    virtual Int_t AddFile(TString fileName, TString parNameForFile = "");
     Int_t GetNumInputFiles(); ///< Get number of input parameter files
 
     bool SetPar(TString name, Bool_t val);   ///< Set Bool_t type parameter with given name
@@ -60,7 +60,7 @@ class KBParameterContainer : public TObjArray
 
     void ReplaceEnvironmentVariable(TString &val);
 
-  private:
+  protected:
     Int_t fNumInputFiles = 0;
 
   ClassDef(KBParameterContainer, 1)

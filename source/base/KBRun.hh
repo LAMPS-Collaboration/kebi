@@ -65,6 +65,8 @@ class KBRun : public KBTask
     void SetInputTreeName(TString treeName); ///< Set input tree name
 
     void SetOutputFile(TString name); ///< Set output file name
+    void SetTag(TString tag);
+    void SetSplit(Int_t split, Long64_t numSplitEntries);
 
     void SetIOFile(TString inputName, TString outputName, TString treeName = "data");
 
@@ -111,6 +113,7 @@ class KBRun : public KBTask
 
   private:
     TString ConfigureDataPath(TString namname);
+    bool CheckFileExistence(TString fileName);
     void OpenEventDisplay();
 
   private:
@@ -129,6 +132,9 @@ class KBRun : public KBTask
     vector<TString> fInputFileNameArray;
 
     TString fOutputFileName = "";
+    TString fTag = "";
+    Int_t fSplit = -1;
+    Long64_t fNumSplitEntries = -1;
     TFile *fOutputFile = nullptr;
     TTree *fOutputTree = nullptr;
 
