@@ -25,7 +25,7 @@ class LAPDecoderTask : public KBTask
 
     void AddData(TString name);
     void LoadMetaData(TString name);
-    void SetNumEvents(Long64_t nEvents);
+    void SetNumEvents(Long64_t numEvents);
 
   private:
     TClonesArray* fPadArray;
@@ -33,7 +33,7 @@ class LAPDecoderTask : public KBTask
 
     KBPadPlane *fPadPlane;
 
-    Long64_t fNEvents = -1;
+    Long64_t fNumEvents = -1;
 
     GETDecoder *fDecoder;
     ifstream fPadMap;

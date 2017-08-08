@@ -1,11 +1,20 @@
-void eve_prototype(TString name = "run0101.reco")
+Int_t fEventID = 0;
+
+void nx(Int_t eventID = -1) {
+  if (eventID < 0) KBRun::GetRun() -> RunEve(++fEventID);
+  else KBRun::GetRun() -> RunEve(fEventID = eventID);
+  cout << "Event " << fEventID << endl;
+}
+
+//void eve(TString name = "run0121.reco")
+void eve(TString name = "last")
 {
   auto run = new KBRun();
   run -> SetInputFile(name);
-  run -> AddParameterFile("LAP.par");
+  run -> SetTag("eve");
+  run -> AddParameterFile("prototype.par");
   run -> AddDetector(new LAPTpc());
   run -> Init();
   run -> SetGeoTransparency(80);
-
-  run -> RunEve(0);
+  run -> RunEve(fEventID);
 }

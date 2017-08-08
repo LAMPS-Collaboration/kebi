@@ -40,12 +40,12 @@ bool LAPDecoderTask::Init()
 
   fDecoder -> SetData(0);
 
-  if (fNEvents == -1) {
+  if (fNumEvents == -1) {
     fDecoder -> GoToEnd();
-    fNEvents = fDecoder -> GetNumFrames();
+    fNumEvents = fDecoder -> GetNumFrames();
   }
 
-  run -> SetEntries(fNEvents);
+  run -> SetEntries(fNumEvents);
   
   return true;
 }
@@ -111,64 +111,55 @@ void LAPDecoderTask::Exec(Option_t*)
 
 void LAPDecoderTask::SetPadPersistency(bool persistence) { fPersistency = persistence; }
 
-void LAPDecoderTask::ReadDirectory(TString directoryName)
+void LAPDecoderTask::ReadDirectory(TString pathToData)
 {
-  Bool_t foundMeta = false;
-
-  if (directoryName[directoryName.Sizeof()-2] != '/')
-    directoryName = directoryName + "/";
+  if (pathToData[pathToData.Sizeof()-2] != '/')
+    pathToData = pathToData + "/";
 
   Int_t runID = KBRun::GetRun() -> GetRunID();
+
+  vector<TString> fileList;
+
   DIR *dir;
   struct dirent *ent;
-
-  if ((dir = opendir (directoryName.Data())) != NULL) {
-    while ((ent = readdir (dir)) != NULL) {
+  if ((dir = opendir(pathToData.Data())) != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
       TString fileName = ent -> d_name;
-
-      if (fileName.Index(Form("run_%04d",runID)) < 0)
-        continue;
-
-      if (fileName.Index(".root") >= 0) {
-        cout << "Meta data : " << directoryName+fileName << endl;
-        LoadMetaData(directoryName+fileName);
-        foundMeta = true;
-      } else if (fileName.Index(".numEvents") >= 0) {
-        //ifstream tempFile(directoryName+fileName);
-        //tempFile >> nEvents;
-        //continue;
-      } else
-        AddData(directoryName+fileName);
+      if (fileName.Index(Form("run_%04d.",runID)) == 0)
+        fileList.push_back(fileName);
     }
     closedir (dir);
   }
-  else
-    cout << "Cannot read directory " << directoryName << endl;
+  if(fileList.size() == 0) {
+    cout << Form("No matching run_%04d",runID) << endl;
+    return;
+  }
 
-  if (!foundMeta) {
-    directoryName = directoryName + Form("run_%04d/metadata/",runID);
-    if ((dir = opendir (directoryName.Data())) != NULL) {
-      while ((ent = readdir (dir)) != NULL) {
-        TString fileName = ent -> d_name;
-        if (fileName.Index(Form("run_%04d",runID)) >= 0 && fileName.Index(".root") >= 0) {
-          cout << "Meta data : " << directoryName+fileName << endl;
-          LoadMetaData(directoryName+fileName);
-          foundMeta = true;
-          continue;
-        }
+  sort(fileList.begin(), fileList.end(), less<TString>());
+
+  for (auto fileName : fileList)
+    AddData(pathToData+fileName);
+
+  pathToData = pathToData + Form("run_%04d/metadata/",runID);
+  if ((dir = opendir (pathToData.Data())) != NULL) {
+    while ((ent = readdir (dir)) != NULL) {
+      TString fileName = ent -> d_name;
+      if (fileName.Index(Form("run_%04d",runID)) >= 0 && fileName.Index(".root") >= 0) {
+        cout << "Meta data : " << pathToData+fileName << endl;
+        LoadMetaData(pathToData+fileName);
+        break;
       }
-      closedir (dir);
     }
+    closedir (dir);
   }
 }
 
 void LAPDecoderTask::LoadMetaData(TString name)
 {
   fDecoder -> SetData(0);
-  if (fNEvents == -1)
-    fNEvents = 0;
-  fNEvents += fDecoder -> LoadMetaData(name);
+  fDecoder -> LoadMetaData(name);
+  fNumEvents = fDecoder -> GetNumFrames();
 }
 
 void LAPDecoderTask::AddData(TString name) { fDecoder -> AddData(name); }
-void LAPDecoderTask::SetNumEvents(Long64_t nEvents) { fNEvents = nEvents; }
+void LAPDecoderTask::SetNumEvents(Long64_t numEvents) { fNumEvents = numEvents; }
