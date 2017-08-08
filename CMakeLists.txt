@@ -5,7 +5,7 @@ project(KEBI)
 
 
 #---Options
-option(KEBI_BUILD_GEANT4 "Build Geant4 simulation" on)
+option(KEBI_BUILD_GEANT4 "Build Geant4 simulation" off)
 option(CREATE_GIT_LOG "Create git-log at when building KEBI" on)
 option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" on)
 
