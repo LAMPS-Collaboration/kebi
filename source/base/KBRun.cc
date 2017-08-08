@@ -256,7 +256,7 @@ bool KBRun::Init()
       else
         fOutputFileName = fOutputFileName + ".out";
 
-      if (!fTag.IsNull())
+      if (fSplit != -1)
         fOutputFileName = fOutputFileName + Form(".%d",fSplit);
 
       fOutputFileName = ConfigureDataPath(fOutputFileName);
