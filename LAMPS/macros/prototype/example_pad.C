@@ -14,8 +14,10 @@ void example_pad()
   run -> GetEvent(0);
 
   auto padplane = tpc -> GetPadPlane();
-  auto hist_padplane = padplane -> GetHist();
+  padplane -> SetPadArray(padArray);
 
+  /////////////////////////////////////////////////////////////////
+  //1st example of getting pad
   Int_t numPads = padArray -> GetEntries();
   for (auto iPad = 0; iPad < numPads; ++iPad) 
   {
@@ -34,14 +36,44 @@ void example_pad()
 
     Short_t *adc = pad -> GetBufferRaw();
 
-    if (section == 0 && row == 0 && layer) {
+    if (section == 0 && row == 0 && layer == 2) {
       pad -> Print();
+      new TCanvas();
       pad -> GetHist("raw") -> Draw();
-      return;
+      break;
     }
   }
+  /////////////////////////////////////////////////////////////////
 
-  padplane -> GetCanvas();
+  /////////////////////////////////////////////////////////////////
+  //2nd example of getting pad
+  Int_t section, row, layer;
+  auto padID = padplane -> FindPadID(section=0, row=0, layer=3);
+  auto pad = padplane -> GetPad(padID);
+  pad -> Print();
+  new TCanvas();
+  pad -> GetHist("raw") -> Draw();
+  /////////////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////////////////
+  //pad plane
+  auto hist_padplane = padplane -> GetHist();
+  for (auto iPad = 0; iPad < padplane -> GetNPads(); ++iPad) {
+    auto pad2 = padplane -> GetPad(iPad);
+    auto bin = hist_padplane -> FindBin(pad2 -> GetI(), pad2 -> GetJ());
+    hist_padplane -> SetBinContent(bin, pad2 -> GetPadID());
+    //hist_padplane -> SetBinContent(bin, pad2 -> GetSection());
+    //hist_padplane -> SetBinContent(bin, pad2 -> GetLayer());
+    //hist_padplane -> SetBinContent(bin, pad2 -> GetRow());
+  }
+  auto cvs = padplane -> GetCanvas();
   gStyle -> SetPalette(kBird);
-  hist_padplane -> Draw("colz");
+  hist_padplane -> SetTitle("PadPlane_PadID");
+  //hist_padplane -> SetTitle("PadPlane_Section");
+  //hist_padplane -> SetTitle("PadPlane_Layer");
+  //hist_padplane -> SetTitle("PadPlane_Row");
+  hist_padplane -> Draw("text");
+  padplane -> DrawFrame();
+  //cvs -> SaveAs(TString(hist_padplane->GetTitle())+".png");
+  /////////////////////////////////////////////////////////////////
 }
