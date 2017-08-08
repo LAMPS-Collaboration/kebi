@@ -1,0 +1,203 @@
+#include "dirent.h"
+#include <algorithm>
+
+void configureRun(Int_t runID)
+{
+  bool testRun = true;
+
+  bool printAll = false;
+  bool printBlock = true;
+
+  Int_t numWordsInLine = 8;
+
+  Long64_t stepBack = 80;
+  Long64_t stepForward = 400;
+
+  Long64_t position = -1;
+  Long64_t position_4000 = -1;
+  Long64_t position_1st0800 = -1;
+  Char_t buffer[2];
+
+  Int_t count_ffff = 0;
+  Int_t count_ffff_limit = 100;
+
+  vector<TString> fileList;
+
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir("./")) != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+      TString fileName = ent -> d_name;
+      if (fileName.Index(Form("run_%04d.",runID)) == 0)
+        fileList.push_back(fileName);
+    }
+    closedir (dir);
+  }
+  if(fileList.size() == 0) {
+    cout << Form("No matching run_%04d",runID) << endl;
+    return;
+  }
+
+  sort(fileList.begin(), fileList.end(), less<TString>());
+
+  TString inputName = fileList[0];
+
+  std::ifstream in(inputName.Data(), std::ifstream::in|std::ifstream::binary);
+  std::cout << std::hex << std::setfill('0');
+  std::cout << "INPUT: " << inputName.Data() << endl;
+
+  if (in.is_open()) {
+    while(true)
+    {
+      bool found_ffff = false;
+
+      for (auto iword = 0; iword < numWordsInLine; ++iword) {
+        position = in.tellg();
+        if (in.read(buffer, 2*sizeof(Char_t)) == nullptr) {
+          cout << "End of file at " << std::dec << position << "++"<< endl;
+          return;
+        }
+        if (printAll)
+          cout << std::hex << setw(2) << (unsigned short) (unsigned char) buffer[0]
+               << std::hex << setw(2) << (unsigned short) (unsigned char) buffer[1] 
+               << std::dec << "(" << setw(7) << position << ") ";
+
+        if ((unsigned short) (unsigned char) buffer[0] == 0xff && (unsigned short) (unsigned char) buffer[1] == 0xff) {
+          found_ffff = true;
+          break;
+        }
+      }
+      if (printAll)
+        cout << endl;
+
+      if (found_ffff) 
+      {
+        if (position - stepBack < 0)
+          in.seekg(0);
+        else
+          in.seekg(position - stepBack);
+
+        if (printBlock)
+          cout << "==== count_ffff: " << std::dec << count_ffff << endl;
+
+        for (auto iline2 = 0; iline2 < stepBack/16 + 1; ++iline2) 
+        {
+          bool found_1st0800 = false;
+          bool found_4000 = false;
+          for (auto iword = 0; iword < numWordsInLine; ++iword) {
+            position = in.tellg();
+            in.read(buffer, 2*sizeof(Char_t));
+            if (printBlock)
+              cout << std::hex << setw(2) << (unsigned short) (unsigned char) buffer[0]
+                << std::hex << setw(2) << (unsigned short) (unsigned char) buffer[1] 
+                << std::dec << "(" << setw(7) << position << ") ";
+
+            if (position_1st0800 == -1 && (unsigned short) (unsigned char) buffer[0] == 0x08 && (unsigned short) (unsigned char) buffer[1] == 0x00) {
+              found_1st0800 = true;
+              position_1st0800 = position;
+            }
+
+            if ((unsigned short) (unsigned char) buffer[0] == 0x40 && (unsigned short) (unsigned char) buffer[1] == 0x00) {
+              found_4000 = true;
+              position_4000 = position;
+            }
+          }
+
+          if (found_4000) {
+            if (printBlock)
+              cout << " <-- 4000! at " << std::dec << position_4000;
+            count_ffff = count_ffff_limit+1;
+          }
+          if (found_1st0800)
+            if (printBlock)
+              cout << " <-- 1st 0800! at " << std::dec << position_1st0800;
+          if (printBlock)
+            cout << endl;
+        }
+
+        in.seekg(position + stepForward);
+        ++count_ffff;
+      }
+
+      if (count_ffff > count_ffff_limit)
+        break;
+    }
+  }
+
+  if (position_4000 == -1) {
+    cout << "Cannot find topology frame! Increase count_ffff_limit or check file." << endl;
+    return;
+  }
+
+  if (position_4000 > position_1st0800) {
+    cout << "Topology frame comes after the first basic frame. Switching order..." << endl;
+
+    TString createHead = Form("tail -c+%lld ",position_4000+1) + inputName + " > head." + inputName;
+    TString createBody = Form("head -c%lld ", position_4000) + inputName + Form("| tail -c+%lld ", position_1st0800+1) + " > body." + inputName;
+    TString moveOrigin = "mv " + inputName + " " + "original." + inputName;
+    TString mergeFile = "cat head." + inputName + " body." + inputName + " > " + inputName;
+    TString rmHeadBody = TString("rm ") + " head." + inputName + " body." + inputName;
+
+    if (testRun) {
+      TString checkHead = Form("tail -c+%lld ",position_4000+1) + inputName + "| xxd | less";
+      TString checkBody = Form("head -c%lld ", position_4000) + inputName + Form("| tail -c+%lld | xxd | less", position_1st0800+1);
+      cout << checkHead << endl;
+      cout << checkBody << endl;
+
+      cout << "On Real Run -> Execute commands: " << endl;
+      cout << "  " << createHead << endl;
+      cout << "  " << createBody << endl;
+      cout << "  " << moveOrigin << endl;
+      cout << "  " << mergeFile << endl;
+      cout << "  " << rmHeadBody << endl;
+      return;
+    }
+
+    cout << createHead << endl; gSystem -> Exec(createHead.Data());
+    cout << createBody << endl; gSystem -> Exec(createBody.Data());
+    cout << moveOrigin << endl; gSystem -> Exec(moveOrigin.Data());
+    cout << mergeFile << endl; gSystem -> Exec(mergeFile.Data());
+    cout << rmHeadBody << endl; gSystem -> Exec(rmHeadBody.Data());
+  }
+  else if (position_4000 != 0) {
+    cout << "File_Header exist! Removing File_Header..." << endl;
+
+    TString moveOrigin = "mv " + inputName + " " + "original." + inputName;
+    TString rmFileHeader = Form("tail -c+%lld ",position_4000+1) + TString("original.") + inputName + " > " + inputName;
+
+    if (testRun) {
+      TString checkNew = Form("tail -c+%lld ",position_4000+1) + inputName + "| xxd | less";
+      cout << checkNew << endl;
+
+      cout << "On Real Run -> Execute commands: " << endl;
+      cout <<  "  " << moveOrigin << endl;
+      cout <<  "  " << rmFileHeader << endl;
+      return;
+    }
+
+    cout << moveOrigin << endl; gSystem -> Exec(moveOrigin.Data());
+    cout << rmFileHeader << endl; gSystem -> Exec(rmFileHeader.Data());
+  }
+  else {
+    cout << "File is Good!" << endl;
+    if (testRun) {
+      cout << "On Real Run -> Create meta data" << endl;
+      return;
+    }
+
+    cout << "Creating meta data..." << endl;
+
+    auto d = new GETDecoder();
+
+    for (auto fileName : fileList)
+      d -> AddData(fileName.Data());
+
+    d -> SetData(0);
+    d -> GoToEnd();
+    d -> SaveMetaData(runID);
+
+    return;
+  }
+
+  configureRun(runID);
+}
