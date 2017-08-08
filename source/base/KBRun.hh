@@ -90,7 +90,9 @@ class KBRun : public KBTask
     void SetGeoTransparency(Int_t transparency); ///< Set transparency of geometry. Will show in eve.
     void SetEntries(Long64_t num); ///< Set total number of entries. Use only input do not exist.
     Long64_t GetEntries(); ///< Get total number of entries
+    Long64_t GetNumEvents();
     Int_t GetEntry(Long64_t entry = 0, Int_t getall = 0); ///< GetEntry from input tree
+    Int_t GetEvent(Long64_t entry);
 
     Long64_t GetStartEventID() const;   ///< Get starting eventID
     Long64_t GetEndEventID() const;     ///< Get ending eventID

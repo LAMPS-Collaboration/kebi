@@ -177,7 +177,7 @@ bool KBRun::Init()
     cout << endl;
     cout << "[KBRun] Input file : " << fInputFileName << endl;
     if (!CheckFileExistence(fInputFileName)) {
-      cout << "  Input file " << fInputFileName << " does not exist!" << endl;
+      //cout << "  Input file " << fInputFileName << " does not exist!" << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -269,7 +269,7 @@ bool KBRun::Init()
   }
 
   if (CheckFileExistence(fOutputFileName)) {
-    cout << "  Output file " << fOutputFileName << " already exist!" << endl;
+    //cout << "  Output file " << fOutputFileName << " already exist!" << endl;
     //return false;
   }
 
@@ -344,6 +344,7 @@ void KBRun::SetGeoTransparency(Int_t transparency)
 
 void KBRun::SetEntries(Long64_t num) { fNumEntries = num; }
 Long64_t KBRun::GetEntries() { return fNumEntries; }
+Long64_t KBRun::GetNumEvents() { return fNumEntries; }
 
 Int_t KBRun::GetEntry(Long64_t entry, Int_t getall)
 {
@@ -354,6 +355,8 @@ Int_t KBRun::GetEntry(Long64_t entry, Int_t getall)
   fEventCount = entry;
   return fInputTree -> GetEntry(entry, getall);
 }
+
+Int_t KBRun::GetEvent(Long64_t entry) { return GetEntry(entry); }
 
 Long64_t KBRun::GetStartEventID() const { return fStartEventID; }
 Long64_t KBRun::GetEndEventID() const { return fEndEventID; }
@@ -391,7 +394,7 @@ void KBRun::Run()
       ///@todo fCurrentEventID = EventHeader -> GetEventID();
     }
 
-    cout << "[KBRun] Execute Run " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
+    cout << "[KBRun] Execute Event " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
     ExecuteTask("");
     if (fOutputTree != nullptr)
       fOutputTree -> Fill();

@@ -10,7 +10,7 @@
     libString = TString(gSystem -> Getenv("KEBIPATH")) + "/build/libKEBI.so";
 
   if (gSystem -> Load(libString) != -1)
-    cout << "Hello KEBI!" << endl;
+    cout << "KEBI Library Loaded" << endl;
   else
-    cout << "Cannot load KEBI" << endl;
+    cout << "Cannot Load KEBI" << endl;
 }
