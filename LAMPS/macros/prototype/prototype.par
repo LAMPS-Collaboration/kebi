@@ -11,10 +11,8 @@ yOffset   d  -285.  # offset along y-axis [mm]
 ppRMin d 75.
 ppRMax d 245.
 
-#tbStart i 0
-#nTbs    i 512
-tbStart i 350
-nTbs    i 10
+tbStart i 0
+nTbs    i 512
 tbTime  d 20   # [ns]
 
 gasDriftVelocity  d  0.0542411  # [mm/ns]
@@ -26,5 +24,4 @@ tpcNPadPlanes i 1
 tpcPadPlaneK0 d 0
 tpcCathodePlaneK d -570
 
-ADCThreshold d 500
-#ADCThreshold d 100
+ADCThreshold d 100
