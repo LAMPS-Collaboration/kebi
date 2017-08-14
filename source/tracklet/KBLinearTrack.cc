@@ -1,5 +1,7 @@
 #include "KBLinearTrack.hh"
 #include "KBLinearTrackFitter.hh"
+#include <iostream>
+using namespace std;
 
 ClassImp(KBLinearTrack)
 
@@ -20,6 +22,30 @@ KBLinearTrack::KBLinearTrack(TVector3 pos1, TVector3 pos2)
 void KBLinearTrack::SetTrack(TVector3 pos1, TVector3 pos2)
 {
   KBGeoLine::SetLine(pos1, pos2);
+}
+
+void KBLinearTrack::Clear(Option_t *option)
+{
+  fX1 = -1;
+  fY1 = -1;
+  fZ1 = -1;
+  fX2 = 1;
+  fY2 = 1;
+  fZ2 = 1;
+}
+
+void KBLinearTrack::Print(Option_t *) const
+{
+    cout << "[KBLinearTrack] from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
+    cout << "                  to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
+
+    Double_t fX1 = 0;
+    Double_t fY1 = 0;
+    Double_t fZ1 = 0;
+
+    Double_t fX2 = 0;
+    Double_t fY2 = 0;
+    Double_t fZ2 = 0;
 }
 
 KBTrackFitter *KBLinearTrack::CreateTrackFitter() const { return new KBLinearTrackFitter(); }

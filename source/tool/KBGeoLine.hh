@@ -43,7 +43,7 @@ class KBGeoLine
     TArrow *CreateTArrowZX();
     TArrow *CreateTArrowXZ();
 
-  private:
+  protected:
     Double_t fX1 = 0;
     Double_t fY1 = 0;
     Double_t fZ1 = 0;

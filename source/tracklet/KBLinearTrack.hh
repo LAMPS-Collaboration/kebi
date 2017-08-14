@@ -12,6 +12,9 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
     KBLinearTrack(TVector3 pos1, TVector3 pos2);
     virtual ~KBLinearTrack() {};
 
+    void Clear(Option_t *option = "");
+    virtual void Print(Option_t *option="") const;
+
     void SetTrack(TVector3 pos1, TVector3 pos2);
 
     virtual KBTrackFitter *CreateTrackFitter() const;
