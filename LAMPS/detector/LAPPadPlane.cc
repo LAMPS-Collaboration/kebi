@@ -247,9 +247,14 @@ TH2* LAPPadPlane::GetHist(Option_t *option)
     h2 -> AddBin(5, iPoints, jPoints);
   }
 
+  h2 -> GetXaxis() -> SetTickSize(0.008);
+  h2 -> GetYaxis() -> SetTickSize(0.008);
+  h2 -> GetXaxis() -> SetRangeUser(-220,220);
+  h2 -> GetYaxis() -> SetRangeUser(-70,70);
+
   fH2Plane = (TH2 *) h2;
   fH2Plane -> SetStats(0);
-  fH2Plane -> SetTitle(";x (mm); z (mm)");
+  fH2Plane -> SetTitle(";(-)z (mm);x (mm)");
   fH2Plane -> GetXaxis() -> CenterTitle();
   fH2Plane -> GetYaxis() -> CenterTitle();
 
