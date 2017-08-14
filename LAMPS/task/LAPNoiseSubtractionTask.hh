@@ -35,7 +35,7 @@ class LAPNoiseSubtractionTask : public KBTask
     Int_t fIdxPadRef = -1;
 
     Int_t fTbNoiseStart = 0;
-    Int_t fTbNoiseEnd = 320;
+    Int_t fTbNoiseEnd = 180;
 
   ClassDef(LAPNoiseSubtractionTask, 1)
 };
