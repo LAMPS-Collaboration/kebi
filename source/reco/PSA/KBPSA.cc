@@ -30,6 +30,6 @@ void KBPSA::SetParameters(KBParameterContainer *par)
 {
   par -> GetParInt("tbStart",fTbStart);
   par -> GetParInt("nTbs",fTbEnd);
-  fTbEnd = fTbStart + fTbEnd;
+  fTbEnd = fTbStart + fTbEnd - 1;
   par -> GetParDouble("ADCThreshold",fThreshold);
 }
