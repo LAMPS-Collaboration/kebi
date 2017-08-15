@@ -15,17 +15,19 @@ LAPBeamTrackingTask::LAPBeamTrackingTask()
 
 bool LAPBeamTrackingTask::Init()
 {
-  KBRun *run = KBRun::GetRun();
+  auto run = KBRun::GetRun();
 
   fHitArray = (TClonesArray *) run -> GetBranch("Hit");
 
   fHitClusterArray = new TClonesArray("KBHit");
-  fLinearTrackArray = new TClonesArray("KBLinearTrack");
+  fBeamTrackArray = new TClonesArray("KBLinearTrack");
   fHitListArray = new TClonesArray("KBHitList");
+  fHitClusterListArray = new TClonesArray("KBHitList");
 
   run -> RegisterBranch("HitCluster", fHitClusterArray, fHitClusterPersistency);
-  run -> RegisterBranch("Beam", fLinearTrackArray, fLinearTrackPersistency);
+  run -> RegisterBranch("Beam", fBeamTrackArray, fLinearTrackPersistency);
   run -> RegisterBranch("BeamHitList", fHitListArray, fHitListPersistency);
+  run -> RegisterBranch("BeamHitClusterList", fHitClusterListArray, fHitListPersistency);
 
   fODRFitter = new KBODRFitter();
 
@@ -34,30 +36,64 @@ bool LAPBeamTrackingTask::Init()
 
 void LAPBeamTrackingTask::Exec(Option_t*)
 {
-  fLinearTrackArray -> Delete();
+  fBeamTrackArray -> Delete();
   fHitListArray -> Delete();
+  fHitClusterListArray -> Delete();
+  fHitClusterArray -> Delete();
 
   fODRFitter -> Reset();
 
-  KBHitList *hitList = new ((*fHitListArray)[0]) KBHitList();
+  auto hitList = new ((*fHitListArray)[0]) KBHitList();
+  auto hitClusterList = new ((*fHitClusterListArray)[0]) KBHitList();
 
   Int_t nHits = fHitArray -> GetEntries();
   if (nHits < 4)
     return;
 
-  for (Int_t iHit = 0; iHit < nHits; iHit++) {
-    KBHit *hit = (KBHit *) fHitArray -> At(iHit);
+  for (auto iHit = 0; iHit < nHits; iHit++) {
+    auto hit = (KBHit *) fHitArray -> At(iHit);
+    auto tb = hit -> GetTb();
+    if (tb < fTb1 || tb > fTb2 || hit -> GetCharge() > fHitChargeThreshold)
+      continue;
     hitList -> AddHit(hit);
   }
 
-  vector<KBHit*> *hitArray = hitList -> GetHitArray();
+  Int_t numSections = 2;
+  Int_t numLayers = 7;
+
+  for (auto iSection = 0; iSection < numSections; ++iSection) {
+    for (auto iLayer = 0; iLayer < numLayers; ++iLayer) {
+      auto cluster = (KBHit *) fHitClusterArray -> ConstructedAt(fHitClusterArray -> GetEntriesFast());
+      cluster -> SetSection(iSection);
+      cluster -> SetLayer(iLayer);
+    }
+  }
+
+  auto hitArray = hitList -> GetHitArray();
+  for (auto iHit = 0; iHit < nHitsBeam; iHit++) {
+    auto hit = hitArray -> at(iHit);
+    auto idxCluster = hit -> GetSection()*numLayers + hit -> GetLayer();
+    auto cluster = (KBHit *) fHitClusterArray -> At(idxCluster);
+    cluster -> AddHit(hit);
+  }
+
+  Int_t numClusters = numLayers * numSections;
+  for (auto iCluster = 0; iCluster < numClusters; ++iCluster) {
+    auto cluster = (KBHit *) fHitClusterArray -> At(iCluster);
+    if (cluster -> GetCharge() == 0)
+      fHitClusterArray -> Remove(cluster);
+    else
+      hitClusterList -> Add(cluster);
+  }
+  fHitClusterArray -> Compress();
+
+
   Double_t xMean = 0, yMean = 0, zMean = 0, chargeSum = 0;
-  for (UInt_t iHit = 0; iHit < hitArray -> size(); ++iHit) {
-    KBHit *hit = hitArray -> at(iHit);
-    xMean += hit -> GetCharge() * hit -> GetX(); 
-    yMean += hit -> GetCharge() * hit -> GetY(); 
-    zMean += hit -> GetCharge() * hit -> GetZ(); 
-    chargeSum += hit -> GetCharge();
+  for (auto cluster : *hitClusterArray) {
+    xMean += cluster -> GetCharge() * cluster -> GetX();
+    yMean += cluster -> GetCharge() * cluster -> GetY();
+    zMean += cluster -> GetCharge() * cluster -> GetZ();
+    chargeSum += cluster -> GetCharge();
   }
 
   xMean = xMean / chargeSum;
@@ -65,40 +101,57 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   zMean = zMean / chargeSum;
 
   fODRFitter -> SetCentroid(xMean, yMean, zMean);
-  for (UInt_t iHit = 0; iHit < hitArray -> size(); ++iHit) {
-    KBHit *hit = hitArray -> at(iHit);
-    fODRFitter -> AddPoint(hit -> GetX(), hit -> GetY(), hit -> GetZ(), hit -> GetCharge());
-  }
+  for (auto cluster : *hitClusterArray)
+    fODRFitter -> AddPoint(cluster -> GetX(), cluster -> GetY(), cluster -> GetZ(), cluster -> GetCharge());
 
   fODRFitter -> FitLine();
-  TVector3 centroid = fODRFitter -> GetCentroid();
-  TVector3 direction = fODRFitter -> GetDirection();
+  auto centroid = fODRFitter -> GetCentroid();
+  auto direction = fODRFitter -> GetDirection();
 
-  KBLinearTrack *beamTrack = new ((*fLinearTrackArray)[0]) KBLinearTrack(centroid, centroid+direction);
+  auto beamTrack = new ((*fBeamTrackArray)[0]) KBLinearTrack(centroid, centroid+direction);
 
   Int_t idxMin = -1;
   Int_t idxMax = -1;
   Double_t lengthMin = DBL_MAX;
   Double_t lengthMax = 0;
+  Double_t dy = 0;
 
-  Int_t nHitsBeam = hitArray -> size();
-  for (Int_t iHit = 0; iHit < nHitsBeam; iHit++) {
-    KBHit *hit = hitArray -> at(iHit);
-    Double_t length = beamTrack -> Length(hit -> GetPosition());
-    if (length > lengthMax) {
-      lengthMax = length;
+  Int_t nHitsBeam = hitClusterArray -> size();
+  for (auto iHit = 0; iHit < nHitsBeam; iHit++) {
+    auto cluster = hitClusterArray -> at(iHit);
+    auto posHit = cluster -> GetPosition();
+
+    auto lengthOnTrack = beamTrack -> Length(posHit);
+    if (lengthOnTrack > lengthMax) {
+      lengthMax = lengthOnTrack;
       idxMax = iHit;
     }
-    if (length < lengthMin) {
-      lengthMin = length;
+    if (lengthOnTrack < lengthMin) {
+      lengthMin = lengthOnTrack;
       idxMin = iHit;
     }
+
+    auto poca = beamTrack = ClosestPointOnLine(posHit);
+    auto toTrack = poca - posHit;
+
+    cluster -> SetDX(toTrack.X());
+    cluster -> SetDY(toTrack.Y());
+    cluster -> SetDZ(toTrack.Z());
+
+    dy += toTrack.Y();
+
+    auto idxCluster = cluster -> GetSection()*numLayers + cluster -> GetLayer();
+    auto cluster = (KBHit *) fHitClusterArray -> At(idxCluster);
+    cluster -> AddHit(cluster);
   }
 
-  KBHit *hitMin = hitArray -> at(idxMin);
+  dy = dy/nHitsBeam;
+  beamTrack -> SetQuality(dy);
+
+  auto hitMin = hitClusterArray -> at(idxMin);
   TVector3 positionMin = beamTrack -> ClosestPointOnLine(hitMin -> GetPosition());
 
-  KBHit *hitMax = hitArray -> at(idxMax);
+  auto hitMax = hitClusterArray -> at(idxMax);
   TVector3 positionMax = beamTrack -> ClosestPointOnLine(hitMax -> GetPosition());
 
   beamTrack -> SetLine(positionMin, positionMax);
@@ -111,3 +164,11 @@ void LAPBeamTrackingTask::Exec(Option_t*)
 void LAPBeamTrackingTask::SetHitClusterPersistency(bool persistency) { fHitClusterPersistency = persistency; }
 void LAPBeamTrackingTask::SetLinearTrackPersistency(bool persistency) { fLinearTrackPersistency = persistency; }
 void LAPBeamTrackingTask::SetHitListPersistency(bool persistency) { fHitListPersistency = persistency; }
+
+void LAPBeamTrackingTask::SetBeamTbRegion(Double_t tb1, Double_t tb2);
+{
+  fTb1 = tb1;
+  fTb2 = tb2;
+}
+
+void LAPBeamTrackingTask::SetHitChargeThreshold(Double_t val) { fHitChargeThreshold = val; }
