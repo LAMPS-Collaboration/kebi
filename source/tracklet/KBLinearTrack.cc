@@ -100,3 +100,6 @@ Double_t KBLinearTrack::LengthAt(TVector3 point) const
   auto length = (pos-tail).Mag();
   return length;
 }
+
+void KBLinearTrack::SetQuality(Double_t val) { fQuality = val; }
+Double_t KBLinearTrack::GetQuality() { return fQuality; }
