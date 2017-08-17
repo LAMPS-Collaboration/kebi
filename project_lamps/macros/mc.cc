@@ -24,28 +24,22 @@ int main(int argc, char** argv)
 
   G4VModularPhysicsList* physicsList = new QGSP_BERT;
   physicsList -> RegisterPhysics(new G4StepLimiterPhysics());
+
   runManager -> SetUserInitialization(physicsList);
-
-  auto dc = new LADetectorConstruction();
-  dc -> SetParameterContainer(runManager->GetParameterContainer());
-  runManager -> SetUserInitialization(dc);
+  runManager -> SetUserInitialization(new LADetectorConstruction());
   runManager -> SetUserAction(new KBPrimaryGeneratorAction());
-
   runManager -> SetUserAction(new KBEventAction());
   runManager -> SetUserAction(new KBTrackingAction());
   runManager -> SetUserAction(new KBSteppingAction());
+  runManager -> Initialize();
 
   G4UImanager* uiManager = G4UImanager::GetUIpointer();
-
   if (argc != 1) {
     G4String command = "/control/execute ";
     G4String fileName = argv[1];
     uiManager -> ApplyCommand(command+fileName);
   }
-  /*
-  else 
-  {
-    runManager -> Initialize();
+  else {
     G4VisManager* visManager = new G4VisExecutive;
     visManager -> Initialize();
 
@@ -56,7 +50,6 @@ int main(int argc, char** argv)
     delete uiExecutive;
     delete visManager;
   }
-  */
 
   delete runManager;
 

@@ -4,13 +4,10 @@
 #include "G4VUserDetectorConstruction.hh"
 #include "globals.hh"
 
-#include "KBParameterContainerHolder.hh"
-#include "KBParameterContainer.hh"
-
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
-class LADetectorConstruction : public G4VUserDetectorConstruction, public KBParameterContainerHolder
+class LADetectorConstruction : public G4VUserDetectorConstruction
 {
   public:
     LADetectorConstruction();

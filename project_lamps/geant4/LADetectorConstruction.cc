@@ -24,19 +24,11 @@ LADetectorConstruction::~LADetectorConstruction()
 
 G4VPhysicalVolume *LADetectorConstruction::Construct()
 {
-  fPar -> Print();
-
-  G4double tpcInnerRadius;
-  G4double tpcOuterRadius;
-  G4double tpcLength;
-  G4double tpcZOffset;
-  G4double worldSize;
-
-  fPar -> GetParDouble("rMinTPC", tpcInnerRadius);
-  fPar -> GetParDouble("rMaxTPC", tpcOuterRadius);
-  fPar -> GetParDouble("dzTPC", tpcLength);
-  fPar -> GetParDouble("zOffset", tpcZOffset);
-  fPar -> GetParDouble("worldSize", worldSize);
+  G4double tpcInnerRadius = 150.;
+  G4double tpcOuterRadius = 500.;
+  G4double tpcLength = 1200.;
+  G4double tpcZOffset = 300.;
+  G4double worldSize = 1000.;
 
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;
