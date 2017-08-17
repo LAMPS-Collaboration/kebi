@@ -16,6 +16,7 @@ class KBHit : public KBContainer
     KBHit() {};
     virtual ~KBHit() {};
 
+    virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
 
     void SetHitID(Int_t id);
@@ -82,7 +83,7 @@ class KBHit : public KBContainer
     Int_t fLayer = -999;
 
     Double_t fTb = -1;
-    Double_t fCharge = -1;
+    Double_t fCharge = 0;
 
     vector<Int_t> fTrackCandArray;  //!
 
