@@ -1,4 +1,4 @@
-void decoding(Int_t runID = 101, TString pathToData = "/home/lamps/ELPH_data/")
+void decoding(Int_t runID = 101, TString pathToData = "/home/lamps/ELPH_data2/")
 {
   auto run = new KBRun();
   run -> SetRunID(runID);
