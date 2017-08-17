@@ -8,23 +8,23 @@ ClassImp(KBHit)
 
 void KBHit::Clear(Option_t *)
 {
-  Int_t fHitID = -1;
-  Int_t fPadID = -1;
-  Int_t fTrackID = -1;
+  fHitID = -1;
+  fPadID = -1;
+  fTrackID = -1;
 
-  Double_t fX = -999;
-  Double_t fY = -999;
-  Double_t fZ = -999;
-  Double_t fDX = -999;
-  Double_t fDY = -999;
-  Double_t fDZ = -999;
+  fX = -999;
+  fY = -999;
+  fZ = -999;
+  fDX = -999;
+  fDY = -999;
+  fDZ = -999;
 
-  Int_t fSection = -999;
-  Int_t fRow = -999;
-  Int_t fLayer = -999;
+  fSection = -999;
+  fRow = -999;
+  fLayer = -999;
 
-  Double_t fTb = -1;
-  Double_t fCharge = 0;
+  fTb = -1;
+  fCharge = 0;
 }
 
 void KBHit::Print(Option_t *option) const

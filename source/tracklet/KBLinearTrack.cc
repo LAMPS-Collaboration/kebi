@@ -36,16 +36,8 @@ void KBLinearTrack::Clear(Option_t *option)
 
 void KBLinearTrack::Print(Option_t *) const
 {
-    cout << "[KBLinearTrack] from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
-    cout << "                  to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
-
-    Double_t fX1 = 0;
-    Double_t fY1 = 0;
-    Double_t fZ1 = 0;
-
-    Double_t fX2 = 0;
-    Double_t fY2 = 0;
-    Double_t fZ2 = 0;
+  cout << "[KBLinearTrack] from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
+  cout << "                  to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
 }
 
 KBTrackFitter *KBLinearTrack::CreateTrackFitter() const { return new KBLinearTrackFitter(); }
