@@ -36,7 +36,7 @@ class LAPBeamTrackingTask : public KBTask
 
     Double_t fTb1 = 0;
     Double_t fTb2 = 511;
-    Double_t fHitChargeThreshold = 5000;
+    Double_t fHitChargeThreshold = 3200;
 
   ClassDef(LAPBeamTrackingTask, 1)
 };
