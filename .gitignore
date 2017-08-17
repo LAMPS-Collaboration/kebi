@@ -1,3 +1,8 @@
+submit*sh
+submit*sh*err
+submit*sh*log
+submit*sh*out
+
 #geometry file
 *.gdml
 
@@ -31,7 +36,7 @@ doc
 temp
 
 #figures
-figures
+figures/
 *.pdf
 *.png
 *.eps
