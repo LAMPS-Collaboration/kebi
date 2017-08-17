@@ -1,4 +1,4 @@
-mkdir project_$1 $2
+mkdir project_$1
 
 
 mkdir project_$1/geant4
@@ -14,6 +14,12 @@ cp ${KEBIPATH}/macros/dummies/DUMMYDetectorPlane.cc project_$1/detector/${2}Dete
 cp ${KEBIPATH}/macros/dummies/DUMMYDetectorPlane.hh project_$1/detector/${2}DetectorPlane.hh
 
 
+mkdir project_$1/task
+cp ${KEBIPATH}/macros/dummies/LinkDefTask.h           project_$1/task/LinkDef.h
+cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.cc project_$1/task/${2}DoSomethingTask.cc
+cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.hh project_$1/task/${2}DoSomethingTask.hh
+
+
 mkdir project_$1/macros
 cp ${KEBIPATH}/macros/dummies/eve.C          project_$1/macros/
 cp ${KEBIPATH}/macros/dummies/mc.cc          project_$1/macros/
@@ -23,7 +29,7 @@ cp ${KEBIPATH}/macros/dummies/vis.mac        project_$1/macros/
 cp ${KEBIPATH}/macros/dummies/doSomething.C  project_$1/macros/
 
 
-mkdir project_$1/task
-cp ${KEBIPATH}/macros/dummies/LinkDefTask.h           project_$1/task/LinkDef.h
-cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.cc project_$1/task/${2}DoSomethingTask.cc
-cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.hh project_$1/task/${2}DoSomethingTask.hh
+sed -i -- s/DUMMY/$2/g project_$1/geant4/*
+sed -i -- s/DUMMY/$2/g project_$1/detector/*
+sed -i -- s/DUMMY/$2/g project_$1/task/*
+sed -i -- s/DUMMY/$2/g project_$1/macros/*
