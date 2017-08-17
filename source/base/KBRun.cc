@@ -125,7 +125,7 @@ TString KBRun::ConfigureDataPath(TString name)
   else {
     if (newName[0] != '/' && newName[0] != '$' && newName != '~') {
       if (fDataPath.IsNull())
-        newName = TString(gSystem -> Getenv("KEBIPATH")) + "/data/" + newName;
+        newName = TString(KEBI_PATH) + "/data/" + newName;
       else
         newName = fDataPath + "/" + newName;
     }
@@ -147,6 +147,7 @@ void KBRun::SetInputFile(TString fileName, TString treeName) {
 
 void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(ConfigureDataPath(fileName)); }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
+TChain *KBRun::GetInputChain() { return fInputTree; }
 void KBRun::SetOutputFile(TString name) { fOutputFileName = name; }
 void KBRun::SetTag(TString tag) { fTag = tag; }
 void KBRun::SetSplit(Int_t split, Long64_t numSplitEntries)
@@ -177,7 +178,7 @@ bool KBRun::Init()
     cout << endl;
     cout << "[KBRun] Input file : " << fInputFileName << endl;
     if (!CheckFileExistence(fInputFileName)) {
-      //cout << "  Input file " << fInputFileName << " does not exist!" << endl;
+      cout << "[KBRun] Init with no input file." << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -317,6 +318,14 @@ TObject *KBRun::GetBranch(TString name)
 {
   TObject *dataContainer = fBranchPtrMap[name];
   return dataContainer;
+}
+
+TClonesArray *KBRun::GetBranchA(TString name)
+{
+  TObject *dataContainer = fBranchPtrMap[name];
+  if (dataContainer -> InheritsFrom("TClonesArray"))
+    return (TClonesArray *) dataContainer;
+  return nullptr;
 }
 
 void KBRun::AddParameterFile(TString name)

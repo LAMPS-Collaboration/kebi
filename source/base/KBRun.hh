@@ -63,6 +63,7 @@ class KBRun : public KBTask
     void SetInputFile(TString fileName, TString treeName = "data"); ///< Set input file and tree name
     void AddInput(TString fileName); ///< Add friend to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
+    TChain *GetInputChain();
 
     void SetOutputFile(TString name); ///< Set output file name
     void SetTag(TString tag);
@@ -79,6 +80,7 @@ class KBRun : public KBTask
     */
     bool RegisterBranch(TString name, TObject *obj, bool persistent);
     TObject *GetBranch(TString name); ///< Get branch by name.
+    TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
     void AddParameterFile(TString name); ///< Add parameter file to parameter container
     KBParameterContainer *GetParameterContainer();
