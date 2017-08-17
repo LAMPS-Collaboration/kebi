@@ -21,6 +21,7 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
   if (stat == fWorldBoundary) 
     return;
 
+  G4int copyNo = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
   G4double edep = step -> GetTotalEnergyDeposit(); 
   if (edep <= 0)
     return;
@@ -32,5 +33,5 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
   G4double time = step -> GetPreStepPoint() -> GetGlobalTime();
   G4ThreeVector pos = step -> GetPreStepPoint() -> GetPosition();
 
-  KBMCDataManager::Instance() -> AddMCStep(pos.x(), pos.y(), pos.z(), time, edep);
+  KBMCDataManager::Instance() -> AddMCStep(copyNo, pos.x(), pos.y(), pos.z(), time, edep);
 }

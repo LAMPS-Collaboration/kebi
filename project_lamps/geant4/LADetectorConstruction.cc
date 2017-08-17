@@ -1,5 +1,6 @@
 #include "LADetectorConstruction.hh"
 
+#include "KBG4RunManager.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -24,11 +25,12 @@ LADetectorConstruction::~LADetectorConstruction()
 
 G4VPhysicalVolume *LADetectorConstruction::Construct()
 {
+  auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
+
   G4double tpcInnerRadius = 150.;
   G4double tpcOuterRadius = 500.;
   G4double tpcLength = 1200.;
   G4double tpcZOffset = 300.;
-  G4double worldSize = 1000.;
 
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;
@@ -62,7 +64,8 @@ G4VPhysicalVolume *LADetectorConstruction::Construct()
   G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
   G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matP10, "TPC");
   logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-  new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
+  auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
+  runManager -> SetSensitiveDetector(pvp);
 
 
 

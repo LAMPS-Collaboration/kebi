@@ -5,6 +5,9 @@
 #include "TTree.h"
 #include "TClonesArray.h"
 
+#include <vector>
+using namespace std;
+
 class KBMCDataManager
 {
   public:
@@ -13,8 +16,10 @@ class KBMCDataManager
 
     virtual ~KBMCDataManager();
 
+    void SetDetector(Int_t detectorID);
+
     void AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz);
-    void AddMCStep(Double_t x, Double_t y, Double_t z, Double_t t, Double_t e);
+    void AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e);
 
     void NextEvent();
     void EndOfRun();
@@ -30,7 +35,7 @@ class KBMCDataManager
     Int_t fTrackID = 0;
 
     TClonesArray *fTrackArray;
-    TClonesArray *fStepArray;
+    TObjArray *fStepArrayList;
 
     static KBMCDataManager* fInstance;
 };

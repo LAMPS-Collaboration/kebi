@@ -23,11 +23,20 @@ void KBMCDataManager::Init()
   fFile = new TFile(fName,"recreate");
 
   fTrackArray = new TClonesArray("KBMCTrack", 100);
-  fStepArray = new TClonesArray("KBMCStep", 10000);
 
   fTree = new TTree("data", fName);
   fTree -> Branch("MCTrack", &fTrackArray);
-  fTree -> Branch("MCStep",  &fStepArray);
+
+  fStepArrayList = new TObjArray();
+}
+
+void KBMCDataManager::SetDetector(Int_t detectorID)
+{
+  auto stepArray = new TClonesArray("KBMCStep", 10000);
+  stepArray -> SetName(Form("MCStep%d", detectorID));
+
+  fTree -> Branch(stepArray -> GetName(), &stepArray);
+  fStepArrayList -> Add(stepArray);
 }
 
 void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz)
@@ -37,9 +46,13 @@ void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Doubl
   track -> SetMCTrack(trackID, parentID, pdg, px, py, pz);
 }
 
-void KBMCDataManager::AddMCStep(Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
+void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
 {
-  KBMCStep *step = (KBMCStep *) fStepArray -> ConstructedAt(fStepArray -> GetEntriesFast());
+  auto stepArray = (TClonesArray *) fStepArrayList -> FindObject(Form("MCStep%d", detectorID));
+  if (stepArray == nullptr)
+    return;
+
+  KBMCStep *step = (KBMCStep *) stepArray -> ConstructedAt(stepArray -> GetEntriesFast());
   step -> SetMCStep(fTrackID, x, y, z, t, e);
 }
 
@@ -48,7 +61,9 @@ void KBMCDataManager::NextEvent()
   fTree -> Fill();
 
   fTrackArray -> Clear();
-  fStepArray -> Clear();
+  TIter it(fStepArrayList);
+  while (auto stepArray = (TClonesArray *) it.Next())
+    stepArray -> Clear();
 }
 
 void KBMCDataManager::EndOfRun() 

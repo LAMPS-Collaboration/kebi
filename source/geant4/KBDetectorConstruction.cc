@@ -1,5 +1,6 @@
 #include "KBDetectorConstruction.hh"
 
+#include "KBG4RunManager.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -18,6 +19,8 @@ KBDetectorConstruction::~KBDetectorConstruction()
 
 G4VPhysicalVolume* KBDetectorConstruction::Construct()
 {  
+  auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
+
   G4NistManager* nist = G4NistManager::Instance();
 
 
@@ -67,6 +70,7 @@ G4VPhysicalVolume* KBDetectorConstruction::Construct()
                         detector_mat,
                         "Detector");
                                    
+  auto pvp =
     new G4PVPlacement(0,
                       G4ThreeVector(0,0,detector_offset_z),
                       logicDetector,
@@ -75,6 +79,8 @@ G4VPhysicalVolume* KBDetectorConstruction::Construct()
                       false,
                       0,
                       true);
+
+  runManager -> SetSensitiveDetector(pvp);
 
   return physWorld;
 }
