@@ -42,7 +42,7 @@ list(APPEND KEBI_GEANT4_DIRECTORY_LIST
 
 #---Add geant4 main programs. Directory should be under "/path/to/KEBI/"
 list(APPEND KEBI_GEANT4_EXECUTABLE_LIST
-  project_lamps/macros/mc.cc
+  project_lamps/macros/lamps.mc.cc
 )
 
 

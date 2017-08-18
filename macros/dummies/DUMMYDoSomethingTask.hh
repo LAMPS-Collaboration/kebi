@@ -16,7 +16,7 @@ class DUMMYDoSomethingTask : public KBTask
   private:
     TClonesArray* fChannelArray;
 
-  ClassDef(KBPSATask, 1)
+  ClassDef(DUMMYDoSomethingTask, 1)
 };
 
 #endif

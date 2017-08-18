@@ -6,7 +6,8 @@ using namespace std;
 ClassImp(DUMMYDetectorPlane)
 
 DUMMYDetectorPlane::DUMMYDetectorPlane()
-:KBPadPlane("DUMMYDetectorPlane", "")
+//:KBPadPlane("DUMMYDetectorPlane", "")
+:KBDetectorPlane("DUMMYDetectorPlane", "")
 {
 }
 

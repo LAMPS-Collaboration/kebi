@@ -22,7 +22,7 @@ cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.hh project_$1/task/${2}DoSome
 
 mkdir project_$1/macros
 cp ${KEBIPATH}/macros/dummies/eve.C          project_$1/macros/
-cp ${KEBIPATH}/macros/dummies/mc.cc          project_$1/macros/
+cp ${KEBIPATH}/macros/dummies/mc.cc          project_$1/macros/${1}.mc.cc
 cp ${KEBIPATH}/macros/dummies/dummy.par      project_$1/macros/
 cp ${KEBIPATH}/macros/dummies/run_geant4.mac project_$1/macros/
 cp ${KEBIPATH}/macros/dummies/vis.mac        project_$1/macros/
