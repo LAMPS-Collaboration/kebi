@@ -7,12 +7,10 @@
 KBSteppingAction::KBSteppingAction()
 : G4UserSteppingAction()
 {
-  fDetectorName = "TPC";
 }
 
 void KBSteppingAction::SetDetectorName(G4String detectorName)
 {
-  fDetectorName = detectorName;
 }
 
 void KBSteppingAction::UserSteppingAction(const G4Step* step)
@@ -21,17 +19,13 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
   if (stat == fWorldBoundary) 
     return;
 
-  G4int copyNo = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
   G4double edep = step -> GetTotalEnergyDeposit(); 
   if (edep <= 0)
     return;
 
-  G4String volume = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetName();
-  if (volume != fDetectorName)
-    return;
-
   G4double time = step -> GetPreStepPoint() -> GetGlobalTime();
   G4ThreeVector pos = step -> GetPreStepPoint() -> GetPosition();
+  G4int copyNo = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
 
   KBMCDataManager::Instance() -> AddMCStep(copyNo, pos.x(), pos.y(), pos.z(), time, edep);
 }
