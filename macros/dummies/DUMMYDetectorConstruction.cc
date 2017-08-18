@@ -29,7 +29,7 @@ G4VPhysicalVolume* DUMMYDetectorConstruction::Construct()
 
   G4Box* solidWorld = new G4Box("World", 0.5*world_size, 0.5*world_size, 0.5*world_size);
   G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, world_mat, "World");
-  G4VPhysicalVolume* physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, 0, true);
+  G4VPhysicalVolume* physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
   // -----------------------------------------------------
   // Detector

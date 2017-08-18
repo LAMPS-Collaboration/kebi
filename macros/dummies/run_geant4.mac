@@ -1,5 +1,5 @@
 /run/SetOutputFile     $KEBIPATH/data/dummy.mc.root
-/run/SetGeneratorFile  $KEBIPATH/LAMPS/macros/proton.gen
+/run/SetGeneratorFile  $KEBIPATH/input/IQMD_short.gen
 
 #/run/setCutForAGivenParticle e- 100. mm
 
