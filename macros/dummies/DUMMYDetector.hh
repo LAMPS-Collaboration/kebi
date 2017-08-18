@@ -11,7 +11,7 @@ class DUMMYDetector : public KBDetector
     DUMMYDetector();
     virtual ~DUMMYDetector() {};
 
-    virtual bool Init() { return true; }
+    virtual bool Init();
 
   protected:
     bool BuildGeometry();

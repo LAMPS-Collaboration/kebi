@@ -6,6 +6,17 @@ DUMMYDetector::DUMMYDetector()
 {
 }
 
+bool DUMMYDetector::Init()
+{
+  if (BuildGeometry() == false)
+    return false;
+
+  if (BuildDetectorPlane() == false)
+    return false;
+
+  return true;
+}
+
 bool DUMMYDetector::BuildGeometry()
 {
   if (fGeoManager == nullptr) {

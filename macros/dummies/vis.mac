@@ -6,7 +6,7 @@
 
 /run/setCutForAGivenParticle e- 100. mm
 
-/vis/scene/add/axes 0 0 0 500 mm
+#/vis/scene/add/axes 0 0 0 500 mm
 /vis/viewer/flush
 
 /vis/viewer/set/lightsVector -1 0 0
@@ -27,7 +27,7 @@
 /vis/set/lineWidth
 
 /vis/geometry/set/visibility World 0 false
-/vis/geometry/set/colour YOURDETECTOR 1 0.8 0.8 1 0.3
+#/vis/geometry/set/colour YOURDETECTOR 1 0.8 0.8 1 0.3
 
 /vis/viewer/set/style surface
 /vis/viewer/set/hiddenMarker true
