@@ -1,4 +1,0 @@
-[submodule "GETDecoder"]
-	path = GETDecoder
-	url = http://github.com/KUNPL/GETDecoder.git
-  branch = master
