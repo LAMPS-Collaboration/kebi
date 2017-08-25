@@ -1,4 +1,5 @@
 #include "KBHit.hh"
+#include "KBPulseGenerator.hh"
 
 #include "TEvePointSet.h"
 
@@ -45,6 +46,14 @@ void KBHit::Print(Option_t *option) const
   cout << "  Track-ID         : " << fTrackID << endl;
   cout << "  Position         : (" << fX << ", " << fY << ", " << fZ << ") " << endl;
   cout << "  (tb, Charge)     : (" << fTb << ", " << fCharge << ")" << endl;
+}
+
+TF1 *KBHit::GetPulseFunction(Option_t *)
+{
+  auto pulseGen = KBPulseGenerator::GetPulseGenerator();
+  auto f1 = pulseGen -> GetPulseFunction("pulse");
+  f1 -> SetParameters(fCharge, fTb);
+  return f1;
 }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }

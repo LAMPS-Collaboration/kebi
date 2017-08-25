@@ -6,6 +6,7 @@
 #include "TEveElement.h"
 #include "TVector3.h"
 #include "TMath.h"
+#include "TF1.h"
 
 #include <vector>
 using namespace std;
@@ -18,6 +19,8 @@ class KBHit : public KBContainer
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
+
+    virtual TF1 *GetPulseFunction(Option_t *option = "");
 
     void SetHitID(Int_t id);
     void SetPadID(Int_t id);
