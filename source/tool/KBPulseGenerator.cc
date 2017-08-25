@@ -9,10 +9,18 @@ using namespace std;
 
 ClassImp(KBPulseGenerator)
 
+KBPulseGenerator* KBPulseGenerator::fInstance = nullptr;
+
+KBPulseGenerator* KBPulseGenerator::GetPulseGenerator(TString fileName) {
+  if (fInstance != nullptr)
+    return fInstance;
+  return new KBPulseGenerator(fileName);
+}
+
 KBPulseGenerator::KBPulseGenerator()
 {
   TString kebi = gSystem -> Getenv("KEBIPATH");
-  TString fileName = "pulser_232ns.dat";
+  TString fileName = "pulser_464ns.dat";
   Initialize(fileName);
 }
 
@@ -23,6 +31,8 @@ KBPulseGenerator::KBPulseGenerator(TString fileName)
 
 void KBPulseGenerator::Initialize(TString fileName)
 {
+  fInstance = this;
+
   TString kebi = gSystem -> Getenv("KEBIPATH");
 
   fileName = kebi + "/input/" + fileName;

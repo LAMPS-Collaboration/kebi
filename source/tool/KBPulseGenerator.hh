@@ -9,6 +9,8 @@
 class KBPulseGenerator
 {
   public:
+    static KBPulseGenerator* GetPulseGenerator(TString fileName = "pulser_464ns.dat");
+
     /** Construct KBPulseGenerator with default setting */
     KBPulseGenerator();
 
@@ -103,6 +105,9 @@ class KBPulseGenerator
     TF1 *fTailFunction = nullptr;
 
     TGraph *fTailGraph = nullptr;
+
+  private:
+    static KBPulseGenerator *fInstance;
 
   ClassDef(KBPulseGenerator, 1)
 };
