@@ -3,20 +3,28 @@
 
 void configureRun(Int_t runID)
 {
-  bool testRun = false;
+  /* run option */
+  bool testRun = true; // true will only show bash commands that will run when false
+  Long64_t position0 = 1; // either 0 or 1
+  Int_t count_ffff_limit = 10; // amount of event blocks to scan
 
-  bool printAll = false;
-  bool printBlock = true;
 
-  Int_t numWordsInLine = 8;
+  /* print option */
+  bool printAll = false; // this option will print ALOT of lines
+  bool printBlock = true; // this option prints blocks (at most [count_ffff_limit] blocks)
+  Int_t numWordsInPrintLine = 8;
+
+
+
+  //////////////////////////////////////////
+  /*          DO NOT TOUCH BELOW          */
+  //////////////////////////////////////////
+
+
 
   Long64_t stepBack = 80;
   Long64_t stepForward = 400;
-
   Char_t buffer[2];
-
-  Int_t count_ffff_limit = 100;
-
   vector<TString> fileList;
 
   DIR *dir;
@@ -52,12 +60,14 @@ void configureRun(Int_t runID)
     std::cout << std::hex << std::setfill('0');
     std::cout << "INPUT: " << inputName.Data() << endl;
 
+    in.seekg(position0);
+
     if (in.is_open()) {
       while(true)
       {
         bool found_ffff = false;
 
-        for (auto iword = 0; iword < numWordsInLine; ++iword) {
+        for (auto iword = 0; iword < numWordsInPrintLine; ++iword) {
           position = in.tellg();
           if (in.read(buffer, 2*sizeof(Char_t)) == nullptr) {
             cout << "End of file at " << std::dec << position << "++"<< endl;
@@ -79,7 +89,7 @@ void configureRun(Int_t runID)
         if (found_ffff) 
         {
           if (position - stepBack < 0)
-            in.seekg(0);
+            in.seekg(position0);
           else
             in.seekg(position - stepBack);
 
@@ -93,7 +103,7 @@ void configureRun(Int_t runID)
             if (splitFile)
               found_4000 = true;
 
-            for (auto iword = 0; iword < numWordsInLine; ++iword) {
+            for (auto iword = 0; iword < numWordsInPrintLine; ++iword) {
               position = in.tellg();
               in.read(buffer, 2*sizeof(Char_t));
               if (printBlock)

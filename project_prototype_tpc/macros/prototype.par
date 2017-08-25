@@ -1,6 +1,6 @@
 #LAMPS TPC parameter
 
-padMap s  $KEBIPATH/LAMPS/macros/prototype/LAP.padMap.ELPH.dat
+padMap s  $KEBIPATH/project_prototype_tpc/macros/LAP.padMap.ELPH.dat
 
 worldSize d  1000.  # side legnth of cubic world [mm]
 rMinTPC   d  75.    # minimum radius (gas) [mm]
