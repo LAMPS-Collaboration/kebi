@@ -5,6 +5,17 @@ ClassImp(KBPSAFastFit)
 KBPSAFastFit::KBPSAFastFit()
 : KBPulseGenerator()
 {
+  Init();
+}
+
+KBPSAFastFit::KBPSAFastFit(TString fileName)
+: KBPulseGenerator(fileName)
+{
+  Init();
+}
+
+void KBPSAFastFit::Init()
+{
   fTbStartCut = 512 - fNDFTbs - 1;
   fThresholdOneTbStep = fThresholdTbStep * fThreshold;
 }
@@ -229,8 +240,8 @@ KBPSAFastFit::TestPulse(Double_t *adc,
   {
     for (Int_t iTbPulse = -1; iTbPulse < numTbsCorrection; iTbPulse++) {
       Int_t tb = Int_t(tbHit) + iTbPulse;
-      //adc[tb] -= Pulse(tb, amplitude, tbHit);
-      adc[tb] = 0;
+      adc[tb] -= Pulse(tb, amplitude, tbHit);
+      //adc[tb] = 0;
     }
 
     return false;
@@ -238,8 +249,8 @@ KBPSAFastFit::TestPulse(Double_t *adc,
 
   for (Int_t iTbPulse = -1; iTbPulse < numTbsCorrection; iTbPulse++) {
     Int_t tb = Int_t(tbHit) + iTbPulse;
-    //adc[tb] -= Pulse(tb, amplitude, tbHit);
-    adc[tb] = 0;
+    adc[tb] -= Pulse(tb, amplitude, tbHit);
+    //adc[tb] = 0;
   }
 
 
