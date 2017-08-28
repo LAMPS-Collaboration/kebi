@@ -23,13 +23,18 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
 
     virtual bool IsInBoundary(Double_t i, Double_t j) = 0;
 
+    virtual Int_t FindChannelID(Double_t i, Double_t j) = 0;
+
     virtual TCanvas *GetCanvas(Option_t *option = "");
-    virtual void DrawFrame(Option_t *option = "") = 0;
+    virtual void DrawFrame(Option_t *option = "");
     virtual TH2* GetHist(Option_t *option = "-1") = 0;
 
   public:
     void SetPlaneID(Int_t id);
     Int_t GetPlaneID() const;
+
+    void SetPlaneK(Double_t k);
+    Double_t GetPlaneK();
 
     KBChannel *GetChannelFast(Int_t idx);
     KBChannel *GetChannel(Int_t idx);
@@ -41,6 +46,7 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
     TObjArray *fChannelArray = nullptr;
 
     Int_t fPlaneID = -1;
+    Double_t fPlaneK = -999;
 
     TCanvas *fCanvas = nullptr;
     TH2 *fH2Plane = nullptr;

@@ -130,6 +130,8 @@ void KBPadPlane::Clear(Option_t *)
   }
 }
 
+Int_t KBPadPlane::FindChannelID(Double_t i, Double_t j) { return FindPadID(i,j); }
+
 void KBPadPlane::ResetHitMap()
 {
   KBPad *pad;

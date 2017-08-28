@@ -40,6 +40,9 @@ KBChannel *KBDetectorPlane::GetChannel(Int_t idx)
 void KBDetectorPlane::SetPlaneID(Int_t id) { fPlaneID = id; }
 Int_t KBDetectorPlane::GetPlaneID() const { return fPlaneID; }
 
+void KBDetectorPlane::SetPlaneK(Double_t k) { fPlaneK = k; }
+Double_t KBDetectorPlane::GetPlaneK() { return fPlaneK; }
+
 Int_t KBDetectorPlane::GetNChannels() { return fChannelArray -> GetEntriesFast(); }
 
 TObjArray *KBDetectorPlane::GetChannelArray() { return fChannelArray; }
@@ -49,4 +52,8 @@ TCanvas *KBDetectorPlane::GetCanvas(Option_t *)
   if (fCanvas == nullptr)
     fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,800,800);
   return fCanvas;
+}
+
+void KBDetectorPlane::DrawFrame(Option_t *)
+{
 }
