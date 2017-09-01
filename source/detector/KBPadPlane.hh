@@ -29,7 +29,7 @@ class KBPadPlane : public KBDetectorPlane
 
     void SetPadArray(TClonesArray *padArray);
     void SetHitArray(TClonesArray *hitArray);
-    Int_t GetNPads();
+    Int_t GetNumPads();
 
     void FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val); 
     void FillDataToHist(Option_t *option = "out");

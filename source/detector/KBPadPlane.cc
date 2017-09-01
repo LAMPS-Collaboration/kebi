@@ -116,7 +116,7 @@ void KBPadPlane::FillDataToHist(Option_t *option)
   }
 }
 
-Int_t KBPadPlane::GetNPads() { return GetNChannels(); }
+Int_t KBPadPlane::GetNumPads() { return GetNChannels(); }
 
 void KBPadPlane::SetPlaneK(Double_t k) { fPlaneK = k; }
 Double_t KBPadPlane::GetPlaneK() { return fPlaneK; }
