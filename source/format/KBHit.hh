@@ -4,7 +4,7 @@
 #include "KBContainer.hh"
 
 #include "TEveElement.h"
-#include "TVector3.hh"
+#include "TVector3.h"
 #include "TMath.h"
 #include "TF1.h"
 
