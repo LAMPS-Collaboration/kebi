@@ -4,7 +4,7 @@
 #include "KBContainer.hh"
 
 #include "TEveElement.h"
-#include "TVector3.h"
+#include "TVector3.hh"
 #include "TMath.h"
 #include "TF1.h"
 
@@ -25,15 +25,18 @@ class KBHit : public KBContainer
     void SetHitID(Int_t id);
     void SetPadID(Int_t id);
     void SetTrackID(Int_t id);
+
     void SetX(Double_t x);
     void SetY(Double_t y);
     void SetZ(Double_t z);
     void SetDX(Double_t dx);
     void SetDY(Double_t dy);
     void SetDZ(Double_t dz);
+
     void SetSection(Int_t section);
     void SetRow(Int_t row);
     void SetLayer(Int_t layer);
+
     void SetTb(Double_t tb);
     void SetCharge(Double_t charge);
     void AddHit(KBHit *hit);
@@ -41,27 +44,31 @@ class KBHit : public KBContainer
     Int_t GetHitID() const;
     Int_t GetPadID() const;
     Int_t GetTrackID() const;
+
+    TVector3 GetPosition() const;
     Double_t GetX() const;
     Double_t GetY() const;
     Double_t GetZ() const;
-    TVector3 GetPosition() const;
+
+    TVector3 GetPosSigma() const;
     Double_t GetDX() const;
     Double_t GetDY() const;
     Double_t GetDZ() const;
+
     Int_t GetSection() const;
     Int_t GetRow() const;
     Int_t GetLayer() const;
-    TVector3 GetPosSigma() const;
     Double_t GetTb() const;
     Double_t GetCharge() const;
+
+    //////////////////////////////////////////////////
 
     vector<Int_t> *GetTrackCandArray();
     Int_t GetNumTrackCands();
     void AddTrackCand(Int_t id);
     void RemoveTrackCand(Int_t trackID);
 
-    void Change();
-    void ChangeBack();
+    //////////////////////////////////////////////////
 
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
@@ -74,12 +81,8 @@ class KBHit : public KBContainer
     Int_t fPadID = -1;
     Int_t fTrackID = -1;
 
-    Double_t fX = -999;
-    Double_t fY = -999;
-    Double_t fZ = -999;
-    Double_t fDX = -999;
-    Double_t fDY = -999;
-    Double_t fDZ = -999;
+    TVector3 fPosition = TVector3(-999,-999,-999);
+    TVector3 fPosSigma = TVector3(-999,-999,-999);
 
     Int_t fSection = -999;
     Int_t fRow = -999;
@@ -89,7 +92,6 @@ class KBHit : public KBContainer
     Double_t fCharge = 0;
 
     vector<Int_t> fTrackCandArray;  //!
-
 
   ClassDef(KBHit, 1)
 };
