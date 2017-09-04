@@ -22,6 +22,11 @@ bool DUMMYDetectorPlane::IsInBoundary(Double_t i, Double_t j)
   return true;
 }
 
+Int_t DUMMYDetectorPlane::FindChannelID(Double_t i, Double_t j)
+{
+  return -1;
+}
+
 TH2* DUMMYDetectorPlane::GetHist(Option_t *option)
 {
   if (fH2Plane != nullptr)
