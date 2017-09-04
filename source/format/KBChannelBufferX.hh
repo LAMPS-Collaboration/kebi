@@ -12,10 +12,7 @@ class KBChannelBufferX : public KBChannel
 
     virtual void Draw(Option_t *option = "");
 
-    virtual TH1 *GetHist(bool update = true) = 0;
-
-  protected:
-    TH1 *fHistogram = nullptr; //!
+    virtual TH1 *GetHist(TString name = "") = 0;
 
   ClassDef(KBChannelBufferX, 1)
 };

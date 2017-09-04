@@ -11,7 +11,9 @@ class KBChannelBufferS : public KBChannelBufferX, public TArrayS
     KBChannelBufferS() {};
     virtual ~KBChannelBufferS() {}
 
-    TH1 *GetHist(bool update = true);
+    virtual void Clear(Option_t *option = "");
+
+    TH1 *GetHist(TString name = "");
 
   ClassDef(KBChannelBufferS, 1)
 };

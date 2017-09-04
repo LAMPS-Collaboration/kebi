@@ -2,17 +2,22 @@
 
 ClassImp(KBChannelBufferD)
 
-TH1 *KBChannelBufferD::GetHist(bool update)
+void KBChannelBufferD::Clear(Option_t *)
 {
-  if (fHistogram == nullptr) {
-    fHistogram = new TH1D(Form("Channel%d",fID),Form("Channel%d;Time-bucket;ADC",fID),fN,0,fN);
-    update = false;
-  }
+  fID = -1;
 
-  if (update) {
-    for (auto iTb = 0; iTb < fN; ++iTb)
-      fHistogram -> SetBinContent(iTb+1,fArray[iTb]);
-  }
+  for (auto iTb = 0; iTb < fN; ++iTb)
+    fArray[iTb] = 0;
+}
 
-  return fHistogram;
+TH1 *KBChannelBufferD::GetHist(TString name)
+{
+  if (name.IsNull())
+    name = Form("Channel%d",fID);
+
+  auto hist = new TH1D(name,Form("Channel%d;Time-bucket;ADC",fID),fN,0,fN);
+  for (auto iTb = 0; iTb < fN; ++iTb)
+    hist -> SetBinContent(iTb+1,fArray[iTb]);
+
+  return hist;
 }
