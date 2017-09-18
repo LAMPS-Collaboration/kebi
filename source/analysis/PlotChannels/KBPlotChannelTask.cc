@@ -21,8 +21,8 @@ bool KBPlotChannelTask::Init()
   auto par = run -> GetParameterContainer();
   fDetector = run -> GetDetector();
   fNPlanes = fDetector -> GetNPlanes();
-  par -> GetParInt("tbStart", fTbStart);
-  par -> GetParInt("nTbs", fNTbs);
+  fTbStart = par -> GetParInt("tbStart");
+  fNTbs = par -> GetParInt("nTbs");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 

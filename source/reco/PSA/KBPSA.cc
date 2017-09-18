@@ -28,8 +28,8 @@ void KBPSA::SetThreshold(Double_t val) { fThreshold = val; }
 
 void KBPSA::SetParameters(KBParameterContainer *par)
 {
-  par -> GetParInt("tbStart",fTbStart);
-  par -> GetParInt("nTbs",fTbEnd);
-  fTbEnd = fTbStart + fTbEnd - 1;
-  par -> GetParDouble("ADCThreshold",fThreshold);
+  fTbStart = par -> GetParInt("tbStart");
+  auto nTbs = par -> GetParInt("nTbs");
+  fTbEnd = fTbStart + nTbs - 1;
+  fThreshold = par -> GetParDouble("ADCThreshold");
 }

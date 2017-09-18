@@ -10,7 +10,7 @@ KBDetector::KBDetector(const char *name, const char *title)
 {
 }
 
-void KBDetector::Print(Option_t *option) const
+void KBDetector::Print(Option_t *) const
 {
   cout << "[" << ClassName() << "] " << fName << ", " << fTitle << endl;
 

@@ -12,18 +12,17 @@ KBTpc::KBTpc(const char *name, const char *title)
 
 bool KBTpc::Init()
 {
-  TString axis;
-  fPar -> GetParString("tpcEFieldAxis", axis);
+  TString axis = fPar -> GetParString("tpcEFieldAxis");
   axis.ToLower();
 
   if (axis == "x") fEFieldAxis = 0;
   if (axis == "y") fEFieldAxis = 1;
   if (axis == "z") fEFieldAxis = 2;
 
-  fPar -> GetParInt("tpcNPadPlanes", fNPlanes);
-  fPar -> GetParDouble("tpcCathodePlaneK", fCathodeK);
+  fNPlanes = fPar -> GetParInt("tpcNPadPlanes");
+  fCathodeK = fPar -> GetParDouble("tpcCathodePlaneK");
   for (Int_t iPlane = 0; iPlane < fNPlanes; iPlane++)
-    fPar -> GetParDouble(Form("tpcPadPlaneK%d",iPlane), fPlaneK[iPlane]);
+    fPlaneK[iPlane] = fPar -> GetParDouble(Form("tpcPadPlaneK%d",iPlane));
 
   if (BuildGeometry() == false)
     return false;
