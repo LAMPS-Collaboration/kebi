@@ -73,6 +73,8 @@ class KBRun : public KBTask
 
     bool Init(); ///< Initailize KBRun. Init() must be done before Run().
 
+    void CreateParameterFile(TString name);
+
     /**
      * Register obj as a output branch with given name.
      * obj will not be registered if same name already exist in the branch list and return fail.

@@ -31,15 +31,19 @@
 class KBParameterContainer : public TObjArray
 {
   public:
-    KBParameterContainer();
-    KBParameterContainer(TString parName); ///< Constructor with input parameter file name
+    KBParameterContainer(bool debug = false);
+    KBParameterContainer(const char *parName, bool debug = false); ///< Constructor with input parameter file name
     virtual ~KBParameterContainer() {}
 
-    virtual void Print(Option_t *option="") const; ///< Print list of parameters
+    void SaveAs(const char *filename, Option_t *option = "") const;
+
+    void SetDebugMode(bool val = true);
+
+    //virtual void Print(Option_t *option ="") const;
 
     /**
      * Add parameter by given fileName.
-     * If fileName do not include path, file will be searched in path/to/KEBI/input.
+     * If fileName does not include path, file will be searched in path/to/KEBI/input.
      *
      * fileName will also be registered as parameter. 
      * If parNameForFile is not set, parameter name will be set as 
@@ -48,19 +52,20 @@ class KBParameterContainer : public TObjArray
     virtual Int_t AddFile(TString fileName, TString parNameForFile = "");
     Int_t GetNumInputFiles(); ///< Get number of input parameter files
 
-    bool SetPar(TString name, Bool_t val);   ///< Set Bool_t type parameter with given name
-    bool SetPar(TString name, Int_t val);    ///< Set Int_t type parameter with given name
+    bool SetPar(TString name, Bool_t val);   ///< Set Bool_t   type parameter with given name
+    bool SetPar(TString name, Int_t val);    ///< Set Int_t    type parameter with given name
     bool SetPar(TString name, Double_t val); ///< Set Double_t type parameter with given name
-    bool SetPar(TString name, TString val);  ///< Set TString type parameter with given name
+    bool SetPar(TString name, TString val);  ///< Set TString  type parameter with given name
 
-    bool GetParBool(TString name, Bool_t &val, bool exitElse = true)     const; ///< Get Bool_t type parameter to val with given name. Terminate if parameter do not exist.
-    bool GetParInt(TString name, Int_t &val, bool exitElse = true)       const; ///< Get Int_t type parameter to val with given name. Terminate if parameter do not exist.
-    bool GetParDouble(TString name, Double_t &val, bool exitElse = true) const; ///< Get Double_t type parameter to val with given name. Terminate if parameter do not exist.
-    bool GetParString(TString name, TString &val, bool exitElse = true)  const; ///< G get TString type parameter to val with given name. Terminate if parameter do not exist.
+    bool     GetParBool(TString name);   ///< Get Bool_t   type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+    Int_t    GetParInt(TString name);    ///< Get Int_t    type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+    Double_t GetParDouble(TString name); ///< Get Double_t type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+    TString  GetParString(TString name); ///< Get TString  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
 
     void ReplaceEnvironmentVariable(TString &val);
 
-  protected:
+  private:
+    bool fDebugMode = false;
     Int_t fNumInputFiles = 0;
 
   ClassDef(KBParameterContainer, 1)

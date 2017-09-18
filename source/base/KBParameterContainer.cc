@@ -1,4 +1,6 @@
+#include "TROOT.h"
 #include "TSystem.h"
+#include "TDirectory.h"
 #include "TApplication.h"
 #include "KBParameterContainer.hh"
 #include <iostream>
@@ -11,17 +13,99 @@ using namespace std;
 
 ClassImp(KBParameterContainer)
 
-KBParameterContainer::KBParameterContainer()
-:TObjArray()
+KBParameterContainer::KBParameterContainer(bool debug)
+:TObjArray(), fDebugMode(debug)
 {
   fName = "ParameterContainer";
 }
 
-KBParameterContainer::KBParameterContainer(TString parName)
-:KBParameterContainer()
+KBParameterContainer::KBParameterContainer(const char *parName, bool debug)
+:KBParameterContainer(debug)
 {
-  AddFile(parName);
+  AddFile(TString(parName));
 }
+
+void KBParameterContainer::SetDebugMode(bool val) { fDebugMode = val; }
+
+void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
+{
+  if (filename && strstr(filename,".par"))
+  {
+    cout << "Writting " << filename << " as parameter file." << endl;
+    ofstream out(filename);
+    out << "# " << filename << endl;
+    out << "# created from method KBParameterContainer::SaveAs" << endl;
+    out << endl;
+
+    TIter iterator(this);
+    TObject *obj;
+    while ((obj = dynamic_cast<TObject*>(iterator())))
+    {
+      TString className = obj -> ClassName();
+
+      if (className == "TNamed") {
+        TNamed *par = (TNamed *) obj;
+        TString key = par -> GetName();
+        bool newpar = false;
+        if (key.Index("NEWPAR")==0) {
+          key.Remove(0,6);
+          newpar = true;
+        }
+        TString value = par -> GetTitle();
+        out << left << setw(25) << key << "  s  " << value;
+        if (newpar)
+          out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
+        out << endl;
+      }
+      else if (className == "TParameter<int>") {
+        TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
+        TString key = par -> GetName();
+        bool newpar = false;
+        if (key.Index("NEWPAR")==0) {
+          key.Remove(0,6);
+          newpar = true;
+        }
+        Int_t value = par -> GetVal();
+        out << left << setw(25) << key << "  i  " << value;
+        if (newpar)
+          out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
+        out << endl;
+      }
+      else if (className == "TParameter<double>") {
+        TParameter<Double_t> *par = (TParameter<Double_t> *) obj;
+        TString key = par -> GetName();
+        bool newpar = false;
+        if (key.Index("NEWPAR")==0) {
+          key.Remove(0,6);
+          newpar = true;
+        }
+        Double_t value = par -> GetVal();
+        out << left << setw(25) << key << "  d  " << value;
+        if (newpar)
+          out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
+        out << endl;
+      }
+      else if (className == "TParameter<bool>") {
+        TParameter<bool> *par = (TParameter<bool> *) obj;
+        TString key = par -> GetName();
+        bool newpar = false;
+        if (key.Index("NEWPAR")==0) {
+          key.Remove(0,6);
+          newpar = true;
+        }
+        TString value = par -> GetVal() == true ? "true" : "false";
+        out << left << setw(25) << key << "  b  " << value;
+        if (newpar)
+          out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
+        out << endl;
+      }
+    }
+    return;
+  }
+  else
+    TObject::SaveAs(filename, option);
+}
+
 
 void KBParameterContainer::ReplaceEnvironmentVariable(TString &val)
 {
@@ -118,7 +202,8 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
 
 Int_t KBParameterContainer::GetNumInputFiles() { return fNumInputFiles; }
 
-void KBParameterContainer::Print(Option_t *) const
+/*
+void KBParameterContainer::Print(Option_t *option) const
 {
   TIter iterator(this);
 
@@ -155,6 +240,7 @@ void KBParameterContainer::Print(Option_t *) const
     }
   }
 }
+*/
 
 
 bool KBParameterContainer::SetPar(TString name, Bool_t val)
@@ -201,58 +287,62 @@ bool KBParameterContainer::SetPar(TString name, TString val)
   return true;
 }
 
-bool KBParameterContainer::GetParBool(TString name, Bool_t &val, bool exitElse) const
+bool KBParameterContainer::GetParBool(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
-    if (exitElse)
+    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    if (fDebugMode)
+      SetPar(TString("NEWPAR")+name, false);
+    else
       gApplication -> Terminate();
     return false;
   }
 
-  val = ((TParameter<Bool_t> *) obj) -> GetVal();
-  return true;
+  return ((TParameter<Bool_t> *) obj) -> GetVal();
 }
 
-bool KBParameterContainer::GetParInt(TString name, Int_t &val, bool exitElse) const
+Int_t KBParameterContainer::GetParInt(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
-    if (exitElse)
+    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    if (fDebugMode)
+      SetPar(TString("NEWPAR")+name, -999);
+    else
       gApplication -> Terminate();
-    return false;
+    return -999;
   }
 
-  val = ((TParameter<Int_t> *) obj) -> GetVal();
-  return true;
+  return ((TParameter<Int_t> *) obj) -> GetVal();
 }
 
-bool KBParameterContainer::GetParDouble(TString name, Double_t &val, bool exitElse) const
+Double_t KBParameterContainer::GetParDouble(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
-    if (exitElse)
+    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    if (fDebugMode)
+      SetPar(TString("NEWPAR")+name, -999.999);
+    else
       gApplication -> Terminate();
-    return false;
+    return -999.999;
   }
 
-  val = ((TParameter<Double_t> *) obj) -> GetVal();
-  return true;
+  return ((TParameter<Double_t> *) obj) -> GetVal();
 }
 
-bool KBParameterContainer::GetParString(TString name, TString &val, bool exitElse) const
+TString KBParameterContainer::GetParString(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " no not exist!" << endl;
-    if (exitElse)
+    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    if (fDebugMode)
+      SetPar(TString("NEWPAR")+name, TString("DOES_NOT_EXIST"));
+    else
       gApplication -> Terminate();
-    return false;
+    return "DOES_NOT_EXIST";
   }
 
-  val = ((TNamed *) obj) -> GetTitle();
-  return true;
+  return ((TNamed *) obj) -> GetTitle();
 }

@@ -178,7 +178,7 @@ bool KBRun::Init()
     cout << endl;
     cout << "[KBRun] Input file : " << fInputFileName << endl;
     if (!CheckFileExistence(fInputFileName)) {
-      cout << "[KBRun] Init with no input file." << endl;
+      cout << "[KBRun] given input file deos not exist!" << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -219,8 +219,7 @@ bool KBRun::Init()
 
   if (fInputFile != nullptr && fInputFile -> Get("RunHeader") != nullptr) {
     KBParameterContainer *runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
-    Int_t runID;
-    runHeaderIn -> GetParInt("RunID",runID);
+    Int_t runID = runHeaderIn -> GetParInt("RunID");
 
     if (fRunID == -1)
       fRunID = runID;
@@ -268,6 +267,8 @@ bool KBRun::Init()
       return false;
     }
   }
+  else
+    fOutputFileName = ConfigureDataPath(fOutputFileName);
 
   if (CheckFileExistence(fOutputFileName)) {
     //cout << "  Output file " << fOutputFileName << " already exist!" << endl;
@@ -290,6 +291,27 @@ bool KBRun::Init()
     cout << "[KBRun] FAILED initializing tasks." << endl;
 
   return fInitialized;
+}
+
+void KBRun::CreateParameterFile(TString name)
+{
+  cout << "===========================================================================================" << endl;
+  cout << "  CreateParameterFile -> " << name << endl;
+  cout << endl;
+  cout << "  Note:" << endl;
+  cout << "  1. This method will create skeleton parameter file with given name." << endl;
+  cout << "  2. You must set input file as usual." << endl;
+  cout << "  3. KBRun will only run Init() method to collect parameters." << endl;
+  cout << "  3. If program stops due to missing parameter, this method will not work properly." << endl;
+  cout << "===========================================================================================" << endl;
+
+  fPar -> SetDebugMode(true);
+  Init();
+  if (name.Index(".par") < 0)
+    name = name + ".par";
+  fPar -> SaveAs(name);
+
+  Terminate(this);
 }
 
 bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
