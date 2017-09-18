@@ -21,12 +21,11 @@ LAPPadPlane::LAPPadPlane()
 
 bool LAPPadPlane::Init()
 {
-  TString padMapFileName;
-  fPar -> GetParString("padMap", padMapFileName);
+  TString padMapFileName = fPar -> GetParString("padMap");
   ifstream padMapData(padMapFileName.Data());
 
-  fPar -> GetParDouble("ppRMin", fRMin);
-  fPar -> GetParDouble("ppRMax", fRMax);
+  fRMin = fPar -> GetParDouble("ppRMin");
+  fRMax = fPar -> GetParDouble("ppRMax");
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);
@@ -201,7 +200,7 @@ bool LAPPadPlane::IsInBoundary(Double_t i, Double_t j)
   return false;
 }
 
-TH2* LAPPadPlane::GetHist(Option_t *option)
+TH2* LAPPadPlane::GetHist(Option_t *)
 {
   if (fH2Plane != nullptr)
     return fH2Plane; 
@@ -261,7 +260,7 @@ TH2* LAPPadPlane::GetHist(Option_t *option)
   return fH2Plane;
 }
 
-void LAPPadPlane::DrawFrame(Option_t *option)
+void LAPPadPlane::DrawFrame(Option_t *)
 {
   Color_t lineColor = kBlack;
 
@@ -342,7 +341,7 @@ Int_t LAPPadPlane::FindSection(Double_t i, Double_t j)
   }
 }
 
-TCanvas *LAPPadPlane::GetCanvas(Option_t *option)
+TCanvas *LAPPadPlane::GetCanvas(Option_t *)
 {
   if (fCanvas == nullptr)
     fCanvas = new TCanvas(fName+Form("%d",fPlaneID),fName,1100,600);

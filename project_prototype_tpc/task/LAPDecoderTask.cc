@@ -29,8 +29,7 @@ bool LAPDecoderTask::Init()
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);
 
-  TString padMapFileName;
-  par -> GetParString("padMap", padMapFileName);
+  TString padMapFileName = par -> GetParString("padMap");
   fPadMap.open(padMapFileName.Data());
 
   if (fDecoder -> GetNumData() == 0) {
