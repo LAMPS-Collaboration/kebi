@@ -27,21 +27,21 @@ bool LADriftElectronTask::Init()
   fNPlanes = fTpc -> GetNPlanes();
 
   KBParameterContainer *par = run -> GetParameterContainer();
-  par -> GetParDouble("gasDriftVelocity", fDriftVelocity);
-  par -> GetParDouble("gasCoefLongDiff", fCoefLD);
-  par -> GetParDouble("gasCoefTranDiff", fCoefTD);
-  par -> GetParDouble("gasEIonize", fEIonize);
-  par -> GetParInt("nElInCluster", fNElInCluster);
+  fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
+  fCoefLD = par -> GetParDouble("gasCoefLongDiff");
+  fCoefTD = par -> GetParDouble("gasCoefTranDiff");
+  fEIonize = par -> GetParDouble("gasEIonize");
+  fNElInCluster = par -> GetParInt("nElInCluster");
 
   TString gemDataFile;
-  par -> GetParString("tpcGEMDataFile", gemDataFile);
+  gemDataFile = par -> GetParString("tpcGEMDataFile");
   TFile *gemFile = new TFile(gemDataFile, "read");
   fGainFunction = (TF1*) gemFile -> Get("gainFit");
   fGainZeroRatio = (((TObjString *) ((TList *) gemFile -> GetListOfKeys()) -> At(2)) -> GetString()).Atof();
   fDiffusionFunction = (TH2D*) ((TCanvas*) gemFile -> Get("diffusion")) -> FindObject("distHist");
 
-  par -> GetParInt("nTbs", fNTbs);
-  par -> GetParDouble("tbTime", fTbTime);
+  fNTbs = par -> GetParInt("nTbs");
+  fTbTime = par -> GetParDouble("tbTime");
 
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);

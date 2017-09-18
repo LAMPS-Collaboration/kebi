@@ -25,22 +25,22 @@ bool LAPadPlane::Init()
 
   fFuncXRightBound = new TF1("RightBound","1/(TMath::Tan(TMath::Pi()*3/8))*x",10,55);
 
-  fPar -> GetParDouble("rMinTPC", fRMin);
-  fPar -> GetParDouble("rMaxTPC", fRMax);
+  fRMin = fPar -> GetParDouble("rMinTPC");
+  fRMax = fPar -> GetParDouble("rMaxTPC");
 
-  fPar -> GetParInt("ppNLayerDivision", fNLayerDivision);
+  fNLayerDivision = fPar -> GetParInt("ppNLayerDivision");
 
   fArcLength = new Double_t[fNLayerDivision];
   fRadius = new Double_t[fNLayerDivision];
   fNLayers = new Int_t[fNLayerDivision];
 
   for (Int_t iDiv = 0; iDiv < fNLayerDivision; iDiv++) {
-    fPar -> GetParDouble(Form("ppArcLength%d",iDiv), fArcLength[iDiv]);
-    fPar -> GetParDouble(Form("ppRadius%d",iDiv), fRadius[iDiv]);
-    fPar -> GetParInt(Form("ppNLayers%d",iDiv), fNLayers[iDiv]);
+    fArcLength[iDiv] = fPar -> GetParDouble(Form("ppArcLength%d",iDiv));
+    fRadius[iDiv] = fPar -> GetParDouble(Form("ppRadius%d",iDiv));
+    fNLayers[iDiv] = fPar -> GetParInt(Form("ppNLayers%d",iDiv));
   }
 
-  fPar -> GetParInt("innerTrackerDivisionIndex",fInDivisionIndex);
+  fInDivisionIndex = fPar -> GetParInt("innerTrackerDivisionIndex");
 
   fTanPi1o8 = TMath::Tan(TMath::Pi()*1./8.);
   fTanPi3o8 = TMath::Tan(TMath::Pi()*3./8.);

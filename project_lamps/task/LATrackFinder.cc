@@ -19,11 +19,11 @@ void LATrackFinder::Init()
   fGoodHits = new vKBHit;
   fBadHits = new vKBHit;
 
-  fPar -> GetParDouble("LATF_defaultScale", fDefaultScale);
-  fPar -> GetParDouble("LATF_trackWCutLL", fTrackWCutLL);
-  fPar -> GetParDouble("LATF_trackWCutHL", fTrackWCutHL);
-  fPar -> GetParDouble("LATF_trackHCutLL", fTrackHCutLL);
-  fPar -> GetParDouble("LATF_trackHCutHL", fTrackHCutHL);
+  fDefaultScale = fPar -> GetParDouble("LATF_defaultScale");
+  fTrackWCutLL = fPar -> GetParDouble("LATF_trackWCutLL");
+  fTrackWCutHL = fPar -> GetParDouble("LATF_trackWCutHL");
+  fTrackHCutLL = fPar -> GetParDouble("LATF_trackHCutLL");
+  fTrackHCutHL = fPar -> GetParDouble("LATF_trackHCutHL");
 
   fFitter = new KBHelixTrackFitter();
 }
@@ -63,7 +63,8 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
         }
 #endif
 
-    for (Int_t iHit = 0; iHit < fBadHits -> size(); ++iHit)
+    Int_t numBadHits = fBadHits -> size();
+    for (Int_t iHit = 0; iHit < numBadHits; ++iHit)
       fPadPlane -> AddHit(fBadHits -> at(iHit));
     fBadHits -> clear();
 
@@ -73,7 +74,8 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
     if (survive) {
       vector<KBHit *> *trackHits = track -> GetHitArray();
       Int_t trackID = track -> GetTrackID();
-      for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+      Int_t numTrackHits = trackHits -> size();
+      for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
         KBHit *trackHit = trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(trackID);
         fPadPlane -> AddHit(trackHit);
@@ -81,7 +83,8 @@ void LATrackFinder::FindTrack(TClonesArray *in, TClonesArray *out)
     }
     else {
       vector<KBHit *> *trackHits = track -> GetHitArray();
-      for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+      Int_t numTrackHits = trackHits -> size();
+      for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
         KBHit *trackHit = trackHits -> at(iTrackHit);
         trackHit -> AddTrackCand(-1);
         fPadPlane -> AddHit(trackHit);
@@ -141,7 +144,8 @@ bool LATrackFinder::InitTrack(KBHelixTrack *track)
         track -> AddHit(candHit);
 
         if (track -> GetNumHits() > 15) {
-          for (UInt_t iCand = 0; iCand < fCandHits -> size(); ++iCand)
+          UInt_t numCandHits2 = fCandHits -> size();
+          for (UInt_t iCand = 0; iCand < numCandHits2; ++iCand)
             fPadPlane -> AddHit(fCandHits -> at(iCand));
           fCandHits -> clear();
           break;
@@ -354,7 +358,8 @@ Double_t LATrackFinder::CorrelateSimple(KBHelixTrack *track, KBHit *hit)
 
   vector<KBHit *> *trackHits = track -> GetHitArray();
   bool ycut = false;
-  for (Int_t iTrackHit = 0; iTrackHit < trackHits -> size(); ++iTrackHit) {
+  Int_t numTrackHits = trackHits -> size();
+  for (Int_t iTrackHit = 0; iTrackHit < numTrackHits; ++iTrackHit) {
     KBHit *trackHit = trackHits -> at(iTrackHit);
     if (row == trackHit -> GetRow() && layer == trackHit -> GetLayer())
       return 0;

@@ -19,8 +19,8 @@ bool LAElectronicsTask::Init()
   KBDetector *det = run -> GetDetector();
 
   fNPlanes = det -> GetNPlanes();
-  par -> GetParInt("nTbs", fNTbs);
-  par -> GetParDouble("eVToADC", feVToADC);
+  fNTbs = par -> GetParInt("nTbs");
+  feVToADC = par -> GetParDouble("eVToADC");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 

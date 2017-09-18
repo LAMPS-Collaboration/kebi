@@ -15,11 +15,10 @@ bool LATpc::BuildGeometry()
     fGeoManager -> SetNameTitle("LAMPS TPC", "LAMPS TPC Geometry");
   }
 
-  Double_t rMinTPC, rMaxTPC, dzTPC, zOffset;
-  fPar -> GetParDouble("rMinTPC", rMinTPC);
-  fPar -> GetParDouble("rMaxTPC", rMaxTPC);
-  fPar -> GetParDouble("dzTPC", dzTPC);
-  fPar -> GetParDouble("zOffset", zOffset);
+  auto rMinTPC = fPar -> GetParDouble("rMinTPC");
+  auto rMaxTPC = fPar -> GetParDouble("rMaxTPC");
+  auto   dzTPC = fPar -> GetParDouble("dzTPC");
+  auto zOffset = fPar -> GetParDouble("zOffset");
 
   TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
 
