@@ -11,7 +11,6 @@ class KBSteppingAction : public G4UserSteppingAction
     KBSteppingAction();
     virtual ~KBSteppingAction() {}
 
-    void SetDetectorName(G4String detectorName);
     virtual void UserSteppingAction(const G4Step*);
 };
 

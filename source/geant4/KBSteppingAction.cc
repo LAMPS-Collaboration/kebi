@@ -9,10 +9,6 @@ KBSteppingAction::KBSteppingAction()
 {
 }
 
-void KBSteppingAction::SetDetectorName(G4String detectorName)
-{
-}
-
 void KBSteppingAction::UserSteppingAction(const G4Step* step)
 {
   G4StepStatus stat = step -> GetPostStepPoint() -> GetStepStatus();
