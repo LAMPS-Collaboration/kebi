@@ -2,6 +2,7 @@
 #include "KBPulseGenerator.hh"
 #include "TEvePointSet.h"
 #include <iostream>
+#include <iomanip>
 
 ClassImp(KBHit)
 
