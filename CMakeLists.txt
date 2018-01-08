@@ -2,59 +2,54 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(KEBI)
 
+#---Configuration
+set(CREATE_GIT_LOG    on  CACHE INTERNAL "") # Create Git log
+set(BUILD_GEANT4_SIM  on  CACHE INTERNAL "") # Build Geant4 simulation
+set(BUILD_DOXYGEN_DOC off CACHE INTERNAL "") # Build Doxygen documentation with HTML
+set(KEBI_PROJECT_LIST     CACHE INTERNAL "") # List of KEBI projects to build
 
+#---Configuration
+include(configure.cmake)
 
-#---Options
-option(KEBI_BUILD_GEANT4 "Build Geant4 simulation" on)
-option(CREATE_GIT_LOG "Create git-log at when building KEBI" on)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" on)
-
-
+message(STATUS "Create Git log         : " ${CREATE_GIT_LOG})
+message(STATUS "Build Geant4 simulation: " ${BUILD_GEANT4_SIM})
+message(STATUS "Build Doxygen document : " ${BUILD_DOXYGEN_DOC})
 
 #---Add source directories. Directory should be under "/path/to/KEBI/"
-list(APPEND KEBI_SOURCE_DIRECTORY_LIST
-  source/fit
-  source/tool
-  source/base
-  source/format
-  source/tracklet
-  source/detector
-  source/reco/PSA
-  source/reco/TrackFinder
-  source/analysis/PlotChannels
-
-  GETDecoder/source/GETCore
-  GETDecoder/source/GETFormat
-  GETDecoder/source/GETUtil
-
-  project_lamps/detector
-  project_lamps/task
-
-  project_prototype_tpc/detector
-  project_prototype_tpc/task
+set(KEBI_SOURCE_DIRECTORY_LIST
+  ${CMAKE_SOURCE_DIR}/source/fit
+  ${CMAKE_SOURCE_DIR}/source/tool
+  ${CMAKE_SOURCE_DIR}/source/base
+  ${CMAKE_SOURCE_DIR}/source/format
+  ${CMAKE_SOURCE_DIR}/source/tracklet
+  ${CMAKE_SOURCE_DIR}/source/detector
+  ${CMAKE_SOURCE_DIR}/source/reco/PSA
+  ${CMAKE_SOURCE_DIR}/source/reco/TrackFinder
+  ${CMAKE_SOURCE_DIR}/source/analysis/PlotChannels
+  ${CMAKE_SOURCE_DIR}/GETDecoder/source/GETCore
+  ${CMAKE_SOURCE_DIR}/GETDecoder/source/GETFormat
+  ${CMAKE_SOURCE_DIR}/GETDecoder/source/GETUtil
+  CACHE INTERNAL ""
 )
 
 #---Add geant4 source directories. Directory should be under "/path/to/KEBI/".
-list(APPEND KEBI_GEANT4_DIRECTORY_LIST
-  source/geant4
-  project_lamps/geant4
+set(KEBI_GEANT4_DIRECTORY_LIST
+  ${CMAKE_SOURCE_DIR}/source/geant4
+  CACHE INTERNAL ""
 )
 
 #---Add geant4 main programs. Directory should be under "/path/to/KEBI/"
-list(APPEND KEBI_GEANT4_EXECUTABLE_LIST
-  project_lamps/macros/lamps.mc.cc
+set(KEBI_GEANT4_EXECUTABLE_LIST
+  CACHE INTERNAL ""
 )
 
-
+foreach(_kbproject ${KEBI_PROJECT_LIST})
+  message(STATUS "Project directory: " ${_kbproject})
+  add_subdirectory(${_kbproject})
+endforeach(_kbproject)
 
 #=====================================================================================
-# BELOW IS NOT TO BE TOUCHED BY USERS GENERALLY
-#=====================================================================================
-
-
-
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
-#   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
@@ -65,31 +60,25 @@ find_package(ROOT REQUIRED COMPONENTS RIO Net Eve Geom Gui Graf Graf3d Ged RGL M
 
 include(${ROOT_USE_FILE})
 
-if(KEBI_BUILD_GEANT4)
+if(BUILD_GEANT4_SIM)
   find_package(Geant4 REQUIRED ui_all vis_all)
   include(${Geant4_USE_FILE})
-endif(KEBI_BUILD_GEANT4)
+endif(BUILD_GEANT4_SIM)
 
 foreach(_directory ${KEBI_SOURCE_DIRECTORY_LIST})
-  include_directories(${CMAKE_SOURCE_DIR}/${_directory})
-  if(KEBI_BUILD_GEANT4)
+  include_directories(${_directory})
+  if(BUILD_GEANT4_SIM)
     foreach(_g4directory ${KEBI_GEANT4_DIRECTORY_LIST})
-      include_directories(${CMAKE_SOURCE_DIR}/${_g4directory})
+      include_directories(${_g4directory})
     endforeach(_g4directory)
-  endif(KEBI_BUILD_GEANT4)
+  endif(BUILD_GEANT4_SIM)
 
   string(REPLACE / _ _name ${_directory})
   list(APPEND KEBI_SOURCE_NAME_LIST ${_name})
   set(KEBI_${_name}_G_NAME G__${_name}Dict)
-  file(GLOB KEBI_${_name}_LINKDEF_FILE ${CMAKE_SOURCE_DIR}/${_directory}/LinkDef.h)
-  file(GLOB KEBI_${_name}_SOURCE_FILES ${CMAKE_SOURCE_DIR}/${_directory}/*cc)
-  file(GLOB KEBI_${_name}_HEADER_FILES ${CMAKE_SOURCE_DIR}/${_directory}/*hh)
-
-  #message(STATUS "[" ${_name} "]")
-  #message(STATUS "  LinkDef file: " ${KEBI_${_name}_LINKDEF_FILE})
-  foreach(_file ${KEBI_${_name}_SOURCE_FILES})
-    #message(STATUS "  source  file: " ${_file})
-  endforeach(_file)
+  file(GLOB KEBI_${_name}_LINKDEF_FILE ${_directory}/LinkDef.h)
+  file(GLOB KEBI_${_name}_SOURCE_FILES ${_directory}/*cc)
+  file(GLOB KEBI_${_name}_HEADER_FILES ${_directory}/*hh)
 endforeach(_directory)
 
 include_directories(${CMAKE_SOURCE_DIR}/log)
@@ -113,42 +102,34 @@ endforeach(_name)
 add_library(KEBI SHARED ${KEBI_LIB_LIST})
 target_link_libraries(KEBI ${ROOT_LIBRARIES})
 
-if(KEBI_BUILD_GEANT4)
+if(BUILD_GEANT4_SIM)
   foreach(_directory ${KEBI_GEANT4_DIRECTORY_LIST})
     set(KEBI_GEANT4_SOURCE_FILES_TEMP)
-    file(GLOB KEBI_GEANT4_SOURCE_FILES_TEMP ${CMAKE_SOURCE_DIR}/${_directory}/*.cc)
+    file(GLOB KEBI_GEANT4_SOURCE_FILES_TEMP ${_directory}/*.cc)
     foreach(_file ${KEBI_GEANT4_SOURCE_FILES_TEMP})
       list(APPEND KEBI_GEANT4_SOURCE_FILES ${_file})
     endforeach(_file)
 
     set(KEBI_GEANT4_HEADER_FILES_TEMP)
-    file(GLOB KEBI_GEANT4_HEADER_FILES_TEMP ${CMAKE_SOURCE_DIR}/${_directory}/*.hh)
+    file(GLOB KEBI_GEANT4_HEADER_FILES_TEMP ${_directory}/*.hh)
     foreach(_file ${KEBI_GEANT4_HEADER_FILES_TEMP})
       list(APPEND KEBI_GEANT4_HEADER_FILES ${_file})
     endforeach(_file)
   endforeach(_directory)
 
-  #message(STATUS "[Geant4 sources]")
-  foreach(_file ${KEBI_GEANT4_SOURCE_FILES})
-    #message(STATUS "  source file: " ${_file})
-  endforeach(_file)
-
   foreach(_g4sim ${KEBI_GEANT4_EXECUTABLE_LIST})
-    get_filename_component(_g4sim_name ${CMAKE_SOURCE_DIR}/${_g4sim} NAME)
-    get_filename_component(_g4sim_directory ${CMAKE_SOURCE_DIR}/${_g4sim} DIRECTORY)
+    get_filename_component(_g4sim_name ${_g4sim} NAME)
+    get_filename_component(_g4sim_directory ${_g4sim} DIRECTORY)
     string(REPLACE .cc "" _executable_head ${_g4sim_name})
     string(REPLACE .cc .g4sim _executable_name ${_g4sim_name})
-    #message(STATUS "[Geat4 simulation " ${_executable_head} "]")
-    #message(STATUS "  executable main: " ${_g4sim_directory}/${_g4sim_name})
-    #message(STATUS "  executable file: " ${_g4sim_directory}/${_executable_name})
 
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${_g4sim_directory})
-    add_executable(${_executable_name} ${CMAKE_SOURCE_DIR}/${_g4sim} ${KEBI_GEANT4_SOURCE_FILES} ${KEBI_GEANT4_HEADER_FILES})
-    EXECUTE_PROCESS(COMMAND root-config --libs OUTPUT_VARIABLE ROOT_LD_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    add_executable(${_executable_name} ${_g4sim} ${KEBI_GEANT4_SOURCE_FILES} ${KEBI_GEANT4_HEADER_FILES})
+    execute_process(COMMAND root-config --libs OUTPUT_VARIABLE ROOT_LD_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(CMAKE_EXE_LINKER_FLAGS ${ROOT_LD_FLAGS})
     target_link_libraries(${_executable_name} ${Geant4_LIBRARIES} KEBI)
   endforeach(_g4sim)
-endif(KEBI_BUILD_GEANT4)
+endif(BUILD_GEANT4_SIM)
 
 set(KEBI_PATH ${CMAKE_SOURCE_DIR})
 configure_file(${KEBI_PATH}/log/KBLog.cmake.in ${KEBI_PATH}/log/KBLog.cmake @ONLY)

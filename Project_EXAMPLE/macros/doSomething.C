@@ -4,9 +4,9 @@ void doSomthing()
   run -> SetRunID(0);
   run -> SetTag("test");
   run -> AddParameterFile("dummy.par");
-  run -> AddDetector(new DUMMYDetector());
+  run -> AddDetector(new EXDetector());
 
-  auto task = new DUMMYDoSomethingTask();
+  auto task = new EXDoSomethingTask();
   run -> Add(task);
 
   run -> Init();
