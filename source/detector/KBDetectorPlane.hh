@@ -36,6 +36,8 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
     void SetPlaneK(Double_t k);
     Double_t GetPlaneK();
 
+    void AddChannel(KBChannel *channel);
+
     KBChannel *GetChannelFast(Int_t idx);
     KBChannel *GetChannel(Int_t idx);
 

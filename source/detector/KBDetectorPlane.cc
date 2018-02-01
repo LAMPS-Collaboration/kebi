@@ -26,6 +26,8 @@ void KBDetectorPlane::Print(Option_t *option) const
   cout << "  [" << fName << "] " << "Detector plane containing " << fChannelArray -> GetEntries() << " channels" << endl;
 }
 
+void KBDetectorPlane::AddChannel(KBChannel *channel) { fChannelArray -> Add(channel); }
+
 KBChannel *KBDetectorPlane::GetChannelFast(Int_t idx) { return (KBChannel *) fChannelArray -> At(idx); }
 
 KBChannel *KBDetectorPlane::GetChannel(Int_t idx)
