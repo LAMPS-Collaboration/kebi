@@ -148,7 +148,7 @@ class GETDecoder
     Int_t fCoboFrameInfoIdx;            ///< Current cobo frame index
     Int_t fTargetFrameInfoIdx;          ///< Target frame or cobo frame index to return
 
-    Char_t *fBuffer;       ///< Buffer for writing frame
+    Char_t *fBuffer;       ///< [14000000] Buffer for writing frame
     TString fWriteFile;    ///< File for writing frames
 
     Int_t fPrevDataID;        ///< Data ID for going back to original data
