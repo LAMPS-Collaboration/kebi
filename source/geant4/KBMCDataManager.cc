@@ -71,5 +71,6 @@ void KBMCDataManager::EndOfRun()
   fFile -> cd();
   G4cout << "[KBMCDataManager] Writing file " << fFile -> GetName() << endl;
   fTree -> Write(); 
+  fPar -> Write(fPar->GetName(),TObject::kSingleKey);
   fFile -> Close();
 }

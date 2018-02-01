@@ -14,7 +14,8 @@ KBG4RunManager::KBG4RunManager()
 KBG4RunManager::KBG4RunManager(const char *name)
 :KBG4RunManager()
 {
-  new KBMCDataManager(name);
+  auto data = new KBMCDataManager(name);
+  data -> SetParameterContainer(fPar);
 }
 
 KBG4RunManager::~KBG4RunManager()
@@ -36,6 +37,7 @@ void KBG4RunManager::SetOutputFile(G4String value)
   TString s = value;
   fPar -> ReplaceEnvironmentVariable(s);
   auto data = new KBMCDataManager(s.Data());
+  data -> SetParameterContainer(fPar);
 
   for (auto copyNo : fCopyNoArray) {
     G4cout << "Set detector " << copyNo << G4endl;
