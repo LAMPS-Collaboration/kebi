@@ -209,8 +209,10 @@ bool KBRun::Init()
   }
 
   if (fPar == nullptr) {
-    if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr)
+    if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr) {
       fPar = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
+      cout << "[KBRun] Parameter container found in " << fInputFileName << endl;
+    }
     else {
       cout << "[KBRun] FAILED to load parameter container." << endl;
       return false;
@@ -356,11 +358,6 @@ void KBRun::AddParameterFile(TString name)
     fPar = new KBParameterContainer();
 
   fPar -> AddFile(name); 
-}
-
-KBParameterContainer *KBRun::GetParameterContainer()
-{
-  return fPar;
 }
 
 void KBRun::AddDetector(KBDetector *detector) { fDetector = detector; }
@@ -631,37 +628,46 @@ void KBRun::RunEve(Long64_t eventID)
 
   gEve -> Redraw3D();
 
-  KBTpc *tpc = (KBTpc *) fDetector;
-  KBPadPlane *padplane = tpc -> GetPadPlane(0);
-  TH2 *hist_padplane = padplane -> GetHist();
-  hist_padplane -> Reset();
+  auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
+  auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
 
-  TClonesArray *hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
-  TClonesArray *padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
-
-  if (hitArray != nullptr)
+  auto numPlanes = fDetector -> GetNPlanes();
+  for (auto iPlane = 0; iPlane < numPlanes; ++iPlane)
   {
-    padplane -> Clear();
-    padplane -> SetHitArray(hitArray);
-    padplane -> FillDataToHist("hit");
-  }
-  else if (padArray != nullptr)
-  {
-    padplane -> Clear();
-    padplane -> SetPadArray(padArray);
-    padplane -> FillDataToHist("raw");
-    //padplane -> FillDataToHist("out");
-  }
-  else
-    return;
+    auto plane = fDetector -> GetDetectorPlane(iPlane);
+    auto histPlane = plane -> GetHist();
+    histPlane -> Reset();
 
-  gStyle -> SetPalette(kBird); // @todo palette is changed when Drawing top node
-  TCanvas *cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
-  cvs -> cd();
-  hist_padplane -> SetMaximum(5000);
-  //hist_padplane -> SetMinimum(1);
-  hist_padplane -> Draw("colz");
-  padplane -> DrawFrame();
+    if (fDetector -> InheritsFrom("KBTpc"))
+    {
+      auto padplane = (KBPadPlane *) plane;
+
+      if (hitArray != nullptr)
+      {
+        padplane -> Clear();
+        padplane -> SetHitArray(hitArray);
+        padplane -> FillDataToHist("hit");
+      }
+      else if (padArray != nullptr)
+      {
+        padplane -> Clear();
+        padplane -> SetPadArray(padArray);
+        padplane -> FillDataToHist("raw");
+        //padplane -> FillDataToHist("out");
+      }
+      else
+        return;
+    }
+
+    auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
+    cvs -> cd();
+    histPlane -> SetMaximum(5000);
+    histPlane -> SetMinimum(1);
+    histPlane -> Draw("colz");
+    plane -> DrawFrame();
+  }
+
+  gStyle -> SetPalette(kBird); // @todo palette is changed when drawing top node because of TGeoMan(?)
 }
 
 void KBRun::Terminate(TObject *obj, TString message)

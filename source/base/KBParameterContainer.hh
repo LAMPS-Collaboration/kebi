@@ -24,8 +24,14 @@
  * ex)\n
  * \#example parameter file\n
  * worldSize    d  1000   # [mm]\n
- * nTbs         n  512\n
+ * nTbs         i  512\n
  * specialFile  s  /path/to/specialFile.dat  \#special\n 
+ *
+ * ============================================================================
+ *
+ * With fDebugMode true, KBParameterContainer will not terminate at attempt of
+ * getting non-existing paramter, but print message and create empty parameter.
+ *
 */
 
 class KBParameterContainer : public TObjArray
@@ -39,7 +45,7 @@ class KBParameterContainer : public TObjArray
 
     void SetDebugMode(bool val = true);
 
-    //virtual void Print(Option_t *option ="") const;
+    virtual void Print(Option_t *option ="") const;
 
     /**
      * Add parameter by given fileName.

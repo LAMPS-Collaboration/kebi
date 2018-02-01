@@ -202,7 +202,6 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
 
 Int_t KBParameterContainer::GetNumInputFiles() { return fNumInputFiles; }
 
-/*
 void KBParameterContainer::Print(Option_t *option) const
 {
   TIter iterator(this);
@@ -240,7 +239,6 @@ void KBParameterContainer::Print(Option_t *option) const
     }
   }
 }
-*/
 
 
 bool KBParameterContainer::SetPar(TString name, Bool_t val)

@@ -5,6 +5,7 @@
 
 #include "KBTask.hh"
 #include "KBParameterContainer.hh"
+#include "KBParameterContainerHolder.hh"
 #include "KBDetector.hh"
 
 #include "KBTpc.hh"
@@ -25,7 +26,7 @@
 #include <map>
 #include <vector>
 
-class KBRun : public KBTask
+class KBRun : public KBTask, public KBParameterContainerHolder
 {
   public:
     static KBRun* GetRun(); ///< Get KBRun static pointer.
@@ -85,7 +86,6 @@ class KBRun : public KBTask
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
     void AddParameterFile(TString name); ///< Add parameter file to parameter container
-    KBParameterContainer *GetParameterContainer();
 
     void AddDetector(KBDetector *detector); ///< Set detector
     KBDetector *GetDetector();
@@ -158,7 +158,6 @@ class KBRun : public KBTask
     Long64_t fCurrentEventID = 0;
     Long64_t fEventCount = 0;
 
-    KBParameterContainer *fPar = nullptr;
     KBParameterContainer *fRunHeader = nullptr;
 
     KBDetector *fDetector = nullptr;

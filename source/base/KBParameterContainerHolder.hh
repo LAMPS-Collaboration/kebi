@@ -12,10 +12,11 @@ class KBParameterContainerHolder
     void CreateParameterContainer();
     void SetParameterContainer(KBParameterContainer *par);
     void SetParameterContainer(TString file);
+    void AddParameterFile(TString file);
     KBParameterContainer *GetParameterContainer();
 
   protected:
-    KBParameterContainer *fPar;
+    KBParameterContainer *fPar = nullptr;
 
   ClassDef(KBParameterContainerHolder, 1)
 };
