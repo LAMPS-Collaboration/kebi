@@ -47,7 +47,7 @@ cp ${KEBIPATH}/macros/dummies/DUMMYDoSomethingTask.hh Project_${1}/task/${2}DoSo
 mkdir Project_${1}/macros
 cp ${KEBIPATH}/macros/dummies/eve.C          Project_${1}/macros/
 cp ${KEBIPATH}/macros/dummies/mc.cc          Project_${1}/macros/${1}.mc.cc
-cp ${KEBIPATH}/macros/dummies/dummy.par      Project_${1}/macros/
+cp ${KEBIPATH}/macros/dummies/dummy.par      Project_${1}/macros/${1}.par
 cp ${KEBIPATH}/macros/dummies/run_geant4.mac Project_${1}/macros/
 cp ${KEBIPATH}/macros/dummies/vis.mac        Project_${1}/macros/
 cp ${KEBIPATH}/macros/dummies/doSomething.C  Project_${1}/macros/
@@ -64,3 +64,5 @@ sed -i '' s/PROJECTNAME/${1}/g Project_${1}/geant4/*
 sed -i '' s/PROJECTNAME/${1}/g Project_${1}/detector/*
 sed -i '' s/PROJECTNAME/${1}/g Project_${1}/task/*
 sed -i '' s/PROEJCTNAME/${1}/g Project_${1}/macros/*
+
+sed -i '' s/dummy/${1}/g Project_${1}/macros/*
