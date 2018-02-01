@@ -12,6 +12,7 @@ class KBChannelBufferS : public KBChannelBufferX, public TArrayS
     virtual ~KBChannelBufferS() {}
 
     virtual void Clear(Option_t *option = "");
+    virtual void Copy (TObject &object) const;
 
     TH1 *GetHist(TString name = "");
 

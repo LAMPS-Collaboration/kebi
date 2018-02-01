@@ -25,6 +25,38 @@ void KBVector3::SetReferenceAxis(Short_t referenceAxis)
 
 Short_t KBVector3::GetReferenceAxis() const { return fReferenceAxis; }
 
+Double_t KBVector3::AtXYZ(Short_t axis)
+{
+       if (axis == 0) return X();
+  else if (axis == 1) return Y();
+  else if (axis == 2) return Z();
+
+  return -999;
+}
+
+Double_t KBVector3::AtIJK(Short_t axis)
+{
+       if (axis == 0) return I();
+  else if (axis == 1) return J();
+  else if (axis == 2) return K();
+
+  return -999;
+}
+
+void KBVector3::AddAtXYZ(Double_t value, Short_t axis)
+{
+       if (axis == 0) SetX(X()+value);
+  else if (axis == 1) SetY(Y()+value);
+  else if (axis == 2) SetZ(Z()+value);
+}
+
+void KBVector3::AddAtIJK(Double_t value, Short_t axis)
+{
+       if (axis == 0) SetI(I()+value);
+  else if (axis == 1) SetJ(J()+value);
+  else if (axis == 2) SetK(K()+value);
+}
+
 void KBVector3::SetIJKR(Double_t i, Double_t j, Double_t k, Short_t referenceAxis)
 {
   fReferenceAxis = referenceAxis;
@@ -81,3 +113,5 @@ Double_t KBVector3::K() const
   else if (fReferenceAxis == 1)  return Y();
 /*else if (fReferenceAxis == 0)*/return X();
 }
+
+TVector3 KBVector3::GetV3IJK() { return TVector3(I(), J(), K()); }

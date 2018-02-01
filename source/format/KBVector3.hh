@@ -28,6 +28,12 @@ class KBVector3 : public TVector3
     void SetReferenceAxis(Short_t referenceAxis);
     Short_t GetReferenceAxis() const;
 
+    Double_t AtXYZ(Short_t axis);
+    Double_t AtIJK(Short_t axis);
+
+    void AddAtXYZ(Double_t value, Short_t axis);
+    void AddAtIJK(Double_t value, Short_t axis);
+
     void SetIJKR(Double_t i, Double_t j, Double_t k, Short_t referenceAxis);
     void SetIJK(Double_t i, Double_t j, Double_t k);
     void SetI(Double_t i);
@@ -37,6 +43,8 @@ class KBVector3 : public TVector3
     Double_t I() const;
     Double_t J() const;
     Double_t K() const;
+
+    TVector3 GetV3IJK();
 
   private:
     Short_t fReferenceAxis = 2; ///< 0(x), 1(y,) 2(z).
