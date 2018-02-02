@@ -1,6 +1,6 @@
 set(KEBI_PATH @KEBI_PATH@)
 set(CREATE_GIT_LOG @CREATE_GIT_LOG@)
-set(BUILD_DOCUMENTATION @BUILD_DOCUMENTATION@)
+set(BUILD_DOXYGEN_DOC @BUILD_DOXYGEN_DOC@)
 
 find_package(Git)
 if(CREATE_GIT_LOG)
@@ -11,10 +11,10 @@ if(CREATE_GIT_LOG)
 endif()
 
 find_package(Doxygen)
-if(BUILD_DOCUMENTATION)
+if(BUILD_DOXYGEN_DOC)
   if(NOT DOXYGEN_FOUND)
     message(FATAL_ERROR "Doxygen is needed to build the documentation.")
-    set(BUILD_DOCUMENTATION off)
+    set(BUILD_DOXYGEN_DOC off)
   endif()
 endif()
 
@@ -47,7 +47,7 @@ if(CREATE_GIT_LOG)
   configure_file(${KEBI_PATH}/log/KBCompiledDiff.log.in ${KEBI_PATH}/log/KBCompiledDiff.log @ONLY)
 endif()
 
-if(BUILD_DOCUMENTATION)
+if(BUILD_DOXYGEN_DOC)
   configure_file(${KEBI_PATH}/log/doxy.conf.in ${KEBI_PATH}/log/doxy.conf @ONLY)
   execute_process(COMMAND ${DOXYGEN_EXECUTABLE} ${KEBI_PATH}/log/doxy.conf 
                   WORKING_DIRECTORY ${KEBI_PATH})

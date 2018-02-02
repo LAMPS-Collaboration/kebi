@@ -3,14 +3,20 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(KEBI)
 
 #---Configuration
-set(CREATE_GIT_LOG    on  CACHE INTERNAL "") # Create Git log
-set(BUILD_GEANT4_SIM  on  CACHE INTERNAL "") # Build Geant4 simulation
-set(BUILD_DOXYGEN_DOC off CACHE INTERNAL "") # Build Doxygen documentation with HTML
+set(ACTIVATE_EVE      OFF CACHE INTERNAL "") # Activate Root Eve package
+set(CREATE_GIT_LOG    ON  CACHE INTERNAL "") # Create Git log
+set(BUILD_GEANT4_SIM  ON  CACHE INTERNAL "") # Build Geant4 simulation
+set(BUILD_DOXYGEN_DOC OFF CACHE INTERNAL "") # Build Doxygen documentation with HTML
 set(KEBI_PROJECT_LIST     CACHE INTERNAL "") # List of KEBI projects to build
+
+if(ACTIVATE_EVE)
+  add_definitions(-DACTIVATE_EVE)
+endif(ACTIVATE_EVE)
 
 #---Configuration
 include(configure.cmake)
 
+message(STATUS "Activate Eve package   : " ${ACTIVATE_EVE})
 message(STATUS "Create Git log         : " ${CREATE_GIT_LOG})
 message(STATUS "Build Geant4 simulation: " ${BUILD_GEANT4_SIM})
 message(STATUS "Build Doxygen document : " ${BUILD_DOXYGEN_DOC})
@@ -56,7 +62,11 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
 #---libs: Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
 #---evelibs: Eve EG TreePlayer Geom Ged RGL Gui Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
-find_package(ROOT REQUIRED COMPONENTS RIO Net Eve Geom Gui Graf Graf3d Ged RGL Matrix MathCore)
+if(ACTIVATE_EVE)
+  find_package(ROOT REQUIRED COMPONENTS RIO Net Eve Geom Gui Graf Graf3d Ged Matrix MathCore)
+else(ACTIVATE_EVE)
+  find_package(ROOT REQUIRED COMPONENTS RIO Net Geom Gui Graf Graf3d Ged Matrix MathCore)
+endif(ACTIVATE_EVE)
 
 include(${ROOT_USE_FILE})
 
