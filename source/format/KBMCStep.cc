@@ -52,6 +52,7 @@ Double_t KBMCStep::GetEdep()  const { return fEdep; }
 
 
 
+#ifdef ACTIVATE_EVE
 bool KBMCStep::DrawByDefault() { return true; }
 bool KBMCStep::IsEveSet() { return true; }
 
@@ -74,3 +75,4 @@ void KBMCStep::AddToEveSet(TEveElement *eveSet)
   auto pointSet = (TEvePointSet *) eveSet;
   pointSet -> SetNextPoint(fX, fY, fZ);
 }
+#endif

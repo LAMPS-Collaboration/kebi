@@ -13,6 +13,7 @@ void KBTracklet::RemoveHit(KBHit *hit)
   fHitList -> RemoveHit(hit);
 }
 
+#ifdef ACTIVATE_EVE
 bool KBTracklet::DrawByDefault() { return true; }
 bool KBTracklet::IsEveSet() { return false; }
 
@@ -41,3 +42,4 @@ void KBTracklet::SetEveElement(TEveElement *element)
 void KBTracklet::AddToEveSet(TEveElement *)
 {
 }
+#endif

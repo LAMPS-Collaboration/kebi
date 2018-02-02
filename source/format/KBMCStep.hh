@@ -29,11 +29,13 @@ class KBMCStep : public KBContainer
     Double_t GetTime()  const;
     Double_t GetEdep()  const;
 
+#ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
     virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
   private:
     Int_t fTrackID;

@@ -121,6 +121,7 @@ void KBHit::RemoveTrackCand(Int_t trackID)
 
 /////////////////////////////////////////////////////////////////////////////////
 
+#ifdef ACTIVATE_EVE
 bool KBHit::DrawByDefault() { return true; }
 bool KBHit::IsEveSet() { return true; }
 
@@ -143,3 +144,4 @@ void KBHit::AddToEveSet(TEveElement *eveSet)
   auto pointSet = (TEvePointSet *) eveSet;
   pointSet -> SetNextPoint(fPosition.X(),fPosition.Y(),fPosition.Z());
 }
+#endif

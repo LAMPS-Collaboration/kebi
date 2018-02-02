@@ -43,11 +43,13 @@ class KBVertex : public KBContainer
     void AddSSet(KBVSSet set) { fSSetArray.push_back(set); }
     vector<KBVSSet> *GetSSetArray() { return &fSSetArray; }
 
+#ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
     virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
   private:
     TVector3 fPosition;

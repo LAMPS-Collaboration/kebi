@@ -21,6 +21,7 @@ void KBVertex::AddTrack(KBTracklet* track)
   fTrackIDArray.push_back(track->GetTrackID());
 }
 
+#ifdef ACTIVATE_EVE
 bool KBVertex::DrawByDefault() { return true; }
 bool KBVertex::IsEveSet() { return true; }
 
@@ -44,3 +45,4 @@ void KBVertex::AddToEveSet(TEveElement *eveSet)
   //pointSet -> SetNextPoint(fPosition.X(), fPosition.Y(), fPosition.Z());
   pointSet -> SetNextPoint(fPosition.Z(), fPosition.X(), fPosition.Y());
 }
+#endif

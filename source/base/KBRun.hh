@@ -110,7 +110,9 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     void RunInRange(Long64_t startID, Long64_t endID); ///< Run in range from startID to endID
     void RunInEventRange(Long64_t startID, Long64_t endID); ///< @todo Write this method
 
+#ifdef ACTIVATE_EVE
     void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
+#endif
 
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
@@ -120,7 +122,9 @@ class KBRun : public KBTask, public KBParameterContainerHolder
   private:
     TString ConfigureDataPath(TString namname);
     bool CheckFileExistence(TString fileName);
+#ifdef ACTIVATE_EVE
     void OpenEventDisplay();
+#endif
 
   private:
     TString fRunName = "";

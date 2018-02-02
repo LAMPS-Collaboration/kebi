@@ -70,11 +70,13 @@ class KBHit : public KBContainer
 
     //////////////////////////////////////////////////
 
+#ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
     virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
   protected:
     Int_t fHitID = -1;

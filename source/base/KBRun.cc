@@ -4,6 +4,7 @@
 #include "TStyle.h"
 #include "TApplication.h"
 
+#ifdef ACTIVATE_EVE
 #include "TEveViewer.h"
 #include "TGLViewer.h"
 #include "TEveGeoNode.h"
@@ -20,12 +21,13 @@
 #include "TGWindow.h"
 #include "TGeoManager.h"
 #include "TRootEmbeddedCanvas.h"
+#include "TEvePointSet.h"
+#include "TEveLine.h"
+#endif
 
 #include "KBHit.hh"
 #include "KBContainer.hh"
 #include "KBMCStep.hh"
-#include "TEvePointSet.h"
-#include "TEveLine.h"
 
 #include <unistd.h>
 #include <iostream>
@@ -487,6 +489,7 @@ void KBRun::RunInEventRange(Long64_t, Long64_t)
 {
 }
 
+#ifdef ACTIVATE_EVE
 void KBRun::OpenEventDisplay()
 {
   if (fDetector == nullptr) {
@@ -669,6 +672,7 @@ void KBRun::RunEve(Long64_t eventID)
 
   gStyle -> SetPalette(kBird); // @todo palette is changed when drawing top node because of TGeoMan(?)
 }
+#endif
 
 void KBRun::Terminate(TObject *obj, TString message)
 {

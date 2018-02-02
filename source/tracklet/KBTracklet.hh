@@ -49,11 +49,13 @@ class KBTracklet : public KBContainer
     virtual Double_t LengthAt(TVector3 point) const = 0; ///< Length at POCA from point, where tail=0, head=TrackLength
 
 
+#ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
     virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
   ClassDef(KBTracklet, 1)
 };
