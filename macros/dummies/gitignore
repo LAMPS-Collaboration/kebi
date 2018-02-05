@@ -6,12 +6,7 @@ submit*sh*out
 #geometry file
 *.gdml
 
-#S2ROOT build
-build
-*.swp
-*.o
-
-#S2ROOT simulation/analysis data
+#simulation/analysis data
 data
 *.root
 *.graw

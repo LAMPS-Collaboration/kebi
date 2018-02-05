@@ -23,6 +23,7 @@ fi
 
 mkdir Project_${1}
 cp ${KEBIPATH}/macros/dummies/CMakeLists.txt Project_${1}/CMakeLists.txt
+cp ${KEBIPATH}/macros/dummies/gitignore Project_${1}/.gitignore
 
 
 mkdir Project_${1}/geant4
