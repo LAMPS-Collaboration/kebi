@@ -7,7 +7,7 @@ class KBVector3 : public TVector3
 {
   public:
     KBVector3()
-    :TVector3() {}
+    :TVector3() { Clear(); }
 
     KBVector3(Short_t referenceAxis)
     :TVector3(), fReferenceAxis(referenceAxis) {}
@@ -24,6 +24,7 @@ class KBVector3 : public TVector3
     virtual ~KBVector3() {}
 
     virtual void Print(Option_t *option = "") const;
+    virtual void Clear(Option_t *option = "");
 
     void SetReferenceAxis(Short_t referenceAxis);
     Short_t GetReferenceAxis() const;

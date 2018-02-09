@@ -12,6 +12,8 @@ class KBHitList : public TObject
     KBHitList();
     virtual ~KBHitList() {}
 
+    virtual void Clear(Option_t *option = "");
+
     void AddHit(KBHit* hit);
     void RemoveHit(KBHit *hit);
 

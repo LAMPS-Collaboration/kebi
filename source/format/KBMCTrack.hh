@@ -13,6 +13,8 @@ class KBMCTrack : public TObject
     KBMCTrack();
     virtual ~KBMCTrack();
 
+    virtual void Clear(Option_t *option = "");
+
     void SetTrackID(Int_t val);
     void SetParentID(Int_t val);
     void SetPDG(Int_t val);

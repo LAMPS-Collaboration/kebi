@@ -10,7 +10,7 @@
 class KBChannel : public TObject
 {
   public:
-    KBChannel() {};
+    KBChannel() { Clear(); }
     virtual ~KBChannel() {}
 
     virtual void Clear(Option_t *option = "");

@@ -10,6 +10,7 @@ ClassImp(KBMCStep)
 
 KBMCStep::KBMCStep()
 {
+  Clear();
 }
 
 KBMCStep::~KBMCStep()
@@ -24,6 +25,16 @@ void KBMCStep::Print(Option_t *) const
        << setw(12) << fZ << " / "
        << setw(12) << fTime
        << setw(12) << fEdep << endl;
+}
+
+void KBMCStep::Clear(Option_t *option)
+{
+  fTrackID = -1;
+  fX = -999;
+  fY = -999;
+  fZ = -999;
+  fTime = -999;
+  fEdep = -999;
 }
 
 void KBMCStep::SetTrackID(Int_t val)  { fTrackID = val; }

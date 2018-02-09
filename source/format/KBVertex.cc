@@ -5,11 +5,12 @@ ClassImp(KBVertex)
 
 KBVertex::KBVertex()
 {
+  Clear();
 }
 
 void KBVertex::Clear(Option_t *)
 {
-  fPosition = TVector3(0,0,0);
+  fPosition = TVector3(-999,-999,-999);
   fTrackArray.clear();
   fTrackIDArray.clear();
   fSSetArray.clear();

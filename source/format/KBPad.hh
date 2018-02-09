@@ -14,7 +14,7 @@ using namespace std;
 class KBPad : public KBChannel
 {
   public:
-    KBPad() {}
+    KBPad() { Clear(); }
     virtual ~KBPad() {}
 
     virtual void Clear(Option_t *option = "");

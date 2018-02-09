@@ -6,10 +6,12 @@
 class KBChannelHit : public TObject
 {
   public:
-    KBChannelHit() {}
+    KBChannelHit() { Clear(); }
     KBChannelHit(KBChannelHit *hit);
     KBChannelHit(Int_t id, Double_t t, Double_t a);
     virtual ~KBChannelHit() {}
+
+    virtual void Clear(Option_t *option = "");
 
     void SetID(Int_t val);
     void SetTDC(Double_t val);
@@ -20,9 +22,9 @@ class KBChannelHit : public TObject
     Double_t GetADC() const;
 
   private:
-    Int_t    fID;
-    Double_t fTDC;
-    Double_t fADC;
+    Int_t    fID = -1;
+    Double_t fTDC = -999;
+    Double_t fADC = -999;
 
     ClassDef(KBChannelHit, 1)
 };

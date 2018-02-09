@@ -14,7 +14,7 @@ using namespace std;
 class KBHit : public KBContainer
 {
   public :
-    KBHit() {};
+    KBHit() { Clear(); };
     virtual ~KBHit() {};
 
     virtual void Clear(Option_t *option = "");

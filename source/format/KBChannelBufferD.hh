@@ -8,7 +8,7 @@
 class KBChannelBufferD : public KBChannelBufferX, public TArrayD
 {
   public:
-    KBChannelBufferD() {};
+    KBChannelBufferD() { Clear(); }
     virtual ~KBChannelBufferD() {}
 
     virtual void Clear(Option_t *option = "");

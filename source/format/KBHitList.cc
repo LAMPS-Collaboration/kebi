@@ -4,6 +4,13 @@ ClassImp(KBHitList)
 
 KBHitList::KBHitList()
 {
+  Clear();
+}
+
+void KBHitList::Clear(Option_t *option)
+{
+  fHitArray.clear();
+  fHitIDArray.clear();
 }
 
 void KBHitList::AddHit(KBHit* hit)

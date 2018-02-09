@@ -4,10 +4,21 @@ ClassImp(KBMCTrack)
 
 KBMCTrack::KBMCTrack()
 {
+  Clear();
 }
 
 KBMCTrack::~KBMCTrack()
 {
+}
+
+void KBMCTrack::Clear(Option_t *option)
+{
+  fTrackID = -1;
+  fParentID = -1;
+  fPDG = -1;
+  fPX = -999;
+  fPY = -999;
+  fPZ = -999;
 }
 
 void KBMCTrack::SetTrackID(Int_t val)  { fTrackID = val; }

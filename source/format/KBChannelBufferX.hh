@@ -7,7 +7,7 @@
 class KBChannelBufferX : public KBChannel
 {
   public:
-    KBChannelBufferX() {};
+    KBChannelBufferX() {}
     virtual ~KBChannelBufferX() {}
 
     virtual void Draw(Option_t *option = "");

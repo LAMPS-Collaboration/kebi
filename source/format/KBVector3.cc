@@ -14,6 +14,14 @@ void KBVector3::Print(Option_t *) const
   cout << "          > (x,y,z) = ("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
 }
 
+void KBVector3::Clear(Option_t *option)
+{
+  SetX(-999);
+  SetY(-999);
+  SetZ(-999);
+  fReferenceAxis = -1;
+}
+
 void KBVector3::SetReferenceAxis(Short_t referenceAxis)
 {
   if (referenceAxis!=2&&referenceAxis!=1&&referenceAxis!=0) {
