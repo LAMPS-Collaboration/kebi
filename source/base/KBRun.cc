@@ -115,6 +115,13 @@ void KBRun::Print(Option_t *option) const
   if (fOutputTree != nullptr && option_string.Index("o") >= 0)
     fOutputTree -> Print("toponly");
 
+  if (!fInitialized) {
+    cout << "-------------------------------------------------------------------------------------------" << endl;
+    cout << "*** Print() is recommanded to be called after the initialization." << endl;
+    cout << "*** This run is not initialized. Please call Init() before Print()." << endl;
+
+  }
+
   cout << "===========================================================================================" << endl;
 }
 
@@ -223,8 +230,16 @@ bool KBRun::Init()
 
   if (fInputFile != nullptr && fInputFile -> Get("RunHeader") != nullptr) {
     KBParameterContainer *runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
-    Int_t runID = runHeaderIn -> GetParInt("RunID");
 
+    TString runName = runHeaderIn -> GetParString("RunName");
+    if (fRunName.IsNull())
+      fRunName = runName;
+    else if (!fRunName.IsNull() && fRunName != runName) {
+      cout << "[KBRun] Run name for input and output file do not match!" << endl;
+      return false;
+    }
+
+    Int_t runID = runHeaderIn -> GetParInt("RunID");
     if (fRunID == -1)
       fRunID = runID;
     else if (runID != -1 && fRunID != runID) {
@@ -240,6 +255,7 @@ bool KBRun::Init()
   fRunHeader -> SetPar("KEBIHostName",KBRun::GetKEBIHostName());
   fRunHeader -> SetPar("KEBIUserName",KBRun::GetKEBIUserName());
   fRunHeader -> SetPar("KEBIPath",KBRun::GetKEBIPath());
+  fRunHeader -> SetPar("RunName",fRunName);
   fRunHeader -> SetPar("RunID",fRunID);
   if (fInputFileName.IsNull() == false)
     fRunHeader -> SetPar("InputFile",fInputFileName);
@@ -253,7 +269,9 @@ bool KBRun::Init()
 
   if (fOutputFileName.IsNull()) {
     if (fRunID != -1) {
-      fOutputFileName = Form("run%04d", fRunID);
+      if (fRunName.IsNull())
+        fRunName = "run";
+      fOutputFileName = fRunName + Form("%04d", fRunID);
 
       if (!fTag.IsNull())
         fOutputFileName = fOutputFileName + "." + fTag;
@@ -293,6 +311,8 @@ bool KBRun::Init()
   }
   else
     cout << "[KBRun] FAILED initializing tasks." << endl;
+
+  fCurrentEventID = -1;
 
   return fInitialized;
 }
@@ -387,11 +407,39 @@ Int_t KBRun::GetEntry(Long64_t entry, Int_t getall)
 }
 
 Int_t KBRun::GetEvent(Long64_t entry) { return GetEntry(entry); }
+bool KBRun::GetNextEvent() { return GetEntry(fCurrentEventID+1) != 0 ? true : false; }
 
 Long64_t KBRun::GetStartEventID() const { return fStartEventID; }
 Long64_t KBRun::GetEndEventID() const { return fEndEventID; }
 Long64_t KBRun::GetCurrentEventID() const { return fCurrentEventID; }
 Long64_t KBRun::GetEventCount() const { return fEventCount; }
+
+bool KBRun::Event(Long64_t eventID)
+{
+  cout << endl;
+  if (fInitialized == false) {
+    cout << "[KBRun::Event] KBRun is not Initialized!" << endl;
+    cout << "               Exit run" << endl;
+    return false;
+  }
+
+  if (eventID < 0 || eventID > fNumEntries-1) {
+    cout << "[KBRun::Event] Event-ID(" << eventID << ") is out of range: " << endl;
+    cout << "               Exit event" << endl;
+    return false;
+  }
+
+  fCurrentEventID = eventID;
+  if (fInputTree != nullptr)
+    fInputTree -> GetEntry(eventID);
+
+  cout << "[KBRun::Event] Execute Event " << eventID << "    (X persistent)" << endl;
+  ExecuteTask("");
+
+  return true;
+}
+
+bool KBRun::NextEvent() { return Event(fCurrentEventID+1); }
 
 void KBRun::Run()
 {
@@ -416,12 +464,12 @@ void KBRun::Run()
 
   Int_t numRunEntries = fEndEventID - fStartEventID + 1;
 
-  fEventCount = 0;
+  fEventCount = 1;
   for (Long64_t iEntry = fStartEventID; iEntry <= fEndEventID; iEntry++) {
     fCurrentEventID = iEntry;
     if (fInputTree != nullptr) {
       fInputTree -> GetEntry(iEntry);
-      ///@todo fCurrentEventID = EventHeader -> GetEventID();
+      ///TODO @todo fCurrentEventID = EventHeader -> GetEventID();
     }
 
     cout << "[KBRun] Execute Event " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;

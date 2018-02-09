@@ -97,6 +97,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     Long64_t GetNumEvents();
     Int_t GetEntry(Long64_t entry = 0, Int_t getall = 0); ///< GetEntry from input tree
     Int_t GetEvent(Long64_t entry);
+    bool GetNextEvent();
 
     Long64_t GetStartEventID() const;   ///< Get starting eventID
     Long64_t GetEndEventID() const;     ///< Get ending eventID
@@ -104,6 +105,9 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 
     /// Get eventID count; event_count = current_eventID - start_eventID
     Long64_t GetEventCount() const;
+
+    bool Event(Long64_t eventID);
+    bool NextEvent();
 
     void Run(); ///< Run all events
     void RunSingle(Long64_t eventID); ///< Run single event given eventID
