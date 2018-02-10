@@ -285,6 +285,11 @@ bool KBParameterContainer::SetPar(TString name, TString val)
   return true;
 }
 
+bool KBParameterContainer::SetPar(TString name, const char* val)
+{
+  return SetPar(name, TString(val));
+}
+
 bool KBParameterContainer::GetParBool(TString name)
 {
   TObject *obj = FindObject(name);

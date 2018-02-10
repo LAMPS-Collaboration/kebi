@@ -3,6 +3,7 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TApplication.h"
+#include "TRandom.h"
 
 #ifdef ACTIVATE_EVE
 #include "TEveViewer.h"
@@ -31,8 +32,7 @@
 
 #include <unistd.h>
 #include <iostream>
-#include <fstream>
-using namespace std;
+#include <ctime>
 
 ClassImp(KBRun)
 
@@ -248,8 +248,13 @@ bool KBRun::Init()
     }
   }
 
+  gRandom -> SetSeed(time(0));
+  TString clist = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890qwertyuiopsadfghjklzxcvbnm";
+  for (auto i=0; i<7; ++i) fHash = fHash + clist[((Int_t) gRandom -> Uniform(62))];
+
   fRunHeader = new KBParameterContainer();
   fRunHeader -> SetName("RunHeader");
+  fRunHeader -> SetPar("Hash",fHash);
   fRunHeader -> SetPar("KEBIVersion",KBRun::GetKEBIVersion());
   fRunHeader -> SetPar("GETDecoderVersion",KBRun::GetGETDecoderVersion());
   fRunHeader -> SetPar("KEBIHostName",KBRun::GetKEBIHostName());
@@ -296,6 +301,8 @@ bool KBRun::Init()
     //cout << "  Output file " << fOutputFileName << " already exist!" << endl;
     //return false;
   }
+
+  fLogFileName = TString(KEBI_PATH) + "/data/kbrun.log";
 
   cout << endl;
   cout << "[KBRun] Output file : " << fOutputFileName << endl;
@@ -374,14 +381,6 @@ TClonesArray *KBRun::GetBranchA(TString name)
   return nullptr;
 }
 
-void KBRun::AddParameterFile(TString name)
-{ 
-  if (fPar == nullptr)
-    fPar = new KBParameterContainer();
-
-  fPar -> AddFile(name); 
-}
-
 void KBRun::AddDetector(KBDetector *detector) { fDetector = detector; }
 KBDetector *KBRun::GetDetector() { return fDetector; }
 
@@ -445,10 +444,13 @@ void KBRun::Run()
 {
   cout << endl;
   if (fInitialized == false) {
-    cout << "[KBRun] KBRun is not Initialized!" << endl;
-    cout << "        Exit run" << endl;
-    return;
+    cout << "[KBRun] KBRun is not initialized!" << endl;
+    cout << "        try initialization..." << endl;
+    if (!Init())
+      cout << "[KBRun] Exit Run() due to initialization fail." << endl;
   }
+
+  CheckIn();
 
   if (fStartEventID == -1 && fEndEventID == -1) {
     fStartEventID = 0;
@@ -499,6 +501,8 @@ void KBRun::Run()
     unlink(linkName.Data());
     symlink(fOutputFileName.Data(), linkName.Data());
   }
+
+  CheckOut();
 
   Terminate(this);
 }
@@ -808,4 +812,36 @@ bool KBRun::CheckFileExistence(TString fileName)
   if (name.IsNull())
     return false;
   return true;
+}
+
+void KBRun::CheckIn()
+{
+  fstream logFile(fLogFileName.Data(), ios::out | ios::app);
+
+  time_t t = time(0);
+  struct tm * now = localtime(&t);
+  TString ldate = Form("%04d.%02d.%02d",now->tm_year+1900,now->tm_mon+1,now->tm_mday);
+  TString ltime = Form("%02d:%02d",now->tm_hour,now->tm_min);
+  TString lname = KBRun::GetKEBIUserName();
+  TString lversion = KBRun::GetKEBIVersion();
+  TString linput = fInputFileName.IsNull() ? "-" : fInputFileName;
+  TString loutput = fOutputFileName.IsNull() ? "-" : fOutputFileName;
+
+  logFile << fHash << "  " << ldate << "  " << ltime << "  START  " << lname << "  " << lversion << "  "
+          << "in:" << linput << "  out:" << loutput << "  " << endl;
+
+  logFile.close();
+}
+
+void KBRun::CheckOut()
+{
+  fstream logFile(fLogFileName.Data(), ios::out | ios::app);
+
+  time_t t = time(0);
+  struct tm * now = localtime(&t);
+  TString ldate = Form("%04d.%02d.%02d",now->tm_year+1900,now->tm_mon+1,now->tm_mday);
+  TString ltime = Form("%02d:%02d",now->tm_hour,now->tm_min);
+
+  logFile << fHash << "  " << ldate << "  " << ltime << "  END" << endl;
+  logFile.close();
 }

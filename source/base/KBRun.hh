@@ -25,6 +25,8 @@
 
 #include <map>
 #include <vector>
+#include <fstream>
+using namespace std;
 
 class KBRun : public KBTask, public KBParameterContainerHolder
 {
@@ -85,8 +87,6 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     TObject *GetBranch(TString name); ///< Get branch by name.
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
-    void AddParameterFile(TString name); ///< Add parameter file to parameter container
-
     void AddDetector(KBDetector *detector); ///< Set detector
     KBDetector *GetDetector();
 
@@ -129,6 +129,8 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
+    void CheckIn();
+    void CheckOut();
 
   private:
     TString fRunName = "";
@@ -178,6 +180,9 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     TGraph *fGraphChannelBoundary = nullptr;
 
     std::vector<TEveElement *> fEveElementList;
+
+    TString fLogFileName;
+    TString fHash;
 
   private:
     static KBRun *fInstance;
