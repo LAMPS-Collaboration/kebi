@@ -2,7 +2,9 @@
 #define KBCONTAINER_HH
 
 #include "TObject.h"
+#ifdef ACTIVATE_EVE
 #include "TEveElement.h"
+#endif
 
 class KBContainer : public TObject
 {

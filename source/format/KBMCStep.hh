@@ -3,7 +3,9 @@
 
 #include "KBContainer.hh"
 
+#ifdef ACTIVATE_EVE
 #include "TEveElement.h"
+#endif
 
 class KBMCStep : public KBContainer
 {

@@ -3,7 +3,9 @@
 
 #include "KBContainer.hh"
 
+#ifdef ACTIVATE_EVE
 #include "TEveElement.h"
+#endif
 #include "TVector3.h"
 #include "TMath.h"
 #include "TF1.h"

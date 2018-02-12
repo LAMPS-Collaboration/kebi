@@ -20,8 +20,10 @@
 #include "TObject.h"
 #include "TClonesArray.h"
 #include "TCanvas.h"
+#ifdef ACTIVATE_EVE
 #include "TEveEventManager.h"
 #include "TEveEventManager.h"
+#endif
 
 #include <map>
 #include <vector>
@@ -172,14 +174,15 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 
     KBDetector *fDetector = nullptr;
 
+#ifdef ACTIVATE_EVE
     TEveEventManager *fEveEventManager = nullptr;
+    std::vector<TEveElement *> fEveElementList;
+#endif
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
     TCanvas *fCvsChannelBuffer = nullptr;
     TH1D *fHistChannelBuffer = nullptr;
     TGraph *fGraphChannelBoundary = nullptr;
-
-    std::vector<TEveElement *> fEveElementList;
 
     TString fLogFileName;
     TString fHash;

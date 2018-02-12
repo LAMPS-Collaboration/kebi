@@ -1,5 +1,7 @@
 #include "KBVertex.hh"
+#ifdef ACTIVATE_EVE
 #include "TEvePointSet.h"
+#endif
 
 ClassImp(KBVertex)
 
