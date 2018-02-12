@@ -1,6 +1,8 @@
 #include "KBMCStep.hh"
 
+#ifdef ACTIVATE_EVE
 #include "TEvePointSet.h"
+#endif
 
 #include <iostream>
 #include <iomanip>

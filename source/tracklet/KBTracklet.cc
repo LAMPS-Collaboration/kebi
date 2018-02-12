@@ -1,5 +1,7 @@
 #include "KBTracklet.hh"
+#ifdef ACTIVATE_EVE
 #include "TEveLine.h"
+#endif
 
 ClassImp(KBTracklet)
 
