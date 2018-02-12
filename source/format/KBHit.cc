@@ -1,6 +1,8 @@
 #include "KBHit.hh"
 #include "KBPulseGenerator.hh"
+#ifdef ACTIVATE_EVE
 #include "TEvePointSet.h"
+#endif
 #include <iostream>
 #include <iomanip>
 
