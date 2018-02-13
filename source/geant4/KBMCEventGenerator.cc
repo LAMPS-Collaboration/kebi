@@ -9,6 +9,14 @@ KBMCEventGenerator::KBMCEventGenerator()
 KBMCEventGenerator::KBMCEventGenerator(TString fileName)
 {
   fInputFile.open(fileName.Data());
+
+  TString me;
+  fInputFile >> me;
+  me.ToLower();
+
+       if (me == "p") fReadMomentumOrEnergy = true;
+  else if (me == "e") fReadMomentumOrEnergy = false;
+
   fInputFile >> fNumEvents;
 }
 
@@ -26,6 +34,7 @@ bool KBMCEventGenerator::ReadNextEvent(Double_t &vx, Double_t &vy, Double_t &vz)
   fCurrentTrackID = 0;
   return true;
 }
+
 bool KBMCEventGenerator::ReadNextTrack(Int_t &pdg, Double_t &px, Double_t &py, Double_t &pz)
 {
   if (fCurrentTrackID >= fNumTracks)

@@ -3,7 +3,8 @@
  * @author JungWoo Lee (Korea Univ.)
  *
  * -# EventGen file must have following format.
- * -# 1) First line is [nEvents].
+ * -# 1) Second line should be "p" or "e": "p" for momentum (Mev/c), "e" for energy (MeV).
+ * -# 1) Second line is [nEvents].
  * -# 2) Repeat 3) to 5) [nEvents] times.
  * -# 3) First line of event is 3 components of vertex position in next event.
  * -# 4) Next line is [nTracks].
@@ -40,9 +41,9 @@
  * @param [vy] y-component of vertex [mm]
  * @param [vz] z-component of vertex [mm]
  * @param [pdg] particle PDG code
- * @param [px] x-component of momentum [MeV/c]
- * @param [py] y-component of momentum [MeV/c]
- * @param [pz] z-component of momentum [MeV/c]
+ * @param [px] x-component of momentum [MeV/c] (option "p") or energy [MeV] (option "e")
+ * @param [py] y-component of momentum [MeV/c] (option "p") or energy [MeV] (option "e")
+ * @param [pz] z-component of momentum [MeV/c] (option "p") or energy [MeV] (option "e")
  */
 
 #ifndef KBMCEVENTGENGENERATOR_HH
@@ -63,9 +64,11 @@ class KBMCEventGenerator
     bool ReadNextTrack(Int_t &pdg, Double_t &px, Double_t &py, Double_t &pz);
 
     Int_t GetNumEvents() { return fNumEvents; };
+    bool ReadMomentumOrEnergy() { return fReadMomentumOrEnergy; }
 
   private:
     std::ifstream fInputFile;
+    bool fReadMomentumOrEnergy;
     Int_t fNumEvents;
     Int_t fNumTracks;
     Int_t fCurrentTrackID;

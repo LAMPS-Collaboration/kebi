@@ -25,6 +25,7 @@ class KBPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
   private:
     G4ParticleGun* fParticleGun;
     KBMCEventGenerator *fEventGenerator;
+    bool fReadMomentumOrEnergy;
 };
 
 #endif

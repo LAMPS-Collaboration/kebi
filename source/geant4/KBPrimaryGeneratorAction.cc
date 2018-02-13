@@ -14,6 +14,7 @@ KBPrimaryGeneratorAction::KBPrimaryGeneratorAction(const char *fileName)
 {
   fParticleGun = new G4ParticleGun();
   fEventGenerator = new KBMCEventGenerator(fileName);
+  fReadMomentumOrEnergy = fEventGenerator -> ReadMomentumOrEnergy();
 }
 
 KBPrimaryGeneratorAction::~KBPrimaryGeneratorAction()
@@ -35,8 +36,11 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     fParticleGun -> SetParticleDefinition(particle);
 
     G4ThreeVector momentum(px,py,pz);
-    fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
     fParticleGun -> SetParticleMomentumDirection(momentum.unit());
+    if (fReadMomentumOrEnergy)
+      fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
+    else
+      fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
     fParticleGun -> GeneratePrimaryVertex(anEvent);
   }
 }
@@ -44,4 +48,5 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 void KBPrimaryGeneratorAction::SetEventGenerator(const char *fileName)
 {
   fEventGenerator = new KBMCEventGenerator(fileName);
+  fReadMomentumOrEnergy = fEventGenerator -> ReadMomentumOrEnergy();
 }
