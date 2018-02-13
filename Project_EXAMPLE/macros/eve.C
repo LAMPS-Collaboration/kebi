@@ -6,7 +6,7 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void eve(TString name = "dummy.mc")
+void eve(TString name = "last")
 {
   auto run = new KBRun();
   run -> SetInputFile(name);

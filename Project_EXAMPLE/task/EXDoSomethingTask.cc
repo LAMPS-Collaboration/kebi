@@ -20,7 +20,7 @@ bool EXDoSomethingTask::Init()
 
 void EXDoSomethingTask::Exec(Option_t*)
 {
-  fChannelArray -> Clear();
+  fChannelArray -> Clear("C");
 
   auto hit = (KBChannelHit *) fChannelArray -> ConstructedAt(0);
   hit -> SetID(0);
