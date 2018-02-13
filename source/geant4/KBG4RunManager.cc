@@ -52,7 +52,7 @@ void KBG4RunManager::AddParFile(G4String value)
   fPar -> AddFile(s.Data());
 }
 
-void KBG4RunManager::SetSensitiveDetector(G4PVPlacement *pvp)
+void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume)
 {
-  fCopyNoArray.push_back(pvp->GetCopyNo());
+  fCopyNoArray.push_back(physicalVolume->GetCopyNo());
 }

@@ -2,7 +2,7 @@
 #define KBG4RUNMANAGER_HH
 
 #include "G4RunManager.hh"
-#include "G4PVPlacement.hh"
+#include "G4VPhysicalVolume.hh"
 #include "KBMCDataManager.hh"
 #include "KBG4RunMessenger.hh"
 #include "KBParameterContainerHolder.hh"
@@ -21,7 +21,7 @@ class KBG4RunManager : public G4RunManager, public KBParameterContainerHolder
     void SetOutputFile(G4String value);
     void AddParFile(G4String value);
 
-    void SetSensitiveDetector(G4PVPlacement *pvp);
+    void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume);
 
   private:
     KBG4RunMessenger *fMessenger;
