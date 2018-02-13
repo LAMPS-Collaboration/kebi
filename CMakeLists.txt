@@ -4,17 +4,17 @@ project(KEBI)
 
 #---Configuration
 set(ACTIVATE_EVE      OFF CACHE INTERNAL "") # Activate Root Eve package
-set(CREATE_GIT_LOG    ON  CACHE INTERNAL "") # Create Git log
-set(BUILD_GEANT4_SIM  ON  CACHE INTERNAL "") # Build Geant4 simulation
+set(CREATE_GIT_LOG    OFF CACHE INTERNAL "") # Create Git log
+set(BUILD_GEANT4_SIM  OFF CACHE INTERNAL "") # Build Geant4 simulation
 set(BUILD_DOXYGEN_DOC OFF CACHE INTERNAL "") # Build Doxygen documentation with HTML
 set(KEBI_PROJECT_LIST     CACHE INTERNAL "") # List of KEBI projects to build
+
+#---Configuration
+include(configure.cmake)
 
 if(ACTIVATE_EVE)
   add_definitions(-DACTIVATE_EVE)
 endif(ACTIVATE_EVE)
-
-#---Configuration
-include(configure.cmake)
 
 message(STATUS "Activate Eve package   : " ${ACTIVATE_EVE})
 message(STATUS "Create Git log         : " ${CREATE_GIT_LOG})
@@ -63,7 +63,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---libs: Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
 #---evelibs: Eve EG TreePlayer Geom Ged RGL Gui Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
 if(ACTIVATE_EVE)
-  find_package(ROOT REQUIRED COMPONENTS RIO Net Eve Geom Gui Graf Graf3d Ged Matrix MathCore)
+  find_package(ROOT REQUIRED COMPONENTS RIO Net Eve RGL Geom Gui Graf Graf3d Ged Matrix MathCore)
 else(ACTIVATE_EVE)
   find_package(ROOT REQUIRED COMPONENTS RIO Net Geom Gui Graf Graf3d Ged Matrix MathCore)
 endif(ACTIVATE_EVE)
