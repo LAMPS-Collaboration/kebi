@@ -23,15 +23,6 @@ void KBWPoint::Set(Double_t x, Double_t y, Double_t z, Double_t w)
   fW = w;
 }
 
-void KBWPoint::SetAt(Double_t val, Int_t i)
-{
-       if (i == 0) fX = val;
-  else if (i == 1) fY = val;
-  else if (i == 2) fZ = val;
-  else
-    Error("SetAt(val,i)", "bad index (%d) returning 0",i);
-}
-
 void KBWPoint::Print(Option_t *) const
 {
   cout << "XYZ|W: "

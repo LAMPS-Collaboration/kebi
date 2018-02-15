@@ -56,7 +56,7 @@ void KBWPointCluster::Add(KBWPoint wp)
   auto ww = fW + w;
 
   for (int i = 0; i < 3; ++i)
-    SetAt((fW*operator[](i) + w*wp[i])/ww,i);
+    operator[](i) = (fW*operator[](i) + w*wp[i])/ww;
 
   if (fW == 0) {
     for (int i = 0; i < 3; ++i)
@@ -70,5 +70,5 @@ void KBWPointCluster::Add(KBWPoint wp)
       fCov[i][j] = fW*fCov[i][j]/ww + w*(operator[](i)-wp[i])*(operator[](j)-wp[j])/fW;
   }
 
-  fW += wp.w();
+  fW = ww;
 }
