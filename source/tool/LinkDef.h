@@ -8,5 +8,7 @@
 #pragma link C++ class KBGeoLine+;
 #pragma link C++ class KBSamplePoint+;
 #pragma link C++ class KBPulseGenerator+;
+#pragma link C++ class KBWPoint+;
+#pragma link C++ class KBWPointCluster+;
 
 #endif
