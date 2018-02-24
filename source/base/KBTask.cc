@@ -13,9 +13,16 @@ KBTask::KBTask(const char* name, const char *title)
 {
 }
 
-bool KBTask::InitTask() 
+void KBTask::Add(TTask *task)
 {
-  if (!fActive) 
+  TTask::Add(task);
+
+  auto kbtask = (KBTask *) task;
+  kbtask -> SetRank(fRank+1);
+}
+
+bool KBTask::InitTask() 
+{ if (!fActive) 
     return false;
 
   bool initialized = Init();
@@ -45,3 +52,15 @@ bool KBTask::InitTasks()
 
   return true;
 }
+
+void KBTask::SetRank(Int_t rank)
+{
+  fRank = rank;
+
+  TIter iter(GetListOfTasks());
+  KBTask* task;
+  while ( (task = dynamic_cast<KBTask*>(iter())) )
+    task -> SetRank(fRank+1);
+}
+
+Int_t KBTask::GetRank() { return fRank; }

@@ -11,6 +11,8 @@
 #include "KBTpc.hh"
 #include "KBPadPlane.hh"
 
+#include "TError.h"
+
 #include "TH1D.h"
 #include "TGraph.h"
 
@@ -53,7 +55,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
      *   - "d" : Print detector
      *   - "i" : Print input
      *   - "o" : Print output
-    */
+     */
     virtual void Print(Option_t *option="all") const;
 
     void SetRunName(TString name);
@@ -84,7 +86,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
      * Register obj as a output branch with given name.
      * obj will not be registered if same name already exist in the branch list and return fail.
      * If persistent is true, branch will write it's data to output tree.
-    */
+     */
     bool RegisterBranch(TString name, TObject *obj, bool persistent);
     TObject *GetBranch(TString name); ///< Get branch by name.
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
@@ -112,6 +114,8 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     bool NextEvent();
 
     void Run(); ///< Run all events
+    void EndOfEvent();
+
     void RunSingle(Long64_t eventID); ///< Run single event given eventID
     void RunInRange(Long64_t startID, Long64_t endID); ///< Run in range from startID to endID
     void RunInEventRange(Long64_t startID, Long64_t endID); ///< @todo Write this method
@@ -169,6 +173,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     Long64_t fEndEventID = -1;
     Long64_t fCurrentEventID = 0;
     Long64_t fEventCount = 0;
+    bool fSignalEndOfEvent = false;
 
     KBParameterContainer *fRunHeader = nullptr;
 
@@ -191,7 +196,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     static KBRun *fInstance;
 
 
-  ClassDef(KBRun, 1)
+    ClassDef(KBRun, 1)
 };
 
 #endif

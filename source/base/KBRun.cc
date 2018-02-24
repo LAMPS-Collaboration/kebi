@@ -1,5 +1,6 @@
 #include "KBRun.hh"
 
+#include "TEnv.h"
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TApplication.h"
@@ -92,37 +93,37 @@ void KBRun::Print(Option_t *option) const
   if (option_string.Index("c") >= 0)
     KBRun::PrintKEBI();
 
-  cout << endl;
-  cout << "===========================================================================================" << endl;
-  cout << "[KBRun] Run Information" << endl;
+  kb_out << endl;
+  kb_out << "===========================================================================================" << endl;
+  kb_info << "Run" << endl;
   if (fPar != nullptr && option_string.Index("p") >= 0) {
-    cout << "-------------------------------------------------------------------------------------------" << endl;
+    kb_out << "-------------------------------------------------------------------------------------------" << endl;
     fPar -> Print();
   }
 
   if (fDetector != nullptr && option_string.Index("d") >= 0) {
-  cout << "-------------------------------------------------------------------------------------------" << endl;
+  kb_out << "-------------------------------------------------------------------------------------------" << endl;
     fDetector -> Print();
   }
 
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "[KBRun Input] " << fInputFileName << endl;
+  kb_out << "-------------------------------------------------------------------------------------------" << endl;
+  kb_info << "Input: " << fInputFileName << endl;
   if (fInputTree != nullptr && option_string.Index("i") >= 0)
     fInputTree -> Print("toponly");
 
-  cout << "-------------------------------------------------------------------------------------------" << endl;
-  cout << "[KBRun Output] " << fOutputFileName << endl;
+  kb_out << "-------------------------------------------------------------------------------------------" << endl;
+  kb_info << "Output: " << fOutputFileName << endl;
   if (fOutputTree != nullptr && option_string.Index("o") >= 0)
     fOutputTree -> Print("toponly");
 
   if (!fInitialized) {
-    cout << "-------------------------------------------------------------------------------------------" << endl;
-    cout << "*** Print() is recommanded to be called after the initialization." << endl;
-    cout << "*** This run is not initialized. Please call Init() before Print()." << endl;
+    kb_out << "-------------------------------------------------------------------------------------------" << endl;
+    kb_warning << "Print() is recommanded to be called after the initialization." << endl;
+    kb_warning << "This run is not initialized. Please call Init() before Print()." << endl;
 
   }
 
-  cout << "===========================================================================================" << endl;
+  kb_out << "===========================================================================================" << endl;
 }
 
 TString KBRun::ConfigureDataPath(TString name)
@@ -175,7 +176,7 @@ bool KBRun::Init()
 {
   fInitialized = false;
 
-  cout << "[KBRun] Initializing" << endl;
+  kb_print << "Initializing" << endl;
 
   Int_t idxInput = 0;
   if (fInputFileName.IsNull() && fInputFileNameArray.size() != 0) {
@@ -184,10 +185,10 @@ bool KBRun::Init()
   }
 
   if (fInputFileName.IsNull() == false) {
-    cout << endl;
-    cout << "[KBRun] Input file : " << fInputFileName << endl;
+    kb_out << endl;
+    kb_print << "Input file : " << fInputFileName << endl;
     if (!CheckFileExistence(fInputFileName)) {
-      cout << "[KBRun] given input file deos not exist!" << endl;
+      kb_print << "given input file deos not exist!" << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -203,7 +204,7 @@ bool KBRun::Init()
       fInputTree -> AddFile(fInputFileNameArray[i]);
 
     fNumEntries = fInputTree -> GetEntries();
-    cout << "  " << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
+    kb_info << "  " << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
 
     TObjArray *branchArray = fInputTree -> GetListOfBranches();
     Int_t nBranches = branchArray -> GetEntries();
@@ -213,17 +214,17 @@ bool KBRun::Init()
       fInputTree -> SetBranchAddress(branch -> GetName(), &fBranchPtr[fNBranches]);
       fBranchPtrMap[branch -> GetName()] = fBranchPtr[fNBranches];
       fNBranches++;
-      cout << "  Input branch " << branch -> GetName() << " found" << endl;
+      kb_info << "  Input branch " << branch -> GetName() << " found" << endl;
     }
   }
 
   if (fPar == nullptr) {
     if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr) {
       fPar = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
-      cout << "[KBRun] Parameter container found in " << fInputFileName << endl;
+      kb_info << "Parameter container found in " << fInputFileName << endl;
     }
     else {
-      cout << "[KBRun] FAILED to load parameter container." << endl;
+      kb_error << "FAILED to load parameter container." << endl;
       return false;
     }
   }
@@ -235,7 +236,7 @@ bool KBRun::Init()
     if (fRunName.IsNull())
       fRunName = runName;
     else if (!fRunName.IsNull() && fRunName != runName) {
-      cout << "[KBRun] Run name for input and output file do not match!" << endl;
+      kb_error << "Run name for input and output file do not match!" << endl;
       return false;
     }
 
@@ -243,7 +244,7 @@ bool KBRun::Init()
     if (fRunID == -1)
       fRunID = runID;
     else if (runID != -1 && fRunID != runID) {
-      cout << "[KBRun] Run-ID for input and output file do not match!" << endl;
+      kb_error << "RunID for input and output file do not match!" << endl;
       return false;
     }
   }
@@ -268,8 +269,8 @@ bool KBRun::Init()
   if (fDetector != nullptr) {
     fDetector -> SetParameterContainer(fPar);
     fDetector -> Init();
-    cout << endl;
-    cout << "[KBRun] " << fDetector -> GetName() << " initialized" << endl;
+    kb_out << endl;
+    kb_print << fDetector -> GetName() << " initialized" << endl;
   }
 
   if (fOutputFileName.IsNull()) {
@@ -289,8 +290,8 @@ bool KBRun::Init()
       fOutputFileName = ConfigureDataPath(fOutputFileName);
     }
     else {
-      cout << "[KBRun] Output file is not set!" << endl;
-      cout << "        Please set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
+      kb_error << "Output file is not set!" << endl;
+      kb_error << "Please set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
       return false;
     }
   }
@@ -298,26 +299,26 @@ bool KBRun::Init()
     fOutputFileName = ConfigureDataPath(fOutputFileName);
 
   if (CheckFileExistence(fOutputFileName)) {
-    //cout << "  Output file " << fOutputFileName << " already exist!" << endl;
+    //kb_warning << "  Output file " << fOutputFileName << " already exist!" << endl;
     //return false;
   }
 
   fLogFileName = TString(KEBI_PATH) + "/data/kbrun.log";
 
-  cout << endl;
-  cout << "[KBRun] Output file : " << fOutputFileName << endl;
+  kb_out << endl;
+  kb_info << "Output file : " << fOutputFileName << endl;
   fOutputFile = new TFile(fOutputFileName, "recreate");
   fOutputTree = new TTree("data", "");
 
   fInitialized = InitTasks();
 
-  cout << endl;
+  kb_out << endl;
   if (fInitialized) {
-    cout << "[KBRun] " << fNumEntries << " input entries" << endl;
-    cout << "[KBRun] KBRun initialized" << endl;
+    kb_info << fNumEntries << " input entries" << endl;
+    kb_print << "KBRun initialized" << endl;
   }
   else
-    cout << "[KBRun] FAILED initializing tasks." << endl;
+    kb_error << "[KBRun] FAILED initializing tasks." << endl;
 
   fCurrentEventID = -1;
 
@@ -326,15 +327,15 @@ bool KBRun::Init()
 
 void KBRun::CreateParameterFile(TString name)
 {
-  cout << "===========================================================================================" << endl;
-  cout << "  CreateParameterFile -> " << name << endl;
-  cout << endl;
-  cout << "  Note:" << endl;
-  cout << "  1. This method will create skeleton parameter file with given name." << endl;
-  cout << "  2. You must set input file as usual." << endl;
-  cout << "  3. KBRun will only run Init() method to collect parameters." << endl;
-  cout << "  3. If program stops due to missing parameter, this method will not work properly." << endl;
-  cout << "===========================================================================================" << endl;
+  kb_out  << "===========================================================================================" << endl;
+  kb_info << "  CreateParameterFile -> " << name << endl;
+  kb_info << endl;
+  kb_info << "  Note:" << endl;
+  kb_info << "  1. This method will create skeleton parameter file with given name." << endl;
+  kb_info << "  2. You must set input file as usual." << endl;
+  kb_info << "  3. KBRun will only run Init() method to collect parameters." << endl;
+  kb_info << "  3. This method will not work if program stops due to missing parameters. " << endl;
+  kb_out  << "===========================================================================================" << endl;
 
   fPar -> SetDebugMode(true);
   Init();
@@ -358,10 +359,10 @@ bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
     if (fOutputTree != nullptr)
       fOutputTree -> Branch(name, &obj);
     fPersistentBranchArray -> Add(obj);
-    cout << "    -Output branch " << name << " (persistent)" << endl;
+    kb_info << "Output branch " << name << " (persistent)" << endl;
   } else {
     fTemporaryBranchArray -> Add(obj);
-    cout << "    -Output branch " << name << " (temporary)" << endl;
+    kb_info << "Output branch " << name << " (temporary)" << endl;
   }
 
   return true;
@@ -415,16 +416,16 @@ Long64_t KBRun::GetEventCount() const { return fEventCount; }
 
 bool KBRun::Event(Long64_t eventID)
 {
-  cout << endl;
+  kb_out << endl;
   if (fInitialized == false) {
-    cout << "[KBRun::Event] KBRun is not Initialized!" << endl;
-    cout << "               Exit run" << endl;
+    kb_info << "KBRun is not Initialized!" << endl;
+    kb_info << "Exit run" << endl;
     return false;
   }
 
   if (eventID < 0 || eventID > fNumEntries-1) {
-    cout << "[KBRun::Event] Event-ID(" << eventID << ") is out of range: " << endl;
-    cout << "               Exit event" << endl;
+    kb_info << "Event-ID(" << eventID << ") is out of range: " << endl;
+    kb_info << "Exit event" << endl;
     return false;
   }
 
@@ -432,7 +433,7 @@ bool KBRun::Event(Long64_t eventID)
   if (fInputTree != nullptr)
     fInputTree -> GetEntry(eventID);
 
-  cout << "[KBRun::Event] Execute Event " << eventID << "    (X persistent)" << endl;
+  kb_info << "Execute Event " << eventID << "    (X persistent)" << endl;
   ExecuteTask("");
 
   return true;
@@ -442,12 +443,12 @@ bool KBRun::NextEvent() { return Event(fCurrentEventID+1); }
 
 void KBRun::Run()
 {
-  cout << endl;
+  kb_out << endl;
   if (fInitialized == false) {
-    cout << "[KBRun] KBRun is not initialized!" << endl;
-    cout << "        try initialization..." << endl;
+    kb_info << "KBRun is not initialized!" << endl;
+    kb_info << "try initialization..." << endl;
     if (!Init())
-      cout << "[KBRun] Exit Run() due to initialization fail." << endl;
+      kb_error << "Exit Run() due to initialization fail." << endl;
   }
 
   CheckIn();
@@ -466,16 +467,25 @@ void KBRun::Run()
 
   Int_t numRunEntries = fEndEventID - fStartEventID + 1;
 
+  fSignalEndOfEvent = false;
+
   fEventCount = 1;
-  for (Long64_t iEntry = fStartEventID; iEntry <= fEndEventID; iEntry++) {
+
+  Long64_t iEntry = 0;
+  for (iEntry = fStartEventID; iEntry <= fEndEventID; iEntry++) {
     fCurrentEventID = iEntry;
     if (fInputTree != nullptr) {
       fInputTree -> GetEntry(iEntry);
       ///TODO @todo fCurrentEventID = EventHeader -> GetEventID();
     }
 
-    cout << "[KBRun] Execute Event " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
+    kb_out << endl;
+    kb_info << "Execute Event " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
     ExecuteTask("");
+
+    if (fSignalEndOfEvent)
+      break;
+
     if (fOutputTree != nullptr)
       fOutputTree -> Fill();
 
@@ -489,10 +499,12 @@ void KBRun::Run()
     fRunHeader -> Write(fRunHeader->GetName(),TObject::kSingleKey);
   }
 
-  cout << endl;
-  cout << "[KBRun] End of Run " << fStartEventID << " -> " << fEndEventID << " (" << fEndEventID - fStartEventID + 1 << ")" << endl;
+  kb_out << endl;
+  kb_info << "End of Run " << fStartEventID << " -> " << fEndEventID << " (" << fEndEventID - fStartEventID + 1 << ")" << endl;
+  if (fSignalEndOfEvent)
+    kb_info << "Run stoped at event " << iEntry - 1 << " (" << iEntry - fStartEventID << ") because EndOfEvent signal was sent" << endl;
 
-  cout << endl;
+  kb_out << endl;
   Print("cio");
 
   if (fOutputTree != nullptr) {
@@ -507,13 +519,14 @@ void KBRun::Run()
   Terminate(this);
 }
 
+void KBRun::EndOfEvent() { fSignalEndOfEvent = true; }
+
 void KBRun::RunSingle(Long64_t eventID)
 {
   if (eventID < 0 || eventID > fNumEntries - 1) {
-    cout << "[KBRun] eventID not in proper range." << endl;
-    cout << "        eventID : " << eventID << endl;
-    cout << "        entry range : " << 0 << " -> " << fNumEntries - 1 << endl;
-    cout << "        Exit run" << endl;
+    kb_error << "EventID: " << eventID << ", not in proper range." << endl;
+    kb_error << "Entry range : " << 0 << " -> " << fNumEntries - 1 << endl;
+    kb_error << "Exit run" << endl;
     return;
   }
 
@@ -525,10 +538,9 @@ void KBRun::RunSingle(Long64_t eventID)
 void KBRun::RunInRange(Long64_t startID, Long64_t endID)
 {
   if (startID > endID || startID < 0 || endID > fNumEntries - 1) {
-    cout << "[KBRun] startID and endID not in proper range." << endl;
-    cout << "        startID / endID : " << startID << " / " << endID << endl;
-    cout << "        entry range : " << 0 << " -> " << fNumEntries - 1 << endl;
-    cout << "        Exit run" << endl;
+    kb_error << "startID " << startID << " and endID " << endID << " not in proper range." << endl;
+    kb_error << "entry range : " << 0 << " -> " << fNumEntries - 1 << endl;
+    kb_error << "Exit run" << endl;
     return;
   }
 
@@ -545,11 +557,13 @@ void KBRun::RunInEventRange(Long64_t, Long64_t)
 void KBRun::OpenEventDisplay()
 {
   if (fDetector == nullptr) {
-    cout << "Cannot open event display: detector is not set." << endl;
+    kb_warning << "Cannot open event display: detector is not set." << endl;
   }
 
-  if (gEve != nullptr)
+  if (gEve != nullptr) {
+    kb_error << "gEve is nullptr" << endl;
     return;
+  }
 
   TEveManager::Create(true, "V");
   fEveEventManager = new TEveEventManager();
@@ -728,7 +742,7 @@ void KBRun::RunEve(Long64_t eventID)
 
 void KBRun::Terminate(TObject *obj, TString message)
 {
-  cout << "Terminated from [" << obj -> GetName() << "] " << message << endl;
+  kb_info << "Terminated from [" << obj -> GetName() << "] " << message << endl;
   gApplication -> Terminate();
 }
 
@@ -778,7 +792,7 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   KBPadPlane *padplane = tpc -> GetPadPlane();
   Int_t id = padplane -> FindPadID(x, y);
   if (id < 0) {
-    cout << "Could not find pad at position: " << x << ", " << y << endl;
+    kb_error << "Could not find pad at position: " << x << ", " << y << endl;
     return;
   }
 
@@ -789,7 +803,7 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   vector<TVector2> *corners = pad -> GetPadCorners();
   for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
     TVector2 corner = corners -> at(iCorner);
-    cout << "corner: " << corner.X() << ", " <<  corner.Y() << endl;
+    kb_print << "corner: " << corner.X() << ", " <<  corner.Y() << endl;
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
 
@@ -805,9 +819,9 @@ bool KBRun::CheckFileExistence(TString fileName)
 {
   TString name = gSystem -> Which(".", fileName.Data());
   if (name.IsNull())
-    cout << "[KBRun::CheckFileExistence] " << fileName << " IS NEW." << endl;
+    kb_info << fileName << " IS NEW." << endl;
   else
-    cout << "[KBRun::CheckFileExistence] " << fileName << " ALREADY EXIST!" << endl;
+    kb_info << fileName << " ALREADY EXIST!" << endl;
 
   if (name.IsNull())
     return false;
