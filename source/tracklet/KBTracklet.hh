@@ -5,6 +5,7 @@
 
 #include "KBHitList.hh"
 #include "KBHit.hh"
+#include "KBVector3.hh"
 #include "KBTrackFitter.hh"
 
 class KBTrackFitter;
@@ -17,18 +18,23 @@ class KBTracklet : public KBContainer
 
     KBHitList *fHitList = nullptr;  //!
 
+    KBVector3::Axis fReferenceAxis = KBVector3::kZ; // B field axis
+
   public:
     KBTracklet() {}
     virtual ~KBTracklet() {}
 
     void SetTrackID(Int_t val) { fTrackID = val; }
-    Int_t GetTrackID() { return fTrackID; }
+    Int_t GetTrackID() const { return fTrackID; }
 
     void SetParentID(Int_t val) { fParentID = val; }
-    Int_t GetParentID() { return fParentID; }
+    Int_t GetParentID() const { return fParentID; }
 
     void SetHitList(KBHitList *list) { fHitList = list; }
     KBHitList *GetHitList() { return fHitList; }
+
+    void SetReferenceAxis(KBVector3::Axis axis) { fReferenceAxis = axis; }
+    KBVector3::Axis GetReferenceAxis() const { return fReferenceAxis; }
 
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);

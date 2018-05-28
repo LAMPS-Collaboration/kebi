@@ -33,10 +33,8 @@ void KBTracklet::SetEveElement(TEveElement *element)
 
   line -> SetLineColor(kRed);
 
-  //for (Double_t r = 0.; r < 1.1; r += 0.01) {
   for (Double_t r = 0.; r < 1.0; r += 0.02) {
     auto pos = ExtrapolateByRatio(r);
-    //line -> SetNextPoint(pos.Z(), pos.X(), pos.Y());
     line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
   }
 }
