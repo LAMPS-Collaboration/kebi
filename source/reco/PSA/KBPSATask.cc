@@ -42,7 +42,7 @@ bool KBPSATask::Init()
 
 void KBPSATask::Exec(Option_t*)
 {
-  fHitArray -> Delete();
+  fHitArray -> Clear("C");
 
   Int_t nPads = fPadArray -> GetEntriesFast();
 
@@ -86,7 +86,7 @@ void KBPSATask::Exec(Option_t*)
     }
   }
 
-  cout << "  [" << this -> GetName() << "] Number of found hits: " << idx << endl;
+  kb_info << "Number of found hits: " << idx << endl;
 }
 
 void KBPSATask::SetPSA(KBPSA *psa)

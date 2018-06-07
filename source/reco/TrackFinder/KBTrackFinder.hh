@@ -2,11 +2,13 @@
 #define KBTRACKFINDER_HH
 
 #include "KBParameterContainerHolder.hh"
+#include "KBTask.hh"
 
-class KBTrackFinder : public KBParameterContainerHolder
+class KBTrackFinder : public KBTask, public KBParameterContainerHolder
 {
   public:
-    KBTrackFinder() {}
+    KBTrackFinder();
+    KBTrackFinder(const char* name, const char *title);
     virtual ~KBTrackFinder() {}
 
     /**

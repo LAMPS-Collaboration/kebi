@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class KBTrackFinder+;
+#pragma link C++ class KBSingleHelixTask+;
 
 #endif
