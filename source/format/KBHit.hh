@@ -21,6 +21,7 @@ class KBHit : public KBContainer
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
+    virtual void Copy (TObject &object) const;
 
     virtual TF1 *GetPulseFunction(Option_t *option = "");
 
@@ -28,9 +29,11 @@ class KBHit : public KBContainer
     void SetPadID(Int_t id);
     void SetTrackID(Int_t id);
 
+    void SetPosition(TVector3 pos);
     void SetX(Double_t x);
     void SetY(Double_t y);
     void SetZ(Double_t z);
+    void SetPosSigma(TVector3 sig);
     void SetDX(Double_t dx);
     void SetDY(Double_t dy);
     void SetDZ(Double_t dz);

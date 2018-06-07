@@ -23,6 +23,8 @@ void KBHit::Clear(Option_t *)
 
   fTb = -1;
   fCharge = 0;
+
+  fTrackCandArray.clear();
 }
 
 void KBHit::Print(Option_t *option) const
@@ -45,6 +47,26 @@ void KBHit::Print(Option_t *option) const
   cout << "  (tb, Charge)     : (" << fTb << ", " << fCharge << ")" << endl;
 }
 
+void KBHit::Copy(TObject &obj) const
+{
+  TObject::Copy(obj);
+  auto hit = (KBHit &) obj;
+
+  hit.SetHitID(fHitID);
+  hit.SetPadID(fPadID);
+  hit.SetTrackID(fTrackID);
+
+  hit.SetPosition(fPosition);
+  hit.SetPosSigma(fPosSigma);
+
+  hit.SetSection(fSection);
+  hit.SetRow(fRow);
+  hit.SetLayer(fLayer);
+
+  hit.SetTb(fTb);
+  hit.SetCharge(fCharge);
+}
+
 TF1 *KBHit::GetPulseFunction(Option_t *)
 {
   auto pulseGen = KBPulseGenerator::GetPulseGenerator();
@@ -56,6 +78,9 @@ TF1 *KBHit::GetPulseFunction(Option_t *)
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
 void KBHit::SetPadID(Int_t id) { fPadID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
+
+void KBHit::SetPosition(TVector3 pos) { fPosition = pos; }
+void KBHit::SetPosSigma(TVector3 sig) { fPosSigma = sig; }
 
 void KBHit::SetX(Double_t x) { fPosition.SetX(x); }
 void KBHit::SetY(Double_t y) { fPosition.SetY(y); }

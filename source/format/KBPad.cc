@@ -122,6 +122,11 @@ void KBPad::GetPosition(Double_t &i, Double_t &j) const
   j = fJ;
 }
 
+TVector2 KBPad::GetPosition() const
+{
+  return TVector2(fI, fJ);
+}
+
 Double_t KBPad::GetI() const { return fI; }
 Double_t KBPad::GetJ() const { return fJ; }
 

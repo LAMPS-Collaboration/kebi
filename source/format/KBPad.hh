@@ -54,6 +54,7 @@ class KBPad : public KBChannel
 
     void SetPosition(Double_t i, Double_t j);
     void GetPosition(Double_t &i, Double_t &j) const;
+    TVector2 GetPosition() const;
     Double_t GetI() const;
     Double_t GetJ() const;
 

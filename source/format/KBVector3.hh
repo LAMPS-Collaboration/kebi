@@ -23,7 +23,25 @@ class KBVector3 : public TVector3
     KBVector3(Double_t x0, Double_t y0, Double_t z0, KBVector3::Axis referenceAxis)
     :TVector3(x0,y0,z0), fReferenceAxis(referenceAxis) {}
 
+    KBVector3(KBVector3::Axis referenceAxis, Double_t i0, Double_t j0, Double_t k0)
+    :fReferenceAxis(referenceAxis) { SetIJK(i0,j0,k0); }
+
+    KBVector3(KBVector3::Axis referenceAxis, TVector3 p)
+    :fReferenceAxis(referenceAxis) { SetIJK(p.X(),p.Y(),p.Z()); }
+
     virtual ~KBVector3() {}
+
+    inline KBVector3 operator - () const {
+      return KBVector3(-X(), -Y(), -Z(), fReferenceAxis);
+    }
+
+    inline KBVector3 & operator = (const KBVector3 & p) {
+      SetX(p.X());
+      SetY(p.Y());
+      SetZ(p.Z());
+      fReferenceAxis = p.fReferenceAxis;
+      return *this;
+    }
 
     virtual void Print(Option_t *option = "") const;
     virtual void Clear(Option_t *option = "");
@@ -44,12 +62,21 @@ class KBVector3 : public TVector3
     Double_t J() const;
     Double_t K() const;
 
-    TVector3 GetV3IJK();
+    TVector3 GetXYZ();
+    TVector3 GetIJK();
 
   private:
     KBVector3::Axis fReferenceAxis = KBVector3::kZ;
 
   ClassDef(KBVector3, 1)
 };
+
+KBVector3 operator + (const KBVector3 &a, const KBVector3 &b);
+KBVector3 operator - (const KBVector3 &a, const KBVector3 &b);
+
+KBVector3 operator * (Double_t a, const KBVector3 &p);
+KBVector3 operator * (const KBVector3 &p, Double_t a);
+KBVector3 operator * (Int_t a, const KBVector3 &p);
+KBVector3 operator * (const KBVector3 &p, Int_t a);
 
 #endif

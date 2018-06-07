@@ -184,4 +184,37 @@ Double_t KBVector3::K() const
   }
 }
 
-TVector3 KBVector3::GetV3IJK() { return TVector3(I(), J(), K()); }
+TVector3 KBVector3::GetXYZ() { return TVector3(X(), Y(), Z()); }
+TVector3 KBVector3::GetIJK() { return TVector3(I(), J(), K()); }
+
+KBVector3 operator - (const KBVector3 &a, const KBVector3 &b) {
+  if (a.GetReferenceAxis() != b.GetReferenceAxis()) {
+    Error("operator -", "operation - between KBVector3s with different reference axis is not allowed");
+    return KBVector3(0,0,0,KBVector3::kNon);
+  }
+  return KBVector3(a.X()-b.X(), a.Y()-b.Y(), a.Z()-b.Z(), a.GetReferenceAxis());
+}
+
+KBVector3 operator + (const KBVector3 &a, const KBVector3 &b) {
+  if (a.GetReferenceAxis() != b.GetReferenceAxis()) {
+    Error("operator +", "operation + between KBVector3s with different reference axis is not allowed");
+    return KBVector3(KBVector3::kNon);
+  }
+  return KBVector3(a.X()+b.X(), a.Y()+b.Y(), a.Z()+b.Z(), a.GetReferenceAxis());
+}
+
+KBVector3 operator * (Double_t a, const KBVector3 &p) {
+  return KBVector3(a*p.X(), a*p.Y(), a*p.Z(), p.GetReferenceAxis());
+}
+
+KBVector3 operator * (const KBVector3 &p, Double_t a) {
+  return KBVector3(a*p.X(), a*p.Y(), a*p.Z(), p.GetReferenceAxis());
+}
+
+KBVector3 operator * (Int_t a, const KBVector3 &p) {
+  return KBVector3(a*p.X(), a*p.Y(), a*p.Z(), p.GetReferenceAxis());
+}
+
+KBVector3 operator * (const KBVector3 &p, Int_t a) {
+  return KBVector3(a*p.X(), a*p.Y(), a*p.Z(), p.GetReferenceAxis());
+}
