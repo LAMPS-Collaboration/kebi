@@ -1,8 +1,11 @@
 #ifndef KBHELIXTRACK_HH
 #define KBHELIXTRACK_HH
 
+#include "TString.h"
+
 #include "KBHit.hh"
 #include "KBTracklet.hh"
+#include "KBVector3.hh"
 #include "KBHelixTrackFitter.hh"
 #include <vector>
 
@@ -24,23 +27,23 @@ class KBHelixTrack : public KBTracklet
   private:
     KBFitStatus fFitStatus;  ///< One of kBad, kHelix and kLine.
 
-    Double_t fXHelixCenter;  ///< x-component of the helix center
-    Double_t fZHelixCenter;  ///< z-component of the helix center
+    Double_t fIHelixCenter;  ///< i-component of the helix center
+    Double_t fJHelixCenter;  ///< j-component of the helix center
     Double_t fHelixRadius;   ///< Radius of the helix
-    Double_t fYInitial;      ///< y-position at angle alpha = 0
-    Double_t fAlphaSlope;    ///< y = fAlphaSlope * alpha + fYInitial
+    Double_t fKInitial;      ///< k-position at angle alpha = 0
+    Double_t fAlphaSlope;    ///< k = fAlphaSlope * alpha + fKInitial
 
     Double_t fChargeSum;     ///< Sum of charge
 
-    Double_t fExpectationX;  //! < Expectation value of x
-    Double_t fExpectationY;  //! < Expectation value of y
-    Double_t fExpectationZ;  //! < Expectation value of z
-    Double_t fExpectationXX; //! < Expectation value of x^2
-    Double_t fExpectationYY; //! < Expectation value of y^2
-    Double_t fExpectationZZ; //! < Expectation value of z^2
-    Double_t fExpectationXY; //! < Expectation value of xy
-    Double_t fExpectationYZ; //! < Expectation value of yz
-    Double_t fExpectationZX; //! < Expectation value of zx
+    Double_t fExpectationI;  //! < Expectation value of i
+    Double_t fExpectationK;  //! < Expectation value of j
+    Double_t fExpectationJ;  //! < Expectation value of k
+    Double_t fExpectationII; //! < Expectation value of i^2
+    Double_t fExpectationJJ; //! < Expectation value of j^2
+    Double_t fExpectationKK; //! < Expectation value of k^2
+    Double_t fExpectationIJ; //! < Expectation value of ij
+    Double_t fExpectationJK; //! < Expectation value of jk
+    Double_t fExpectationKI; //! < Expectation value of ki
 
     Double_t fRMSW;          ///< width RMS of the fit
     Double_t fRMSH;          ///< height RMS of the fit
@@ -60,8 +63,9 @@ class KBHelixTrack : public KBTracklet
     Double_t fGenfitMomentum;  ///< Momentum reconstructed by GENFIT
 
   public:
-    void Clear(Option_t *option = "");
+    virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
+    virtual void Copy (TObject &object) const;
 
     KBTrackFitter *CreateTrackFitter() const;
 
@@ -85,9 +89,9 @@ class KBHelixTrack : public KBTracklet
     void SetLineDirection(TVector3 dir);  ///< ONLY USED IN TRACK FINDING
     void SetPlaneNormal(TVector3 norm);   ///< ONLY USED IN TRACK FINDING
 
-    void SetHelixCenter(Double_t x, Double_t z);
+    void SetHelixCenter(Double_t i, Double_t j);
     void SetHelixRadius(Double_t r);
-    void SetYInitial(Double_t y);
+    void SetKInitial(Double_t k);
     void SetAlphaSlope(Double_t s);
 
     void SetRMSW(Double_t rms);
@@ -110,47 +114,47 @@ class KBHelixTrack : public KBTracklet
     bool IsHelix() const;
     bool IsGenfitTrack() const;
 
-    Double_t GetHelixCenterX() const;
-    Double_t GetHelixCenterZ() const;
+    Double_t GetHelixCenterJ() const;
+    Double_t GetHelixCenterI() const;
     Double_t GetHelixRadius() const;
-    Double_t GetYInitial() const;
+    Double_t GetKInitial() const;
     Double_t GetAlphaSlope() const;
 
-    void GetHelixParameters(Double_t &xCenter, 
-        Double_t &zCenter, 
-        Double_t &radius, 
-        Double_t &dipAngle,
-        Double_t &yInitial,
-        Double_t &alphaSlope) const;
+    void GetHelixParameters(Double_t &iCenter, 
+                            Double_t &jCenter, 
+                            Double_t &radius, 
+                            Double_t &dipAngle,
+                            Double_t &kInitial,
+                            Double_t &alphaSlope) const;
 
     Double_t GetChargeSum() const;
 
-    TVector3 GetMean() const;
-    Double_t GetXMean() const;
-    Double_t GetYMean() const;
-    Double_t GetZMean() const;
-    Double_t GetXCov() const;
-    Double_t GetZCov() const;
+    KBVector3 GetMean() const;
+    Double_t GetIMean() const;
+    Double_t GetJMean() const;
+    Double_t GetKMean() const;
+    Double_t GetICov() const;
+    Double_t GetJCov() const;
 
-    Double_t CovWXX() const; ///< SUM_i {(x_centroid-x_i)*(x_centroid-x_i) }
-    Double_t CovWYY() const; ///< SUM_i {(y_centroid-y_i)*(y_centroid-y_i) }
-    Double_t CovWZZ() const; ///< SUM_i {(z_centroid-z_i)*(z_centroid-z_i) }
+    Double_t CovWII() const; ///< SUM_i {(z_centroid-z_i)*(z_centroid-z_i) }
+    Double_t CovWJJ() const; ///< SUM_i {(x_centroid-x_i)*(x_centroid-x_i) }
+    Double_t CovWKK() const; ///< SUM_i {(y_centroid-y_i)*(y_centroid-y_i) }
 
-    Double_t CovWXY() const; ///< SUM_i {(x_centroid-x_i)*(y_centroid-y_i) }
-    Double_t CovWYZ() const; ///< SUM_i {(y_centroid-y_i)*(z_centroid-z_i) }
-    Double_t CovWZX() const; ///< SUM_i {(z_centroid-z_i)*(x_centroid-x_i) }
+    Double_t CovWIJ() const; ///< SUM_i {(z_centroid-z_i)*(x_centroid-x_i) }
+    Double_t CovWJK() const; ///< SUM_i {(x_centroid-x_i)*(y_centroid-y_i) }
+    Double_t CovWKI() const; ///< SUM_i {(y_centroid-y_i)*(z_centroid-z_i) }
 
-    Double_t GetExpectationX()  const;
-    Double_t GetExpectationY()  const;
-    Double_t GetExpectationZ()  const;
+    Double_t GetExpectationI()  const;
+    Double_t GetExpectationJ()  const;
+    Double_t GetExpectationK()  const;
 
-    Double_t GetExpectationXX() const;
-    Double_t GetExpectationYY() const;
-    Double_t GetExpectationZZ() const;
+    Double_t GetExpectationII() const;
+    Double_t GetExpectationJJ() const;
+    Double_t GetExpectationKK() const;
 
-    Double_t GetExpectationXY() const;
-    Double_t GetExpectationYZ() const;
-    Double_t GetExpectationZX() const;
+    Double_t GetExpectationIJ() const;
+    Double_t GetExpectationJK() const;
+    Double_t GetExpectationKI() const;
 
     Double_t GetRMSW() const;
     Double_t GetRMSH() const;
@@ -179,11 +183,11 @@ class KBHelixTrack : public KBTracklet
 
 
 
-    TVector3 GetLineDirection() const;     ///< ONLY USED IN TRACK FINDING
-    TVector3 GetPlaneNormal() const;       ///< ONLY USED IN TRACK FINDING
+    KBVector3 GetLineDirection() const;     ///< ONLY USED IN TRACK FINDING
+    KBVector3 GetPlaneNormal() const;       ///< ONLY USED IN TRACK FINDING
 
-    TVector3 PerpLine(TVector3 p) const;   ///< ONLY USED IN TRACK FINDING
-    TVector3 PerpPlane(TVector3 p) const;  ///< ONLY USED IN TRACK FINDING
+    KBVector3 PerpLine(TVector3 p) const;   ///< ONLY USED IN TRACK FINDING
+    KBVector3 PerpPlane(TVector3 p) const;  ///< ONLY USED IN TRACK FINDING
 
     Double_t GetGenfitMomentum() const;    /// Momentum reconstructed by genfit (if is set)
     /**
@@ -197,12 +201,8 @@ class KBHelixTrack : public KBTracklet
 
        Int_t Charge() const;                        ///< Assumed charge of the track
        Int_t Helicity() const;                      ///< Helicity of track +/-
-    TVector3 PositionAtHead() const;                ///< Position at head of helix
-    TVector3 PositionAtTail() const;                ///< Position at tail of helix
-    TVector3 Momentum(Double_t B = 0.5) const;      ///< Momentum of track (B = 0.5 by default)
-    Double_t TrackLength() const;                   ///< Length of track calculated from head to tail.
     Double_t LengthInPeriod() const;                ///< Length of track in one period
-    Double_t YLengthInPeriod() const;               ///< y-length of track in one period
+    Double_t KLengthInPeriod() const;               ///< y-length of track in one period
     Double_t LengthByAlpha(Double_t alpha) const;   ///< Length of track in change of alpha
     Double_t AlphaByLength(Double_t length) const;  ///< Angle alpha in change of length
     TVector3 PositionByAlpha(Double_t alpha) const; ///< Position at angle alpha [mm]
@@ -247,13 +247,13 @@ class KBHelixTrack : public KBTracklet
      * @param pointOnHelix  extrapolated position on the helix.
      * @param alpha         extrapolated alpha angle.
     */
-    Double_t ExtrapolateToPointY(TVector3 pointGiven, TVector3 &pointOnHelix, Double_t &alpha) const;
+    Double_t ExtrapolateToPointK(TVector3 pointGiven, TVector3 &pointOnHelix, Double_t &alpha) const;
 
     /** Check feasibility of Extrapolation of track to zy-plane at x-position. */
-    bool CheckExtrapolateToX(Double_t x) const;
+    bool CheckExtrapolateToI(Double_t x) const;
 
     /** Check feasibility of Extrapolation of track to xy-plane at z-position. */
-    bool CheckExtrapolateToZ(Double_t z) const;
+    bool CheckExtrapolateToJ(Double_t z) const;
 
     /**
      * Extrapolate track to zy-plane at x-position.
@@ -265,7 +265,7 @@ class KBHelixTrack : public KBTracklet
      * @param pointOnHelix2  extrapolated position on the helix close to fAlphaTail
      * @param alpha2         extrapolated alpha angle close to fAlphaTail
     */
-    bool ExtrapolateToX(Double_t x, 
+    bool ExtrapolateToI(Double_t x, 
         TVector3 &pointOnHelix1, Double_t &alpha1,
         TVector3 &pointOnHelix2, Double_t &alpha2) const;
 
@@ -279,7 +279,7 @@ class KBHelixTrack : public KBTracklet
      * @param pointOnHelix2  extrapolated position on the helix close to fAlphaTail
      * @param alpha2         extrapolated alpha angle close to fAlphaTail
     */
-    bool ExtrapolateToZ(Double_t z,
+    bool ExtrapolateToJ(Double_t z,
         TVector3 &pointOnHelix1, Double_t &alpha1,
         TVector3 &pointOnHelix2, Double_t &alpha2) const;
 
@@ -291,7 +291,7 @@ class KBHelixTrack : public KBTracklet
      * @param alphaRef       reference position for extapolation
      * @param pointOnHelix   extrapolated position on the helix close to alphaRef
     */
-    bool ExtrapolateToX(Double_t x, Double_t alphaRef, TVector3 &pointOnHelix) const;
+    bool ExtrapolateToI(Double_t x, Double_t alphaRef, TVector3 &pointOnHelix) const;
 
     /**
      * Extrapolate track to xy-plane at z-position.
@@ -301,7 +301,7 @@ class KBHelixTrack : public KBTracklet
      * @param alphaRef       reference position for extapolation
      * @param pointOnHelix   extrapolated position on the helix close to alphaRef
     */
-    bool ExtrapolateToZ(Double_t z, Double_t alphaRef, TVector3 &pointOnHelix) const;
+    bool ExtrapolateToJ(Double_t z, Double_t alphaRef, TVector3 &pointOnHelix) const;
 
     /**
      * Extrapolate track to xy-plane at z-position.
@@ -310,19 +310,7 @@ class KBHelixTrack : public KBTracklet
      * @param z             z-position of xy-plane.
      * @param pointOnHelix  extrapolated position close to tracjectory.
     */
-    bool ExtrapolateToZ(Double_t z, TVector3 &pointOnHelix) const;
-
-    /** 
-     * Extrapolate head of track about length
-     * Return extrapolated position
-    */
-    TVector3 ExtrapolateHead(Double_t length) const;
-
-    /** 
-     * Extrapolate tail of track about length
-     * Return extrapolated position
-    */
-    TVector3 ExtrapolateTail(Double_t length) const;
+    bool ExtrapolateToJ(Double_t z, TVector3 &pointOnHelix) const;
 
     /**
      * Interpolate between head and tail of helix.
@@ -378,10 +366,16 @@ class KBHelixTrack : public KBTracklet
     /** Same as Continuity(Double_t&, Double_t&) but no length outputs. */
     Double_t Continuity();
 
-    TVector3 ExtrapolateTo(TVector3 point) const;
-    TVector3 ExtrapolateByRatio(Double_t r) const;
-    TVector3 ExtrapolateByLength(Double_t l) const;
-    Double_t LengthAt(TVector3 point) const;
+    virtual TVector3 Momentum(Double_t B = 0.5) const;       ///< Momentum of track (B = 0.5 by default)
+    virtual TVector3 PositionAtHead() const;                 ///< Position at head of helix
+    virtual TVector3 PositionAtTail() const;                 ///< Position at tail of helix
+    virtual Double_t TrackLength() const;                    ///< Length of track calculated from head to tail.
+    virtual TVector3 ExtrapolateTo(TVector3 point) const;    ///< Extrapolate to POCA from point, returns extrapolated position
+    virtual TVector3 ExtrapolateHead(Double_t length) const; ///< Extrapolate head of track about length, returns extrapolated position
+    virtual TVector3 ExtrapolateTail(Double_t length) const; ///< Extrapolate tail of track about length, returns extrapolated position
+    virtual TVector3 ExtrapolateByRatio(Double_t r) const;   ///< Extrapolate by ratio (tail:0, head:1), returns extrapolated position
+    virtual TVector3 ExtrapolateByLength(Double_t l) const;  ///< Extrapolate by length (tail:0), returns extrapolated position
+    virtual Double_t LengthAt(TVector3 point) const;         ///< Length at POCA from point, where tail=0, head=TrackLength
 
   ClassDef(KBHelixTrack, 1)
 };

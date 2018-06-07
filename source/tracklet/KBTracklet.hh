@@ -1,6 +1,8 @@
 #ifndef KBTRACKLET_HH
 #define KBTRACKLET_HH
 
+#include "TGraph.h"
+
 #include "KBContainer.hh"
 
 #include "KBHitList.hh"
@@ -19,6 +21,8 @@ class KBTracklet : public KBContainer
     KBHitList *fHitList = nullptr;  //!
 
     KBVector3::Axis fReferenceAxis = KBVector3::kZ; // B field axis
+
+    TGraph *fTrajectoryOnPlane = nullptr; //!
 
   public:
     KBTracklet() {}
@@ -62,6 +66,9 @@ class KBTracklet : public KBContainer
     virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
 #endif
+
+    virtual bool DoDrawOnDetectorPlane();
+    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
 
   ClassDef(KBTracklet, 1)
 };

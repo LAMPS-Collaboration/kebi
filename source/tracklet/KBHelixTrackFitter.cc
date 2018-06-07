@@ -1,3 +1,5 @@
+//#define DEBUG_HELIX_FITTER
+
 #include "KBHelixTrackFitter.hh"
 
 #include <iostream>
@@ -6,23 +8,23 @@ using namespace std;
 ClassImp(KBHelixTrackFitter)
 
 bool
-KBHelixTrackFitter::FitPlane(KBHelixTrack *track)
+KBHelixTrackFitter::FitPlane(KBHelixTrack *track) 
 {
   if (track -> GetNumHits() < 4)
     return false;
 
   fODRFitter -> Reset();
 
-  fODRFitter -> SetCentroid(track -> GetXMean(),
-                            track -> GetYMean(),
-                            track -> GetZMean());
+  fODRFitter -> SetCentroid(track -> GetIMean(),
+                            track -> GetJMean(),
+                            track -> GetKMean());
 
-  fODRFitter -> SetMatrixA(track -> CovWXX(),
-                           track -> CovWXY(),
-                           track -> CovWZX(),
-                           track -> CovWYY(),
-                           track -> CovWYZ(),
-                           track -> CovWZZ());
+  fODRFitter -> SetMatrixA(track -> CovWII(),
+                           track -> CovWIJ(),
+                           track -> CovWJK(),
+                           track -> CovWJJ(),
+                           track -> CovWJK(),
+                           track -> CovWKK());
 
   fODRFitter -> SetWeightSum(track -> GetChargeSum());
   fODRFitter -> SetNumPoints(track -> GetNumHits());
@@ -34,7 +36,7 @@ KBHelixTrackFitter::FitPlane(KBHelixTrack *track)
 
   TVector3 normal = fODRFitter -> GetDirection();
 
-  if (normal.Y() < 1.e-10) {
+  if (normal.Z() < 1.e-10) {
     track -> SetIsLine();
     fODRFitter -> ChooseEigenValue(0);
     track -> SetLineDirection(fODRFitter -> GetDirection());
@@ -70,106 +72,114 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
 
   fODRFitter -> Reset();
 
-  Double_t xMean = track -> GetXMean();
-  Double_t zMean = track -> GetZMean();
-  Double_t xCov  = track -> GetXCov();
-  Double_t zCov  = track -> GetZCov();
-  Double_t RSR = 2 * sqrt(xCov + zCov);
-  xMean = 0;
-  zMean = 0;
+  Double_t iMean = track -> GetIMean();
+  Double_t jMean = track -> GetJMean();
+  Double_t iCov  = track -> GetICov();
+  Double_t jCov  = track -> GetJCov();
+  Double_t RSR = 2 * sqrt(iCov + jCov);
+#ifdef DEBUG_HELIX_FITTER
+  kb_print << "riemann circle radius: " << RSR << endl;
+#endif
+  iMean = 0; // TODO @todo
+  jMean = 0; // TODO @todo
 
-  Double_t xMapMean = 0;
-  Double_t yMapMean = 0;
-  Double_t zMapMean = 0;
+  Double_t iMapMean = 0;
+  Double_t jMapMean = 0;
+  Double_t kMapMean = 0;
 
   auto hitArray = track -> GetHitArray();
 
-  Double_t x = 0;
-  Double_t z = 0;
+  Double_t i = 0;
+  Double_t j = 0;
 
   for (auto hit : *hitArray)
   {
-    x = hit -> GetX() - xMean;
-    z = hit -> GetZ() - zMean;
+    KBVector3 pos(hit -> GetPosition(), fReferenceAxis);
+    i = pos.I() - iMean;
+    j = pos.J() - jMean;
     Double_t w = hit -> GetCharge();
     w = TMath::Power(w, scale);
 
-    Double_t rEff = sqrt(x*x + z*z) / (2*RSR);
+    Double_t rEff = sqrt(i*i + j*j) / (2*RSR);
     Double_t denominator = 1 + rEff*rEff;
 
-    Double_t xMap = x / denominator;
-    Double_t yMap = 2 * RSR * rEff * rEff / denominator;
-    Double_t zMap = z / denominator;
+    Double_t iMap = i / denominator;
+    Double_t jMap = j / denominator;
+    Double_t kMap = 2 * RSR * rEff * rEff / denominator;
 
-    xMapMean += w * xMap;
-    yMapMean += w * yMap;
-    zMapMean += w * zMap;
+    iMapMean += w * iMap;
+    jMapMean += w * jMap;
+    kMapMean += w * kMap;
   }
 
   Double_t weightSum = track -> GetChargeSum();
-  xMapMean = xMapMean / weightSum;
-  yMapMean = yMapMean / weightSum;
-  zMapMean = zMapMean / weightSum;
+  iMapMean = iMapMean / weightSum;
+  jMapMean = jMapMean / weightSum;
+  kMapMean = kMapMean / weightSum;
 
-  fODRFitter -> SetCentroid(xMapMean, yMapMean, zMapMean);
-  TVector3 mapMean(xMapMean, yMapMean, zMapMean);
+  fODRFitter -> SetCentroid(iMapMean, jMapMean, kMapMean);
+  KBVector3 mapMean(fReferenceAxis, iMapMean, jMapMean, kMapMean);
 
   for (auto hit : *hitArray)
   {
-    x = hit -> GetX() - xMean;
-    z = hit -> GetZ() - zMean;
+    KBVector3 pos(hit -> GetPosition(), fReferenceAxis);
+    i = pos.I() - iMean;
+    j = pos.J() - jMean;
+#ifdef DEBUG_HELIX_FITTER
+    kb_print << "hit position in circle: " << i << " " << j << endl;
+#endif
     Double_t w = hit -> GetCharge();
     w = TMath::Power(w, scale);
 
-    Double_t rEff = sqrt(x*x + z*z) / (2*RSR);
+    Double_t rEff = sqrt(i*i + j*j) / (2*RSR);
     Double_t denominator = 1 + rEff*rEff;
 
-    Double_t xMap = x / denominator;
-    Double_t yMap = 2 * RSR * rEff * rEff / denominator;
-    Double_t zMap = z / denominator;
+    Double_t iMap = i / denominator;
+    Double_t jMap = j / denominator;
+    Double_t kMap = 2 * RSR * rEff * rEff / denominator;
 
-    fODRFitter -> AddPoint(xMap, yMap, zMap, w);
+    fODRFitter -> AddPoint(iMap, jMap, kMap, w);
   }
 
   if (fODRFitter -> Solve() == false)
     return false;
 
-  fODRFitter -> ChooseEigenValue(0); TVector3 uOnPlane = fODRFitter -> GetDirection();
-  fODRFitter -> ChooseEigenValue(1); TVector3 vOnPlane = fODRFitter -> GetDirection();
-  fODRFitter -> ChooseEigenValue(2); TVector3 nToPlane = fODRFitter -> GetDirection();
+  fODRFitter -> ChooseEigenValue(0); KBVector3 uOnPlane(fReferenceAxis, fODRFitter -> GetDirection());
+  fODRFitter -> ChooseEigenValue(1); KBVector3 vOnPlane(fReferenceAxis, fODRFitter -> GetDirection());
+  fODRFitter -> ChooseEigenValue(2); KBVector3 nToPlane(fReferenceAxis, fODRFitter -> GetDirection());
 
-  if (std::abs(nToPlane.Y()) < 1.e-8) {
+  if (std::abs(nToPlane.K()) < 1.e-8) {
     track -> SetIsLine();
     return false;
   }
 
-  TVector3 RSC = TVector3(0, RSR, 0);
+  KBVector3 RSC(fReferenceAxis,0,0,RSR);
   Double_t tCC = nToPlane.Dot(mapMean - RSC) / nToPlane.Mag2();
-  TVector3 RCC = tCC * nToPlane + RSC;
+  KBVector3 RCC(tCC * nToPlane + RSC, fReferenceAxis);
   Double_t dCS = (RCC - RSC).Mag();
   Double_t RCR = sqrt(RSR*RSR - dCS*dCS);
 
-  Double_t uConst = uOnPlane.Y() / sqrt(uOnPlane.Y()*uOnPlane.Y() + vOnPlane.Y()*vOnPlane.Y());
+  Double_t uConst = uOnPlane.K() / sqrt(uOnPlane.K()*uOnPlane.K() + vOnPlane.K()*vOnPlane.K());
   Double_t vConst = sqrt(1-uConst*uConst);
 
-  Double_t ref1 = uConst*uOnPlane.Y() + vConst*vOnPlane.Y();
-  Double_t ref2 = uConst*uOnPlane.Y() - vConst*vOnPlane.Y();
+  Double_t ref1 = uConst*uOnPlane.K() + vConst*vOnPlane.K();
+  Double_t ref2 = uConst*uOnPlane.K() - vConst*vOnPlane.K();
 
   if (ref1 < 0) ref1 = -ref1;
   if (ref2 < 0) ref2 = -ref2;
   if (ref1 < ref2) vConst = -vConst;
 
-  TVector3 toLouu = uConst * uOnPlane + vConst * vOnPlane;
-  TVector3 louu = RCC + toLouu*RCR;
-  TVector3 high = RCC - toLouu*RCR;
+  KBVector3 toLouu = uConst * uOnPlane + vConst * vOnPlane;
+  KBVector3 louu = RCC + toLouu*RCR;
+  KBVector3 high = RCC - toLouu*RCR;
 
-  TVector3 louuInvMap(louu.X()/(1-louu.Y()/(2*RSR)), 0, louu.Z()/(1-louu.Y()/(2*RSR)));
-  TVector3 highInvMap(high.X()/(1-high.Y()/(2*RSR)), 0, high.Z()/(1-high.Y()/(2*RSR)));
+  KBVector3 louuInvMap(fReferenceAxis, louu.I()/(1-louu.K()/(2*RSR)), louu.J()/(1-louu.K()/(2*RSR)), 0);
+  KBVector3 highInvMap(fReferenceAxis, high.I()/(1-high.K()/(2*RSR)), high.J()/(1-high.K()/(2*RSR)), 0);
 
-  TVector3 FCC = 0.5 * (louuInvMap + highInvMap);
+  KBVector3 FCC = 0.5 * (louuInvMap + highInvMap);
 
-  Double_t xC = FCC.X() + xMean;
-  Double_t zC = FCC.Z() + zMean;
+  Double_t iC = FCC.I() + iMean;
+  Double_t jC = FCC.J() + jMean;
   Double_t radius = 0.5 * (louuInvMap - highInvMap).Mag();
 
   if (radius > 1.e+8) {
@@ -177,29 +187,35 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
     return false;
   }
 
-  track -> SetHelixCenter(xC, zC);
+  track -> SetHelixCenter(iC, jC);
   track -> SetHelixRadius(radius);
+#ifdef DEBUG_HELIX_FITTER
+  kb_print << "helix center: " << iC << " " << jC << endl;
+  kb_print << "helix radius: " << radius << endl;
+#endif
 
   track -> SetIsHelix();
 
-  sort(hitArray -> begin(), hitArray -> end(), KBHitSortY());
+  if (fReferenceAxis==KBVector3::kX) sort(hitArray->begin(),hitArray->end(),KBHitSortX());
+  if (fReferenceAxis==KBVector3::kY) sort(hitArray->begin(),hitArray->end(),KBHitSortY());
+  if (fReferenceAxis==KBVector3::kZ) sort(hitArray->begin(),hitArray->end(),KBHitSortZ());
 
-  TVector3 position0 = hitArray -> at(0) -> GetPosition();
-  x = position0.X() - xC;
-  z = position0.Z() - zC;
-  Double_t y = 0;
+  KBVector3 posHit0(hitArray->at(0)->GetPosition(), fReferenceAxis);
+  i = posHit0.I() - iC;
+  j = posHit0.J() - jC;
+  Double_t k = 0;
 
-  Double_t alphaInit = TMath::ATan2(z, x);
-  TVector2 xAxis(x,z);
-  TVector2 zAxis(-z,x);
+  Double_t alphaInit = TMath::ATan2(j, i);
+  TVector2 iAxis(i,j);
+  TVector2 jAxis(-j,i);
 
-  xAxis = xAxis.Unit();
-  zAxis = zAxis.Unit();
+  iAxis = iAxis.Unit();
+  jAxis = jAxis.Unit();
 
   Double_t expA  = 0;
   Double_t expA2 = 0;
-  Double_t expY  = 0;
-  Double_t expAY = 0;
+  Double_t expK  = 0;
+  Double_t expAK = 0;
 
   Double_t alphaStack = 0;
   Double_t alphaLast = 0;
@@ -209,16 +225,17 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
 
   for (auto hit : *hitArray)
   {
-    x = hit -> GetX() - xC;
-    y = hit -> GetY();
-    z = hit -> GetZ() - zC;;
+    KBVector3 posHit(hit -> GetPosition(), fReferenceAxis);
+    i = posHit.I() - iC;
+    j = posHit.J() - jC;
+    k = posHit.K();
 
-    TVector2 v(x,z);
+    TVector2 v(i,j);
 
-    Double_t xRot = v*xAxis;
-    Double_t zRot = v*zAxis;
+    Double_t iRot = v*iAxis;
+    Double_t jRot = v*jAxis;
 
-    alphaLast = TMath::ATan2(zRot, xRot);
+    alphaLast = TMath::ATan2(jRot, iRot);
     if (alphaLast > .5*TMath::Pi() || alphaLast < -.5*TMath::Pi())
     {
       Double_t t0 = alphaLast;
@@ -226,10 +243,11 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
       alphaLast += alphaStack;
       alphaStack += t0;
 
-      xAxis = v;
-      zAxis = TVector2(-v.Y(), v.X());
-      xAxis = xAxis.Unit();
-      zAxis = zAxis.Unit();
+      iAxis = v;
+      jAxis = TVector2(-v.Y(), v.X());
+
+      iAxis = iAxis.Unit();
+      jAxis = jAxis.Unit();
     }
     else
       alphaLast += alphaStack;
@@ -240,8 +258,8 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
 
     expA  += w * alphaLast;
     expA2 += w * alphaLast * alphaLast;
-    expY  += w * y;
-    expAY += w * alphaLast * y;
+    expK  += w * k;
+    expAK += w * alphaLast * k;
 
     if (alphaLast < alphaMin)
       alphaMin = alphaLast;
@@ -259,11 +277,11 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
 
   expA  /= weightSum;
   expA2 /= weightSum;
-  expY  /= weightSum;
-  expAY /= weightSum;
+  expK  /= weightSum;
+  expAK /= weightSum;
 
-  Double_t slope  = (expAY - expA*expY) / (expA2 - expA*expA);
-  Double_t offset = (expA2*expY - expA*expAY) / (expA2 - expA*expA);
+  Double_t slope  = (expAK - expA*expK) / (expA2 - expA*expA);
+  Double_t offset = (expA2*expK - expA*expAK) / (expA2 - expA*expA);
 
   if (std::isinf(slope)) {
     track -> SetIsLine();
@@ -271,22 +289,22 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
   }
 
   track -> SetAlphaSlope(slope);
-  track -> SetYInitial(offset);
+  track -> SetKInitial(offset);
 
-  Double_t Sx = 0;
-  Double_t Sy = 0;
+  Double_t s1 = 0;
+  Double_t s2 = 0;
   for (auto hit : *hitArray)
   {
     TVector3 q = track -> Map(hit -> GetPosition());
-    Sx += hit -> GetCharge() * q.X() * q.X();
-    Sy += hit -> GetCharge() * q.Y() * q.Y();
+    s1 += hit -> GetCharge() * q.X() * q.X();
+    s2 += hit -> GetCharge() * q.Y() * q.Y();
   }
 
-  Double_t rmsr = sqrt(Sx / (track -> GetChargeSum() * (1 - 3/hitArray -> size())));
-  Double_t rmsy = sqrt(Sy / (track -> GetChargeSum() * (1 - 3/hitArray -> size())));
+  Double_t rmsr = sqrt(s1 / (track -> GetChargeSum() * (1 - 3/hitArray -> size())));
+  Double_t rmsk = sqrt(s2 / (track -> GetChargeSum() * (1 - 3/hitArray -> size())));
 
   track -> SetRMSW(rmsr);
-  track -> SetRMSH(rmsy);
+  track -> SetRMSH(rmsk);
 
   return true;
 }

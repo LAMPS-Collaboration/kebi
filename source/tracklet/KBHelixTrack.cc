@@ -22,25 +22,27 @@ void KBHelixTrack::Clear(Option_t *option)
   fTrackID  = -999;
   fParentID = -999;
 
+  KBVector3::Axis fReferenceAxis = KBVector3::kZ;
+
   fFitStatus = kBad;
 
-  fXHelixCenter = -999;
-  fZHelixCenter = -999;
+  fIHelixCenter = -999;
+  fJHelixCenter = -999;
   fHelixRadius  = -999;
-  fYInitial     = -999;
+  fKInitial     = -999;
   fAlphaSlope   = -999;
 
   fChargeSum = 0;
 
-  fExpectationX = 0;
-  fExpectationY = 0;
-  fExpectationZ = 0;
-  fExpectationXX = 0;
-  fExpectationYY = 0;
-  fExpectationZZ = 0;
-  fExpectationXY = 0;
-  fExpectationYZ = 0;
-  fExpectationZX = 0;
+  fExpectationI = 0;
+  fExpectationK = 0;
+  fExpectationJ = 0;
+  fExpectationII = 0;
+  fExpectationKK = 0;
+  fExpectationJJ = 0;
+  fExpectationIJ = 0;
+  fExpectationJK = 0;
+  fExpectationKI = 0;
 
   fRMSW = -999;
   fRMSH = -999;
@@ -50,22 +52,26 @@ void KBHelixTrack::Clear(Option_t *option)
 
   fIsPositiveChargeParticle = true;
 
-  if (TString(option) == "C")
-    DeleteHits();
-  else {
+  //if (TString(option) == "C") DeleteHits();
+  //else {
     fMainHits.clear();
     fCandHits.clear();
-  }
+  //}
 
   fMainHitIDs.clear();
+  fdEdxArray.clear();
 
-  fGenfitID  = -999;
+  fGenfitID = -999;
   fGenfitMomentum = -999;
 }
 
 void KBHelixTrack::Print(Option_t *) const
 {
-  TString center = "("+TString::Itoa(fXHelixCenter,10)+", x, "+TString::Itoa(fZHelixCenter,10)+")";
+  TString center = "("+TString::Itoa(fIHelixCenter,10)+", "+TString::Itoa(fJHelixCenter,10)+")";
+
+       if (fReferenceAxis == KBVector3::kX) center = TString("(y,z): ")+center;
+  else if (fReferenceAxis == KBVector3::kY) center = TString("(z,x): ")+center;
+  else if (fReferenceAxis == KBVector3::kZ) center = TString("(x,y): ")+center;
 
   cout << left << " KBHelixTrack, units in [mm] [radian] [ADC]" << endl;
   cout << " - " << setw(13) << "Track ID"     << " : " << fTrackID << endl;
@@ -90,28 +96,48 @@ void KBHelixTrack::Print(Option_t *) const
   }
 }
 
+void KBHelixTrack::Copy(TObject &obj) const
+{
+  TObject::Copy(obj);
+  auto helix = (KBHelixTrack &) obj;
+
+  helix.SetHelixCenter(fIHelixCenter, fJHelixCenter);
+  helix.SetHelixRadius(fHelixRadius);
+  helix.SetKInitial(fKInitial);
+  helix.SetAlphaSlope(fAlphaSlope);
+
+  helix.SetAlphaHead(fAlphaHead);
+  helix.SetAlphaTail(fAlphaTail);
+  helix.SetIsPositiveChargeParticle(fIsPositiveChargeParticle);
+
+  helix.SetTrackID(fTrackID);
+  helix.SetParentID(fParentID);
+  helix.SetReferenceAxis(fReferenceAxis);
+}
+
 KBTrackFitter *KBHelixTrack::CreateTrackFitter() const { return new KBHelixTrackFitter(); }
 
 void KBHelixTrack::AddHit(KBHit *hit)
 {
-  Double_t x = hit -> GetX();
-  Double_t y = hit -> GetY();
-  Double_t z = hit -> GetZ();
+  KBVector3 pos(hit->GetPosition(),fReferenceAxis);
+  Double_t i = pos.I();
+  Double_t j = pos.J();
+  Double_t k = pos.K();
   Double_t w = hit -> GetCharge();
 
   Double_t W = fChargeSum + w;
 
-  fExpectationX = (fChargeSum * fExpectationX + w * x) / W;
-  fExpectationY = (fChargeSum * fExpectationY + w * y) / W;
-  fExpectationZ = (fChargeSum * fExpectationZ + w * z) / W;
+  fExpectationI = (fChargeSum * fExpectationI + w * i) / W;
+  fExpectationJ = (fChargeSum * fExpectationJ + w * j) / W;
+  fExpectationK = (fChargeSum * fExpectationK + w * k) / W;
 
-  fExpectationXX = (fChargeSum * fExpectationXX + w * x * x) / W;
-  fExpectationYY = (fChargeSum * fExpectationYY + w * y * y) / W;
-  fExpectationZZ = (fChargeSum * fExpectationZZ + w * z * z) / W;
+  fExpectationII = (fChargeSum * fExpectationII + w * i * i) / W;
+  fExpectationJJ = (fChargeSum * fExpectationJJ + w * j * j) / W;
+  fExpectationKK = (fChargeSum * fExpectationKK + w * k * k) / W;
 
-  fExpectationXY = (fChargeSum * fExpectationXY + w * x * y) / W;
-  fExpectationYZ = (fChargeSum * fExpectationYZ + w * y * z) / W;
-  fExpectationZX = (fChargeSum * fExpectationZX + w * z * x) / W;
+  fExpectationIJ = (fChargeSum * fExpectationIJ + w * i * j) / W;
+  fExpectationJK = (fChargeSum * fExpectationJK + w * j * k) / W;
+  fExpectationKI = (fChargeSum * fExpectationKI + w * k * i) / W;
 
   fChargeSum = W;
 
@@ -120,9 +146,10 @@ void KBHelixTrack::AddHit(KBHit *hit)
 
 void KBHelixTrack::RemoveHit(KBHit *hit)
 {
-  Double_t x = hit -> GetX();
-  Double_t y = hit -> GetY();
-  Double_t z = hit -> GetZ();
+  KBVector3 pos(hit->GetPosition(),fReferenceAxis);
+  Double_t i = pos.I();
+  Double_t j = pos.J();
+  Double_t k = pos.K();
   Double_t w = hit -> GetCharge();
 
   Double_t W = fChargeSum - w;
@@ -135,17 +162,17 @@ void KBHelixTrack::RemoveHit(KBHit *hit)
     }
   }
 
-  fExpectationX = (fChargeSum * fExpectationX - w * x) / W;
-  fExpectationY = (fChargeSum * fExpectationY - w * y) / W;
-  fExpectationZ = (fChargeSum * fExpectationZ - w * z) / W;
+  fExpectationI = (fChargeSum * fExpectationI - w * i) / W;
+  fExpectationJ = (fChargeSum * fExpectationJ - w * j) / W;
+  fExpectationK = (fChargeSum * fExpectationK - w * k) / W;
 
-  fExpectationXX = (fChargeSum * fExpectationXX - w * x * x) / W;
-  fExpectationYY = (fChargeSum * fExpectationYY - w * y * y) / W;
-  fExpectationZZ = (fChargeSum * fExpectationZZ - w * z * z) / W;
+  fExpectationII = (fChargeSum * fExpectationII - w * i * i) / W;
+  fExpectationJJ = (fChargeSum * fExpectationJJ - w * j * j) / W;
+  fExpectationKK = (fChargeSum * fExpectationKK - w * k * k) / W;
 
-  fExpectationXY = (fChargeSum * fExpectationXY - w * x * y) / W;
-  fExpectationYZ = (fChargeSum * fExpectationYZ - w * y * z) / W;
-  fExpectationZX = (fChargeSum * fExpectationZX - w * z * x) / W;
+  fExpectationIJ = (fChargeSum * fExpectationIJ - w * i * j) / W;
+  fExpectationJK = (fChargeSum * fExpectationJK - w * j * k) / W;
+  fExpectationKI = (fChargeSum * fExpectationKI - w * k * i) / W;
 
   fChargeSum = W;
 }
@@ -195,21 +222,21 @@ void KBHelixTrack::SetIsGenfitTrack()  { fFitStatus = KBHelixTrack::kGenfitTrack
 
 void KBHelixTrack::SetLineDirection(TVector3 dir)
 {
-  fXHelixCenter = dir.X();
-  fZHelixCenter = dir.Y();
+  fIHelixCenter = dir.X();
+  fJHelixCenter = dir.Y();
   fHelixRadius = dir.Z();
 }
 
 void KBHelixTrack::SetPlaneNormal(TVector3 norm)
 {
-  fXHelixCenter = norm.X();
-  fZHelixCenter = norm.Y();
+  fIHelixCenter = norm.X();
+  fJHelixCenter = norm.Y();
   fHelixRadius = norm.Z();
 }
 
-void KBHelixTrack::SetHelixCenter(Double_t x, Double_t z) { fXHelixCenter = x; fZHelixCenter = z; }
+void KBHelixTrack::SetHelixCenter(Double_t i, Double_t j) { fIHelixCenter = i; fJHelixCenter = j; }
 void KBHelixTrack::SetHelixRadius(Double_t r)    { fHelixRadius = r; }
-void KBHelixTrack::SetYInitial(Double_t y)       { fYInitial = y; }
+void KBHelixTrack::SetKInitial(Double_t k)       { fKInitial = k; }
 void KBHelixTrack::SetAlphaSlope(Double_t s)     { fAlphaSlope = s; }
 void KBHelixTrack::SetRMSW(Double_t rms)         { fRMSW = rms; }
 void KBHelixTrack::SetRMSH(Double_t rms)         { fRMSH = rms; }
@@ -258,34 +285,34 @@ bool KBHelixTrack::IsPlane() const        { return fFitStatus == kPlane ? true :
 bool KBHelixTrack::IsHelix() const        { return fFitStatus == kHelix ? true : false; }
 bool KBHelixTrack::IsGenfitTrack() const  { return fFitStatus == kGenfitTrack ? true : false; }
 
-Double_t KBHelixTrack::GetHelixCenterX() const { return fXHelixCenter; }
-Double_t KBHelixTrack::GetHelixCenterZ() const { return fZHelixCenter; }
+Double_t KBHelixTrack::GetHelixCenterJ() const { return fIHelixCenter; }
+Double_t KBHelixTrack::GetHelixCenterI() const { return fJHelixCenter; }
 Double_t KBHelixTrack::GetHelixRadius()  const { return fHelixRadius; }
-Double_t KBHelixTrack::GetYInitial()     const { return fYInitial; }
+Double_t KBHelixTrack::GetKInitial()     const { return fKInitial; }
 Double_t KBHelixTrack::GetAlphaSlope()   const { return fAlphaSlope; }
 
-TVector3 KBHelixTrack::GetLineDirection() const { return TVector3(fXHelixCenter, fZHelixCenter, fHelixRadius); }
-TVector3 KBHelixTrack::GetPlaneNormal()   const { return TVector3(fXHelixCenter, fZHelixCenter, fHelixRadius); }
+KBVector3 KBHelixTrack::GetLineDirection() const { return KBVector3(fReferenceAxis, fIHelixCenter, fJHelixCenter, fHelixRadius); }
+KBVector3 KBHelixTrack::GetPlaneNormal()   const { return KBVector3(fReferenceAxis, fIHelixCenter, fJHelixCenter, fHelixRadius); }
 
-TVector3 KBHelixTrack::PerpLine(TVector3 p) const
+KBVector3 KBHelixTrack::PerpLine(TVector3 p) const
 {
-  TVector3 mean = GetMean();
-  TVector3 dir = GetLineDirection();
+  KBVector3 mean = GetMean();
+  KBVector3 dir = GetLineDirection();
 
-  TVector3 pMinusMean = p - mean;
-  TVector3 pMinusMeanUnit = pMinusMean.Unit();
+  KBVector3 pMinusMean = KBVector3(p,fReferenceAxis) - mean;
+  KBVector3 pMinusMeanUnit = KBVector3(pMinusMean.Unit(), fReferenceAxis);
   Double_t cosine = pMinusMeanUnit.Dot(dir);
   dir.SetMag(pMinusMean.Mag()*cosine);
 
   return dir - pMinusMean;
 }
 
-TVector3 KBHelixTrack::PerpPlane(TVector3 p) const
+KBVector3 KBHelixTrack::PerpPlane(TVector3 p) const
 {
-  TVector3 normal = GetPlaneNormal();
-  TVector3 mean = GetMean();
+  KBVector3 normal = GetPlaneNormal();
+  KBVector3 mean = GetMean();
 
-  Double_t perp = abs(normal * p - normal * mean) / sqrt(normal * normal);
+  Double_t perp = abs(normal * KBVector3(p, fReferenceAxis) - normal * mean) / sqrt(normal * normal);
   return perp * normal;
 }
 
@@ -303,61 +330,61 @@ Double_t KBHelixTrack::DipAngle() const
 }
 
 
-void KBHelixTrack::GetHelixParameters(Double_t &xCenter, 
-    Double_t &zCenter, 
+void KBHelixTrack::GetHelixParameters(Double_t &iCenter, 
+    Double_t &jCenter, 
     Double_t &radius, 
     Double_t &dipAngle,
-    Double_t &yInitial,
+    Double_t &kInitial,
     Double_t &alphaSlope) const
 {
   if (fFitStatus == KBHelixTrack::kHelix || fFitStatus == KBHelixTrack::kGenfitTrack)
   {
-    xCenter    = fXHelixCenter;
-    zCenter    = fZHelixCenter;
+    iCenter    = fIHelixCenter;
+    jCenter    = fJHelixCenter;
     radius     = fHelixRadius;
     dipAngle   = DipAngle();
-    yInitial   = fYInitial;
+    kInitial   = fKInitial;
     alphaSlope = fAlphaSlope;
   }
   else
   {
-    xCenter    = -999;
-    zCenter    = -999;
+    iCenter    = -999;
+    jCenter    = -999;
     radius     = -999;
     dipAngle   = -999;
-    yInitial   = -999;
+    kInitial   = -999;
     alphaSlope = -999;
   }
 }
 
 Double_t KBHelixTrack::GetChargeSum()  const { return fChargeSum; }
 
-TVector3 KBHelixTrack::GetMean()  const { return TVector3(fExpectationX, fExpectationY, fExpectationZ); }
-Double_t KBHelixTrack::GetXMean() const { return fExpectationX; }
-Double_t KBHelixTrack::GetYMean() const { return fExpectationY; }
-Double_t KBHelixTrack::GetZMean() const { return fExpectationZ; }
-Double_t KBHelixTrack::GetXCov()  const { return CovWXX()/fChargeSum; }
-Double_t KBHelixTrack::GetZCov()  const { return CovWZZ()/fChargeSum; }
+KBVector3 KBHelixTrack::GetMean()  const { KBVector3 v3(fReferenceAxis); v3.SetIJK(fExpectationI, fExpectationJ, fExpectationK); return v3; }
+Double_t KBHelixTrack::GetIMean() const { return fExpectationJ; }
+Double_t KBHelixTrack::GetJMean() const { return fExpectationI; }
+Double_t KBHelixTrack::GetKMean() const { return fExpectationK; }
+Double_t KBHelixTrack::GetJCov()  const { return CovWJJ()/fChargeSum; }
+Double_t KBHelixTrack::GetICov()  const { return CovWII()/fChargeSum; }
 
-Double_t KBHelixTrack::CovWXX() const { return fChargeSum * (fExpectationXX - fExpectationX * fExpectationX); }
-Double_t KBHelixTrack::CovWYY() const { return fChargeSum * (fExpectationYY - fExpectationY * fExpectationY); }
-Double_t KBHelixTrack::CovWZZ() const { return fChargeSum * (fExpectationZZ - fExpectationZ * fExpectationZ); }
+Double_t KBHelixTrack::CovWJJ() const { return fChargeSum * (fExpectationII - fExpectationI * fExpectationI); }
+Double_t KBHelixTrack::CovWII() const { return fChargeSum * (fExpectationJJ - fExpectationJ * fExpectationJ); }
+Double_t KBHelixTrack::CovWKK() const { return fChargeSum * (fExpectationKK - fExpectationK * fExpectationK); }
 
-Double_t KBHelixTrack::CovWXY() const { return fChargeSum * (fExpectationXY - fExpectationX * fExpectationY); }
-Double_t KBHelixTrack::CovWYZ() const { return fChargeSum * (fExpectationYZ - fExpectationY * fExpectationZ); }
-Double_t KBHelixTrack::CovWZX() const { return fChargeSum * (fExpectationZX - fExpectationZ * fExpectationX); }
+Double_t KBHelixTrack::CovWIJ() const { return fChargeSum * (fExpectationIJ - fExpectationI * fExpectationJ); }
+Double_t KBHelixTrack::CovWJK() const { return fChargeSum * (fExpectationJK - fExpectationJ * fExpectationK); }
+Double_t KBHelixTrack::CovWKI() const { return fChargeSum * (fExpectationKI - fExpectationK * fExpectationI); }
 
-Double_t KBHelixTrack::GetExpectationX()  const { return fExpectationX; }
-Double_t KBHelixTrack::GetExpectationY()  const { return fExpectationY; }
-Double_t KBHelixTrack::GetExpectationZ()  const { return fExpectationZ; }
+Double_t KBHelixTrack::GetExpectationI()  const { return fExpectationI; }
+Double_t KBHelixTrack::GetExpectationJ()  const { return fExpectationJ; }
+Double_t KBHelixTrack::GetExpectationK()  const { return fExpectationK; }
 
-Double_t KBHelixTrack::GetExpectationXX() const { return fExpectationXX; }
-Double_t KBHelixTrack::GetExpectationYY() const { return fExpectationYY; }
-Double_t KBHelixTrack::GetExpectationZZ() const { return fExpectationZZ; }
+Double_t KBHelixTrack::GetExpectationII() const { return fExpectationII; }
+Double_t KBHelixTrack::GetExpectationJJ() const { return fExpectationJJ; }
+Double_t KBHelixTrack::GetExpectationKK() const { return fExpectationKK; }
 
-Double_t KBHelixTrack::GetExpectationXY() const { return fExpectationXY; }
-Double_t KBHelixTrack::GetExpectationYZ() const { return fExpectationYZ; }
-Double_t KBHelixTrack::GetExpectationZX() const { return fExpectationZX; }
+Double_t KBHelixTrack::GetExpectationIJ() const { return fExpectationIJ; }
+Double_t KBHelixTrack::GetExpectationJK() const { return fExpectationJK; }
+Double_t KBHelixTrack::GetExpectationKI() const { return fExpectationKI; }
 
 Double_t KBHelixTrack::GetRMSW()       const { return fRMSW; }
 Double_t KBHelixTrack::GetRMSH()       const { return fRMSH; }
@@ -388,9 +415,10 @@ std::vector<Double_t> *KBHelixTrack::GetdEdxArray() { return &fdEdxArray; }
 Double_t 
 KBHelixTrack::DistCircle(TVector3 pointGiven) const
 {
-  Double_t dx = pointGiven.X() - fXHelixCenter;
-  Double_t dz = pointGiven.Z() - fZHelixCenter;
-  return sqrt(dx*dx + dz*dz) - fHelixRadius;
+  KBVector3 pointGiven2(pointGiven,fReferenceAxis);
+  Double_t di = pointGiven2.I() - fIHelixCenter;
+  Double_t dj = pointGiven2.J() - fJHelixCenter;
+  return sqrt(di*di + dj*dj) - fHelixRadius;
 }
 
 Int_t KBHelixTrack::Charge()   const { return fIsPositiveChargeParticle ? 1 : -1; }
@@ -419,7 +447,7 @@ Double_t KBHelixTrack::TrackLength() const {
 Double_t KBHelixTrack::LengthInPeriod()  const { 
   return 2*TMath::Pi()*fHelixRadius/TMath::Cos(DipAngle());
 }
-Double_t KBHelixTrack::YLengthInPeriod() const { 
+Double_t KBHelixTrack::KLengthInPeriod() const { 
   return 2*TMath::Pi()*fAlphaSlope;
 }
 Double_t KBHelixTrack::LengthByAlpha(Double_t alpha) const { 
@@ -428,33 +456,37 @@ Double_t KBHelixTrack::LengthByAlpha(Double_t alpha) const {
 Double_t KBHelixTrack::AlphaByLength(Double_t length) const { 
   return length*TMath::Cos(DipAngle())/fHelixRadius;
 }
-TVector3 KBHelixTrack::PositionByAlpha(Double_t alpha) const {
-
-  return TVector3(fHelixRadius*TMath::Cos(alpha)+fXHelixCenter, alpha*fAlphaSlope+fYInitial, fHelixRadius*TMath::Sin(alpha)+fZHelixCenter); 
+TVector3 KBHelixTrack::PositionByAlpha(Double_t alpha) const
+{
+  KBVector3 pos(fReferenceAxis);
+  pos.SetIJK(fHelixRadius*TMath::Cos(alpha)+fIHelixCenter, fHelixRadius*TMath::Sin(alpha)+fJHelixCenter, alpha*fAlphaSlope+fKInitial); 
+  return pos.GetXYZ();
 }
 
 TVector3 KBHelixTrack::Direction(Double_t alpha) const
 {
   Double_t alphaTemp = alpha;
-  Double_t ylength = YLengthInPeriod()/4.;
+  Double_t klength = KLengthInPeriod()/4.;
 
   Double_t alphaMid = (fAlphaHead + fAlphaTail) * 0.5;
   if (alpha > alphaMid) 
     alphaTemp += TMath::Pi()/2.;
   else {
     alphaTemp -= TMath::Pi()/2.;
-    ylength *= -1;
+    klength *= -1;
   }
 
-  TVector3 center(fXHelixCenter, 0, fZHelixCenter);
-  TVector3 direction = PositionByAlpha(alphaTemp) - center;
+  KBVector3 center(fReferenceAxis);
+  center.SetIJK(fIHelixCenter, fJHelixCenter, 0);
 
-  direction.SetY(0);
+  KBVector3 direction = KBVector3(PositionByAlpha(alphaTemp), fReferenceAxis) - center;
+
+  direction.SetK(0);
   direction.SetMag(0.5*TMath::Pi()*fHelixRadius);
-  direction.SetY(ylength);
-  direction = direction.Unit();
+  direction.SetK(klength);
+  direction = KBVector3(direction.Unit(),fReferenceAxis);
 
-  return direction;
+  return direction.GetXYZ();
 }
 
 Double_t 
@@ -466,7 +498,9 @@ KBHelixTrack::ExtrapolateToAlpha(Double_t alpha) const
 Double_t
 KBHelixTrack::ExtrapolateToAlpha(Double_t alpha, TVector3 &pointOnHelix) const
 {
-  pointOnHelix.SetXYZ(fHelixRadius*TMath::Cos(alpha)+fXHelixCenter, alpha*fAlphaSlope + fYInitial, fHelixRadius*TMath::Sin(alpha)+fZHelixCenter);
+  KBVector3 pointOnHelix0(fReferenceAxis);
+  pointOnHelix0.SetIJK(fHelixRadius*TMath::Cos(alpha)+fIHelixCenter, fHelixRadius*TMath::Sin(alpha)+fJHelixCenter, alpha*fAlphaSlope + fKInitial);
+  pointOnHelix = pointOnHelix0.GetXYZ();
   Double_t length = alpha * fHelixRadius / TMath::Cos(DipAngle());
 
   return length;
@@ -476,37 +510,39 @@ Double_t
 KBHelixTrack::ExtrapolateToPointAlpha(TVector3 pointGiven, TVector3 &pointOnHelix, Double_t &alpha) const
 // TODO
 {
-  Double_t alpha0 = TMath::ATan2(pointGiven.Z()-fZHelixCenter, pointGiven.X()-fXHelixCenter);
+  KBVector3 pointGiven2(pointGiven,fReferenceAxis);
+  Double_t alpha0 = TMath::ATan2(pointGiven2.J()-fJHelixCenter, pointGiven2.I()-fIHelixCenter);
 
-  TVector3 point0(fHelixRadius*TMath::Cos(alpha0)+fXHelixCenter, alpha0*fAlphaSlope+fYInitial, fHelixRadius*TMath::Sin(alpha0)+fZHelixCenter);
-  Double_t y0 = std::abs(point0.Y() - pointGiven.Y());
+  KBVector3 point0(fReferenceAxis);
+  point0.SetIJK(fHelixRadius*TMath::Cos(alpha0)+fIHelixCenter, fHelixRadius*TMath::Sin(alpha0)+fJHelixCenter, alpha0*fAlphaSlope+fKInitial);
+  Double_t k0 = std::abs(point0.K() - pointGiven2.K());
 
-  Double_t y1; 
+  Double_t k1; 
   Double_t alpha1 = alpha0;
-  TVector3 point1 = point0;
+  KBVector3 point1 = point0;
 
-  Double_t yLengthInPeriod = std::abs(YLengthInPeriod());
-  if (yLengthInPeriod > 3*fRMSH && yLengthInPeriod > 5 && std::abs(DipAngle()) < 1.5)
+  Double_t kLengthInPeriod = std::abs(KLengthInPeriod());
+  if (kLengthInPeriod > 3*fRMSH && kLengthInPeriod > 5 && std::abs(DipAngle()) < 1.5)
   {
     Int_t count = 0;
     while(1)
     {
       alpha1 = alpha1 + 2*TMath::Pi();
-      point1.SetY(point1.Y() + 2*TMath::Pi()*fAlphaSlope);
-      y1 = std::abs(point1.Y() - pointGiven.Y());
+      point1.SetK(point1.K() + 2*TMath::Pi()*fAlphaSlope);
+      k1 = std::abs(point1.K() - pointGiven2.K());
 
-      if (y0 - y1 < 1.e10)
+      if (std::abs(k0) < std::abs(k1))
         break;
       else {
         alpha0 = alpha1;
         point0 = point1;
-        y0 = y1;
+        k0 = k1;
       }
       if (count++ > 20)
         break;
     }
 
-    y1 = y0;
+    k1 = k0;
     alpha1 = alpha0;
     point1 = point0;
 
@@ -514,22 +550,22 @@ KBHelixTrack::ExtrapolateToPointAlpha(TVector3 pointGiven, TVector3 &pointOnHeli
     while(1)
     {
       alpha1 = alpha1 - 2*TMath::Pi();
-      point1.SetY(point1.Y() - 2*TMath::Pi()*fAlphaSlope);
-      y1 = std::abs(point1.Y() - pointGiven.Y());
+      point1.SetK(point1.K() - 2*TMath::Pi()*fAlphaSlope);
+      k1 = std::abs(point1.Y() - pointGiven2.K());
 
-      if (y0 - y1 < 1.e10)
+      if (std::abs(k0) < std::abs(k1))
         break;
       else {
         alpha0 = alpha1;
         point0 = point1;
-        y0 = y1;
+        k0 = k1;
       }
       if (count++ > 20)
         break;
     }
   }
 
-  pointOnHelix = point0;
+  pointOnHelix = point0.GetXYZ();
   alpha = alpha0;
   Double_t length = alpha0 * fHelixRadius / TMath::Cos(DipAngle());
 
@@ -537,48 +573,51 @@ KBHelixTrack::ExtrapolateToPointAlpha(TVector3 pointGiven, TVector3 &pointOnHeli
 }
 
 Double_t
-KBHelixTrack::ExtrapolateToPointY(TVector3 pointGiven, TVector3 &pointOnHelix, Double_t &alpha) const
+KBHelixTrack::ExtrapolateToPointK(TVector3 pointGiven, TVector3 &pointOnHelix, Double_t &alpha) const
 {
-  alpha = (pointGiven.Y() - fYInitial)/fAlphaSlope;
-  pointOnHelix.SetXYZ(fHelixRadius*TMath::Cos(alpha)+fXHelixCenter, pointGiven.Y(), fHelixRadius*TMath::Sin(alpha)+fZHelixCenter);
+  KBVector3 pointGiven2(pointGiven, fReferenceAxis);
+  alpha = (pointGiven2.K() - fKInitial)/fAlphaSlope;
+
+  KBVector3 ph(fReferenceAxis, fHelixRadius*TMath::Cos(alpha)+fIHelixCenter, fHelixRadius*TMath::Sin(alpha)+fJHelixCenter, pointGiven2.K());
+  pointOnHelix = ph.GetXYZ();
 
   Double_t length = alpha * fHelixRadius / TMath::Cos(DipAngle());
   return length;
 }
 
 bool
-KBHelixTrack::CheckExtrapolateToX(Double_t x) const
+KBHelixTrack::CheckExtrapolateToI(Double_t i) const
 {
-  Double_t xRef = fXHelixCenter - x;
-  Double_t mult = (xRef + fHelixRadius) * (xRef - fHelixRadius);
+  Double_t iRef = fIHelixCenter - i;
+  Double_t mult = (iRef + fHelixRadius) * (iRef - fHelixRadius);
   if (mult > 0)
     return false;
   return true;
 }
 
 bool
-KBHelixTrack::CheckExtrapolateToZ(Double_t z) const
+KBHelixTrack::CheckExtrapolateToJ(Double_t j) const
 {
-  Double_t zRef = fZHelixCenter - z;
-  Double_t mult = (zRef + fHelixRadius) * (zRef - fHelixRadius);
+  Double_t jRef = fJHelixCenter - j;
+  Double_t mult = (jRef + fHelixRadius) * (jRef - fHelixRadius);
   if (mult > 0)
     return false;
   return true;
 }
 
 bool
-KBHelixTrack::ExtrapolateToX(Double_t x,
+KBHelixTrack::ExtrapolateToI(Double_t i,
     TVector3 &pointOnHelix1, Double_t &alpha1,
     TVector3 &pointOnHelix2, Double_t &alpha2) const
 {
-  if (CheckExtrapolateToX(x) == false)
+  if (CheckExtrapolateToI(i) == false)
     return false;
 
-  Double_t zOff = sqrt(fHelixRadius * fHelixRadius - (x - fXHelixCenter) * (x - fXHelixCenter));
-  Double_t z1 = fZHelixCenter + zOff;
-  Double_t z2 = fZHelixCenter - zOff;
+  Double_t jOff = sqrt(fHelixRadius * fHelixRadius - (i - fIHelixCenter) * (i - fIHelixCenter));
+  Double_t j1 = fJHelixCenter + jOff;
+  Double_t j2 = fJHelixCenter - jOff;
 
-  alpha1 = TMath::ATan2(z1-fZHelixCenter, x-fXHelixCenter);
+  alpha1 = TMath::ATan2(j1-fJHelixCenter, i-fIHelixCenter);
   Double_t alpha1Temp = alpha1;
   Double_t d1Cand = std::abs(alpha1Temp-fAlphaHead);
   Double_t d1Temp = d1Cand;
@@ -605,7 +644,7 @@ KBHelixTrack::ExtrapolateToX(Double_t x,
   }
   pointOnHelix1 = PositionByAlpha(alpha1);
 
-  alpha2 = TMath::ATan2(z2-fZHelixCenter, x-fXHelixCenter);
+  alpha2 = TMath::ATan2(j2-fJHelixCenter, i-fIHelixCenter);
   Double_t alpha2Temp = alpha2;
   Double_t d2Cand = std::abs(alpha2Temp-fAlphaTail);
   Double_t d2Temp = d2Cand;
@@ -636,18 +675,18 @@ KBHelixTrack::ExtrapolateToX(Double_t x,
 }
 
 bool
-KBHelixTrack::ExtrapolateToZ(Double_t z,
+KBHelixTrack::ExtrapolateToJ(Double_t j,
     TVector3 &pointOnHelix1, Double_t &alpha1,
     TVector3 &pointOnHelix2, Double_t &alpha2) const
 {
-  if (CheckExtrapolateToZ(z) == false)
+  if (CheckExtrapolateToJ(j) == false)
     return false;
 
-  Double_t xOff = sqrt(fHelixRadius * fHelixRadius - (z - fZHelixCenter) * (z - fZHelixCenter));
-  Double_t x1 = fXHelixCenter + xOff;
-  Double_t x2 = fXHelixCenter - xOff;
+  Double_t iOff = sqrt(fHelixRadius * fHelixRadius - (j - fJHelixCenter) * (j - fJHelixCenter));
+  Double_t i1 = fIHelixCenter + iOff;
+  Double_t i2 = fIHelixCenter - iOff;
 
-  alpha1 = TMath::ATan2(z-fZHelixCenter, x1-fXHelixCenter);
+  alpha1 = TMath::ATan2(j-fJHelixCenter, i1-fIHelixCenter);
   Double_t alpha1Temp = alpha1;
   Double_t d1Cand = std::abs(alpha1Temp-fAlphaHead);
   Double_t d1Temp = d1Cand;
@@ -674,7 +713,7 @@ KBHelixTrack::ExtrapolateToZ(Double_t z,
   }
   pointOnHelix1 = PositionByAlpha(alpha1);
 
-  alpha2 = TMath::ATan2(z-fZHelixCenter, x2-fXHelixCenter);
+  alpha2 = TMath::ATan2(j-fJHelixCenter, i2-fIHelixCenter);
   Double_t alpha2Temp = alpha2;
   Double_t d2Cand = std::abs(alpha2Temp-fAlphaTail);
   Double_t d2Temp = d2Cand;
@@ -705,15 +744,15 @@ KBHelixTrack::ExtrapolateToZ(Double_t z,
 }
 
 bool
-KBHelixTrack::ExtrapolateToX(Double_t x, Double_t alphaRef, TVector3 &pointOnHelix) const
+KBHelixTrack::ExtrapolateToI(Double_t x, Double_t alphaRef, TVector3 &pointOnHelix) const
 {
-  if (CheckExtrapolateToX(x) == false)
+  if (CheckExtrapolateToI(x) == false)
     return false;
 
-  Double_t zOff = sqrt(fHelixRadius * fHelixRadius - (x - fXHelixCenter) * (x - fXHelixCenter));
-  Double_t z1 = fZHelixCenter + zOff;
+  Double_t zOff = sqrt(fHelixRadius * fHelixRadius - (x - fIHelixCenter) * (x - fIHelixCenter));
+  Double_t z1 = fJHelixCenter + zOff;
 
-  Double_t alpha = TMath::ATan2(z1-fZHelixCenter, x-fXHelixCenter);
+  Double_t alpha = TMath::ATan2(z1-fJHelixCenter, x-fIHelixCenter);
   Double_t alphaTemp = alpha;
   Double_t d1Cand = std::abs(alphaTemp-alphaRef);
   Double_t d1Temp = d1Cand;
@@ -744,15 +783,15 @@ KBHelixTrack::ExtrapolateToX(Double_t x, Double_t alphaRef, TVector3 &pointOnHel
 }
 
 bool
-KBHelixTrack::ExtrapolateToZ(Double_t z, Double_t alphaRef, TVector3 &pointOnHelix) const
+KBHelixTrack::ExtrapolateToJ(Double_t j, Double_t alphaRef, TVector3 &pointOnHelix) const
 {
-  if (CheckExtrapolateToZ(z) == false)
+  if (CheckExtrapolateToJ(j) == false)
     return false;
 
-  Double_t xOff = sqrt(fHelixRadius * fHelixRadius - (z - fZHelixCenter) * (z - fZHelixCenter));
-  Double_t x1 = fXHelixCenter + xOff;
+  Double_t iOff = sqrt(fHelixRadius * fHelixRadius - (j - fJHelixCenter) * (j - fJHelixCenter));
+  Double_t i1 = fIHelixCenter + iOff;
 
-  Double_t alpha = TMath::ATan2(z-fZHelixCenter, x1-fXHelixCenter);
+  Double_t alpha = TMath::ATan2(j-fJHelixCenter, i1-fIHelixCenter);
   Double_t alphaTemp = alpha;
   Double_t d1Cand = std::abs(alphaTemp-alphaRef);
   Double_t d1Temp = d1Cand;
@@ -783,12 +822,12 @@ KBHelixTrack::ExtrapolateToZ(Double_t z, Double_t alphaRef, TVector3 &pointOnHel
 }
 
 bool
-KBHelixTrack::ExtrapolateToZ(Double_t z, TVector3 &pointOnHelix) const
+KBHelixTrack::ExtrapolateToJ(Double_t j, TVector3 &pointOnHelix) const
 {
   TVector3 position1, position2;
   Double_t alpha1, alpha2;
 
-  if (ExtrapolateToZ(z, position1, alpha1, position2, alpha2) == false)
+  if (ExtrapolateToJ(j, position1, alpha1, position2, alpha2) == false)
     return false;
 
   Double_t alphaMid = (fAlphaHead + fAlphaTail)/2;
@@ -873,9 +912,13 @@ KBHelixTrack::ExtrapolateByMap(TVector3 p, TVector3 &q, TVector3 &m) const
   Double_t alpha;
   Double_t length = ExtrapolateToPointAlpha(p, q, alpha);
   Double_t r = DistCircle(p);
-  Double_t y = p.Y() - q.Y();
 
-  m = TVector3(r, y/TMath::Cos(DipAngle()), length+y*TMath::Sin(DipAngle()) - lOff);
+  KBVector3 p2(p, fReferenceAxis);
+  KBVector3 q2(q, fReferenceAxis);
+
+  Double_t k = p2.K() - q2.K();
+
+  m = TVector3(r, k/TMath::Cos(DipAngle()), length+k*TMath::Sin(DipAngle()) - lOff);
 
   return alpha * fHelixRadius / TMath::Cos(DipAngle()); 
 }
