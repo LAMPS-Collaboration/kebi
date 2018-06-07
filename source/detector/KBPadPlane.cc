@@ -1,4 +1,7 @@
+#define DEBUG_PULLOUT
 #include "KBPadPlane.hh"
+
+#include "TVector2.h"
 
 #include <iostream>
 using namespace std;
@@ -10,9 +13,25 @@ KBPadPlane::KBPadPlane(const char *name, const char *title)
 {
 }
 
-void KBPadPlane::Print(Option_t *) const
+void KBPadPlane::Print(Option_t *option) const
 {
   cout << "Pad Plane containing " << fChannelArray -> GetEntries() << " pads" << endl;
+
+  if (TString(option) == "detail") {
+    Int_t numChannels = fChannelArray -> GetEntries();
+    auto countPads = 0;
+    auto countHits = 0;
+    for (auto iChannel = 0; iChannel < numChannels; ++iChannel) {
+      auto pad = (KBPad *) fChannelArray -> At(iChannel);
+      Int_t numHits = pad -> GetNumHits();
+      if (numHits > 0) {
+        ++countPads;
+        countHits += numHits;
+      }
+    }
+    cout << "number of active pads: " << countPads << endl;
+    cout << "number of hits: " << countHits << endl;
+  }
 }
 
 KBPad *KBPadPlane::GetPadFast(Int_t idx) { return (KBPad *) fChannelArray -> At(idx); }
@@ -44,9 +63,10 @@ void KBPadPlane::SetPadArray(TClonesArray *padArray)
 
 void KBPadPlane::SetHitArray(TClonesArray *hitArray)
 {
-  TIter iterPads(hitArray);
-  KBHit *hit;
-  while ((hit = (KBHit *) iterPads.Next())) {
+  Int_t numHits = hitArray -> GetEntries();
+  for (auto iHit = 0; iHit < numHits; ++iHit)
+  {
+    auto hit = (KBHit *) hitArray -> At(iHit);
     auto padID = hit -> GetPadID();
     if (padID < 0)
       continue;
@@ -54,6 +74,12 @@ void KBPadPlane::SetHitArray(TClonesArray *hitArray)
     pad -> AddHit(hit);
     pad -> SetActive();
   }
+}
+
+void KBPadPlane::AddHit(KBHit *hit)
+{
+  auto pad = GetPadFast(hit -> GetPadID());
+  pad -> AddHit(hit);
 }
 
 void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val)
@@ -144,12 +170,6 @@ void KBPadPlane::ResetHitMap()
   fFreePadIdx = 0;
 }
 
-void KBPadPlane::AddHit(KBHit *hit)
-{
-  auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
-  pad -> AddHit(hit);
-}
-
 KBHit *KBPadPlane::PullOutNextFreeHit()
 {
   if (fFreePadIdx == fChannelArray -> GetEntriesFast() - 1)
@@ -226,3 +246,39 @@ void KBPadPlane::GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighbor
 }
 
 TObjArray *KBPadPlane::GetPadArray() { return fChannelArray; }
+
+bool KBPadPlane::PadPositionChecker()
+{
+  cout << "[PadPositionChecker] Number of pads: " << fChannelArray -> GetEntries() << endl;
+
+  Int_t countBad = 0;
+
+  KBPad *pad;
+  TIter iterPads(fChannelArray);
+  while ((pad = (KBPad *) iterPads.Next())) {
+    auto center = pad -> GetPosition();
+    auto padID0 = pad -> GetPadID();
+    auto padID = FindPadID(center.X(),center.Y());
+    if (padID != padID0) {
+      cout << "Pad-" << padID0 << " position is bad! FindPadID(" << center.X() << "," << center.Y() << ") finds Pad-" << padID << endl;
+      ++countBad;
+    }
+    for (auto corner : *(pad->GetPadCorners())) {
+      auto pos = 0.1*center + 0.9*corner;
+      padID = FindPadID(pos.X(),pos.Y());
+      if (padID != padID0) {
+        cout << "Pad-" << padID0 << " 0.1center + 0.9*corner position is bad! FindPadID(" << pos.X() << "," << pos.Y() << ") finds Pad-" << padID << endl;
+        ++countBad;
+      }
+    }
+  }
+
+  if (countBad > 0) {
+    cout << " =================== Bad pad position exist!!!" << endl;
+    cout << " =================== Number of bad pads: " << countBad << endl;
+    return false;
+  }
+
+  cout << " =================== All pads are good!" << endl;
+  return true;
+}

@@ -59,3 +59,12 @@ TCanvas *KBDetectorPlane::GetCanvas(Option_t *)
 void KBDetectorPlane::DrawFrame(Option_t *)
 {
 }
+
+void KBDetectorPlane::SetAxis(KBVector3::Axis axis1, KBVector3::Axis axis2)
+{
+  fAxis1 = axis1;
+  fAxis2 = axis2;
+}
+
+KBVector3::Axis KBDetectorPlane::GetAxis1() { return fAxis1; }
+KBVector3::Axis KBDetectorPlane::GetAxis2() { return fAxis2; }

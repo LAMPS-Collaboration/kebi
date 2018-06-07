@@ -14,7 +14,7 @@ class KBTpc : public KBDetector
 
     virtual bool Init();
 
-    KBPadPlane *GetPadPlane(Int_t idx = 0);
+    virtual KBPadPlane *GetPadPlane(Int_t idx = 0);
     Int_t GetEFieldAxis();
 
     void GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane);

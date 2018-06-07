@@ -47,6 +47,8 @@ class KBPadPlane : public KBDetectorPlane
     void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
     TObjArray *GetPadArray();
 
+    bool PadPositionChecker();
+
   protected:
     Int_t fEFieldAxis = -1;
     Double_t fPlaneK = -999;

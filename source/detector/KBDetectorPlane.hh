@@ -3,6 +3,7 @@
 
 #include "KBChannel.hh"
 #include "KBParameterContainerHolder.hh"
+#include "KBVector3.hh"
 
 #include "TH2.h"
 #include "TCanvas.h"
@@ -44,6 +45,10 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
     Int_t GetNChannels();
     TObjArray *GetChannelArray();
 
+    void SetAxis(KBVector3::Axis axis1, KBVector3::Axis axis2);
+    KBVector3::Axis GetAxis1();
+    KBVector3::Axis GetAxis2();
+
   protected:
     TObjArray *fChannelArray = nullptr;
 
@@ -52,6 +57,9 @@ class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
 
     TCanvas *fCanvas = nullptr;
     TH2 *fH2Plane = nullptr;
+
+    KBVector3::Axis fAxis1 = KBVector3::kX;
+    KBVector3::Axis fAxis2 = KBVector3::kY;
 
 
   ClassDef(KBDetectorPlane, 1)
