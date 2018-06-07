@@ -73,6 +73,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     TChain *GetInputChain();
 
     void SetOutputFile(TString name); ///< Set output file name
+    TTree *GetOutputTree();
     void SetTag(TString tag);
     void SetSplit(Int_t split, Long64_t numSplitEntries);
 

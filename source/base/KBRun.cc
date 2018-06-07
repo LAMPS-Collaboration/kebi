@@ -5,6 +5,7 @@
 #include "TStyle.h"
 #include "TApplication.h"
 #include "TRandom.h"
+#include "TGraph.h"
 
 #ifdef ACTIVATE_EVE
 #include "TEveViewer.h"
@@ -29,6 +30,7 @@
 
 #include "KBHit.hh"
 #include "KBContainer.hh"
+#include "KBTracklet.hh"
 #include "KBMCStep.hh"
 
 #include <unistd.h>
@@ -133,7 +135,7 @@ TString KBRun::ConfigureDataPath(TString name)
   if (name == "last")
     newName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
   else {
-    if (newName[0] != '/' && newName[0] != '$' && newName != '~') {
+    if (newName[0] != '.' && newName[0] != '/' && newName[0] != '$' && newName != '~') {
       if (fDataPath.IsNull())
         newName = TString(KEBI_PATH) + "/data/" + newName;
       else
@@ -159,6 +161,7 @@ void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(Configure
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 TChain *KBRun::GetInputChain() { return fInputTree; }
 void KBRun::SetOutputFile(TString name) { fOutputFileName = name; }
+TTree *KBRun::GetOutputTree() { return fOutputTree; }
 void KBRun::SetTag(TString tag) { fTag = tag; }
 void KBRun::SetSplit(Int_t split, Long64_t numSplitEntries)
 {
@@ -204,7 +207,7 @@ bool KBRun::Init()
       fInputTree -> AddFile(fInputFileNameArray[i]);
 
     fNumEntries = fInputTree -> GetEntries();
-    kb_info << "  " << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
+    kb_info << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
 
     TObjArray *branchArray = fInputTree -> GetListOfBranches();
     Int_t nBranches = branchArray -> GetEntries();
@@ -214,7 +217,7 @@ bool KBRun::Init()
       fInputTree -> SetBranchAddress(branch -> GetName(), &fBranchPtr[fNBranches]);
       fBranchPtrMap[branch -> GetName()] = fBranchPtr[fNBranches];
       fNBranches++;
-      kb_info << "  Input branch " << branch -> GetName() << " found" << endl;
+      kb_info << "Input branch " << branch -> GetName() << " found" << endl;
     }
   }
 
@@ -664,7 +667,7 @@ void KBRun::RunEve(Long64_t eventID)
     TClonesArray *branch = (TClonesArray *) fBranchPtr[iBranch];
     TObject *objSample = nullptr;
 
-    if (branch -> GetEntriesFast() != 0) {
+    if (branch -> GetEntries() != 0) {
       objSample = branch -> At(0);
       if (objSample -> InheritsFrom("KBContainer") == false)
         continue;
@@ -672,10 +675,11 @@ void KBRun::RunEve(Long64_t eventID)
     else
       continue;
 
+    kb_info << "Drawing " << objSample -> ClassName() << endl;
     KBContainer *eveObj = (KBContainer *) objSample;
     if (eveObj -> IsEveSet()) {
       TEveElement *eveSet = eveObj -> CreateEveElement();
-      Int_t nObjects = branch -> GetEntriesFast();
+      Int_t nObjects = branch -> GetEntries();
       for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
         eveObj = (KBContainer *) branch -> At(iObject);
         eveObj -> AddToEveSet(eveSet);
@@ -684,7 +688,7 @@ void KBRun::RunEve(Long64_t eventID)
       fEveElementList.push_back(eveSet);
     }
     else {
-      Int_t nObjects = branch -> GetEntriesFast();
+      Int_t nObjects = branch -> GetEntries();
       for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
         eveObj = (KBContainer *) branch -> At(iObject);
         TEveElement *eveElement = eveObj -> CreateEveElement();
@@ -734,6 +738,33 @@ void KBRun::RunEve(Long64_t eventID)
     histPlane -> SetMinimum(1);
     histPlane -> Draw("colz");
     plane -> DrawFrame();
+
+    KBVector3::Axis axis1 = plane -> GetAxis1();
+    KBVector3::Axis axis2 = plane -> GetAxis2();
+
+    for (Int_t iBranch = 0; iBranch < fNBranches; ++iBranch)
+    {
+      TClonesArray *branch = (TClonesArray *) fBranchPtr[iBranch];
+      TObject *objSample = nullptr;
+
+      Int_t numTracklets = branch -> GetEntries();
+      if (numTracklets != 0) {
+        objSample = branch -> At(0);
+        if (objSample -> InheritsFrom("KBContainer") == false || objSample -> InheritsFrom("KBTracklet") == false)
+          continue;
+      }
+      else
+        continue;
+
+      auto tracklet = (KBTracklet *) objSample;
+      if (tracklet -> DoDrawOnDetectorPlane())
+      {
+        for (auto iTracklet = 0; iTracklet < numTracklets; ++iTracklet) {
+          auto tracklet = (KBTracklet *) branch -> At(iTracklet);
+          tracklet -> TrajectoryOnPlane(axis1, axis2) -> Draw("samel");
+        }
+      }
+    }
   }
 
   gStyle -> SetPalette(kBird); // @todo palette is changed when drawing top node because of TGeoMan(?)
@@ -821,7 +852,7 @@ bool KBRun::CheckFileExistence(TString fileName)
   if (name.IsNull())
     kb_info << fileName << " IS NEW." << endl;
   else
-    kb_info << fileName << " ALREADY EXIST!" << endl;
+    kb_info << fileName << " EXIST!" << endl;
 
   if (name.IsNull())
     return false;
