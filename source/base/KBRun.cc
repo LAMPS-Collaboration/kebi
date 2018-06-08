@@ -725,8 +725,8 @@ void KBRun::RunEve(Long64_t eventID)
       {
         padplane -> Clear();
         padplane -> SetPadArray(padArray);
-        padplane -> FillDataToHist("raw");
-        //padplane -> FillDataToHist("out");
+        //padplane -> FillDataToHist("raw");
+        padplane -> FillDataToHist("out");
       }
       else
         return;
@@ -834,9 +834,10 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   vector<TVector2> *corners = pad -> GetPadCorners();
   for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
     TVector2 corner = corners -> at(iCorner);
-    kb_print << "corner: " << corner.X() << ", " <<  corner.Y() << endl;
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
+  TVector2 corner = corners -> at(0);
+  fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
 
   fHistChannelBuffer -> Draw("l");
   fCvsChannelBuffer -> Modified();
