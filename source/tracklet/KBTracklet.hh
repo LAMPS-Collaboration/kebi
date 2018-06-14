@@ -43,6 +43,8 @@ class KBTracklet : public KBContainer
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);
 
+    virtual bool Fit() { return true; }
+
     virtual KBTrackFitter *CreateTrackFitter() const = 0;
 
     virtual TVector3 Momentum(Double_t B = 0.5) const = 0; ///< Momentum of track at head.

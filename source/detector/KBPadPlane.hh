@@ -4,6 +4,7 @@
 #include "KBPad.hh"
 #include "KBDetectorPlane.hh"
 
+#include "TVector2.h"
 #include "TH2.h"
 #include "TClonesArray.h"
 
@@ -42,12 +43,13 @@ class KBPadPlane : public KBDetectorPlane
 
     virtual KBHit *PullOutNextFreeHit();
     void PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neighborHits);
-    void PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *neighborHits);
+    void PullOutNeighborHits(TVector2 p, Int_t range, vector<KBHit*> *neighborHits);
 
     void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
     TObjArray *GetPadArray();
 
-    bool PadPositionChecker();
+    bool PadPositionChecker(bool checkCorners = true);
+    bool PadNeighborChecker();
 
   protected:
     Int_t fEFieldAxis = -1;

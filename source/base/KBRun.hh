@@ -189,6 +189,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     TCanvas *fCvsChannelBuffer = nullptr;
     TH1D *fHistChannelBuffer = nullptr;
     TGraph *fGraphChannelBoundary = nullptr;
+    TGraph *fGraphChannelBoundaryNb[20];
 
     TString fLogFileName;
     TString fHash;

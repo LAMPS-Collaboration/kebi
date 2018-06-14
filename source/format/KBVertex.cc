@@ -15,7 +15,6 @@ void KBVertex::Clear(Option_t *)
   fPosition = TVector3(-999,-999,-999);
   fTrackArray.clear();
   fTrackIDArray.clear();
-  fSSetArray.clear();
 }
 
 void KBVertex::AddTrack(KBTracklet* track)
@@ -45,7 +44,6 @@ void KBVertex::SetEveElement(TEveElement *)
 void KBVertex::AddToEveSet(TEveElement *eveSet)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  //pointSet -> SetNextPoint(fPosition.X(), fPosition.Y(), fPosition.Z());
-  pointSet -> SetNextPoint(fPosition.Z(), fPosition.X(), fPosition.Y());
+  pointSet -> SetNextPoint(fPosition.X(), fPosition.Y(), fPosition.Z());
 }
 #endif

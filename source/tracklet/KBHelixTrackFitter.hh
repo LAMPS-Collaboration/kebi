@@ -14,7 +14,9 @@ class KBHelixTrack;
 class KBHelixTrackFitter : public KBTrackFitter
 {
   public:
-    KBHelixTrackFitter() : KBTrackFitter("KBHelixTrackFitter","KBHelixTrackFitter"), fODRFitter(new KBODRFitter()) {}
+    static KBHelixTrackFitter* GetFitter();
+
+    KBHelixTrackFitter();
     ~KBHelixTrackFitter() {};
 
     bool Fit(KBTracklet *track);
@@ -26,6 +28,9 @@ class KBHelixTrackFitter : public KBTrackFitter
   private:
     KBODRFitter *fODRFitter;
     KBVector3::Axis fReferenceAxis = KBVector3::kZ;
+
+  private:
+    static KBHelixTrackFitter *fInstance;
 
   ClassDef(KBHelixTrackFitter, 1)
 };

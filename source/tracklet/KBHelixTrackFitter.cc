@@ -7,6 +7,20 @@ using namespace std;
 
 ClassImp(KBHelixTrackFitter)
 
+KBHelixTrackFitter* KBHelixTrackFitter::fInstance = nullptr;
+
+KBHelixTrackFitter* KBHelixTrackFitter::GetFitter() {
+  if (fInstance != nullptr)
+    return fInstance;
+  return new KBHelixTrackFitter();
+}
+
+KBHelixTrackFitter::KBHelixTrackFitter()
+:KBTrackFitter("KBHelixTrackFitter","KBHelixTrackFitter"), fODRFitter(KBODRFitter::GetFitter())
+{
+  fInstance = this;
+}
+
 bool
 KBHelixTrackFitter::FitPlane(KBHelixTrack *track) 
 {

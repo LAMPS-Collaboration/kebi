@@ -195,7 +195,7 @@ void KBPadPlane::PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neigh
   }
 }
 
-void KBPadPlane::PullOutNeighborHits(TVector3 p, Int_t range, vector<KBHit*> *neighborHits)
+void KBPadPlane::PullOutNeighborHits(TVector2 p, Int_t range, vector<KBHit*> *neighborHits)
 {
   vector<KBPad *> neighborsUsed;
   vector<KBPad *> neighborsTemp;
@@ -247,31 +247,48 @@ void KBPadPlane::GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighbor
 
 TObjArray *KBPadPlane::GetPadArray() { return fChannelArray; }
 
-bool KBPadPlane::PadPositionChecker()
+bool KBPadPlane::PadPositionChecker(bool checkCorners)
 {
   cout << "[PadPositionChecker] Number of pads: " << fChannelArray -> GetEntries() << endl;
 
+  Int_t countM1 = 0;
   Int_t countBad = 0;
 
   KBPad *pad;
   TIter iterPads(fChannelArray);
   while ((pad = (KBPad *) iterPads.Next())) {
-    auto center = pad -> GetPosition();
+    if (pad -> GetPadID() == -1) {
+      ++countM1;
+      continue;
+    }
+    auto center0 = pad -> GetPosition();
     auto padID0 = pad -> GetPadID();
-    auto padID = FindPadID(center.X(),center.Y());
-    if (padID != padID0) {
-      cout << "Pad-" << padID0 << " position is bad! FindPadID(" << center.X() << "," << center.Y() << ") finds Pad-" << padID << endl;
+    auto padID1 = FindPadID(center0.X(),center0.Y());
+    //cout << "Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad-> GetSection() << "," << pad-> GetRow() << "," << pad-> GetLayer() << ") >>> " << padID1 << endl;
+
+    if (padID1 != padID0) {
+      auto pad1 = (KBPad *) fChannelArray -> At(padID1);
+      auto center1 = pad1 -> GetPosition();
+      cout << "Bad! Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad -> GetSection() << "," << pad -> GetRow() << "," << pad -> GetLayer() << ")"
+           << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
       ++countBad;
     }
-    for (auto corner : *(pad->GetPadCorners())) {
-      auto pos = 0.1*center + 0.9*corner;
-      padID = FindPadID(pos.X(),pos.Y());
-      if (padID != padID0) {
-        cout << "Pad-" << padID0 << " 0.1center + 0.9*corner position is bad! FindPadID(" << pos.X() << "," << pos.Y() << ") finds Pad-" << padID << endl;
-        ++countBad;
+    if (checkCorners) {
+      for (auto corner : *(pad->GetPadCorners())) {
+        auto pos = 0.1*center0 + 0.9*corner;
+        padID1 = FindPadID(pos.X(),pos.Y());
+        if (padID1 != padID0) {
+          auto pad1 = (KBPad *) fChannelArray -> At(padID1);
+          auto center1 = pad1 -> GetPosition();
+          cout << "     Corner(" << pos.X() << "," << pos.Y() << ")"
+               << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
+          ++countBad;
+        }
       }
     }
   }
+
+  cout << " =================== Number of id = -1 pads: " << countM1 << endl;
 
   if (countBad > 0) {
     cout << " =================== Bad pad position exist!!!" << endl;
@@ -280,5 +297,50 @@ bool KBPadPlane::PadPositionChecker()
   }
 
   cout << " =================== All pads are good!" << endl;
+  return true;
+}
+
+bool KBPadPlane::PadNeighborChecker()
+{
+  cout << "[PadNeighborChecker] Number of pads: " << fChannelArray -> GetEntries() << endl;
+
+  auto distMax = 0.;
+  KBPad *pad0 = 0;
+  KBPad *pad1 = 0;
+
+  KBPad *pad;
+  TIter iterPads(fChannelArray);
+  while ((pad = (KBPad *) iterPads.Next())) {
+    auto pos = pad -> GetPosition();
+    auto padID = pad -> GetPadID();
+    auto neighbors = pad -> GetNeighborPadArray();
+    for (auto nb : *neighbors) {
+      auto padIDnb = nb -> GetPadID();
+      auto posnb = nb -> GetPosition();
+      auto neighbors2 = nb -> GetNeighborPadArray();
+      auto neighborToEachOther = false;
+      for (auto nb2 : *neighbors2) {
+        if (padID == nb2 -> GetPadID()) {
+          neighborToEachOther = true;
+          break;
+        }
+      }
+      if (!neighborToEachOther)
+        cout << "Pad:" << padID << " and Pad:" << padIDnb << " are not neighbor to each other!" << endl;
+      auto dx = pos.X() - posnb.X();
+      auto dy = pos.Y() - posnb.Y();
+      auto dist = sqrt(dx*dx + dy*dy);
+      if (dist > distMax) {
+        distMax = dist;
+        pad0 = pad;
+        pad1 = nb;
+      }
+    }
+  }
+
+  cout << " =================== Maximum distance between neighbor pads: " << distMax << endl;
+  cout << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetPosition().X() << "," << pad0->GetPosition().Y() << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
+  cout << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y() << "|" << pad1-> GetSection() << "," << pad1 -> GetRow() << "," << pad1 -> GetLayer() << ")" << endl;
+
   return true;
 }

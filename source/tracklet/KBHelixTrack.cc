@@ -17,12 +17,12 @@ KBHelixTrack::KBHelixTrack(Int_t id)
   fTrackID = id;
 }
 
-void KBHelixTrack::Clear(Option_t *option)
+void KBHelixTrack::Clear(Option_t *)
 {
   fTrackID  = -999;
   fParentID = -999;
 
-  KBVector3::Axis fReferenceAxis = KBVector3::kZ;
+  fReferenceAxis = KBVector3::kZ;
 
   fFitStatus = kBad;
 
@@ -115,7 +115,12 @@ void KBHelixTrack::Copy(TObject &obj) const
   helix.SetReferenceAxis(fReferenceAxis);
 }
 
-KBTrackFitter *KBHelixTrack::CreateTrackFitter() const { return new KBHelixTrackFitter(); }
+bool KBHelixTrack::Fit()
+{
+  return KBHelixTrackFitter::GetFitter() -> Fit(this);
+}
+
+KBTrackFitter *KBHelixTrack::CreateTrackFitter() const { return KBHelixTrackFitter::GetFitter(); }
 
 void KBHelixTrack::AddHit(KBHit *hit)
 {
@@ -926,7 +931,6 @@ KBHelixTrack::ExtrapolateByMap(TVector3 p, TVector3 &q, TVector3 &m) const
 Double_t 
 KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 {
-  /*
   Int_t numHits = fMainHits.size();
   if (numHits < 2) 
     return -1;
@@ -943,7 +947,7 @@ KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
     auto length = std::abs(current.Z()-before.Z());
 
     total += length;
-    if (length < 50)
+    if (length < 25)
       continuous += length;
 
     before = current;
@@ -953,39 +957,13 @@ KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
   continuousLength = continuous;
 
   return continuous/total;
-  */
-  return 1;
 }
 
 Double_t 
 KBHelixTrack::Continuity()
 {
-  /* TODO
-  Int_t numHits = fMainHits.size();
-  if (numHits < 2) 
-    return -1;
-
-  SortHits();
-
-  Double_t total = 0;
-  Double_t continuous = 0;
-  TVector3 before = Map(fMainHits[0]->GetPosition());
-
-  for (auto iHit = 1; iHit < numHits; iHit++) 
-  {
-    TVector3 current = Map(fMainHits[iHit]->GetPosition());
-    auto length = std::abs(current.Z()-before.Z());
-
-    total += length;
-    if (length < 20)
-      continuous += length;
-
-    before = current;
-  }
-
-  return continuous/total;
-  */
-  return 1;
+  Double_t l1, l2;
+  return Continuity(l1, l2);
 }
 
 Double_t 

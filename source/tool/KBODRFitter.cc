@@ -8,8 +8,17 @@ using namespace std;
 
 ClassImp(KBODRFitter)
 
+KBODRFitter* KBODRFitter::fInstance = nullptr;
+
+KBODRFitter* KBODRFitter::GetFitter() {
+  if (fInstance != nullptr)
+    return fInstance;
+  return new KBODRFitter();
+}
+
 KBODRFitter::KBODRFitter()
 {
+  fInstance = this;
   fNormal = new TVectorD(3);
   fMatrixA = new TMatrixD(3,3);
   fEigenValues = new TVectorD(3);

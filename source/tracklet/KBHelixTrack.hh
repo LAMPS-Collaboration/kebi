@@ -67,6 +67,8 @@ class KBHelixTrack : public KBTracklet
     virtual void Print(Option_t *option="") const;
     virtual void Copy (TObject &object) const;
 
+    virtual bool Fit();
+
     KBTrackFitter *CreateTrackFitter() const;
 
     void AddHit(KBHit *hit);

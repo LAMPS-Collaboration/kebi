@@ -55,7 +55,7 @@ KBRun::KBRun()
   fCvsDetectorPlaneArray = new TObjArray();
   fTemporaryBranchArray = new TObjArray();
   fBranchPtr = new TObject*[1000];
-  for (Int_t i = 0; i < 1000; i++) 
+  for (Int_t i = 0; i < 1000; ++i) 
     fBranchPtr[i] = nullptr;
 }
 
@@ -650,8 +650,15 @@ void KBRun::OpenEventDisplay()
 
 void KBRun::RunEve(Long64_t eventID)
 {
-  if (gEve == nullptr)
+  if (gEve == nullptr) {
     OpenEventDisplay();
+
+    for (Int_t i = 0; i < 20; ++i) {
+      fGraphChannelBoundaryNb[i] = new TGraph();
+      fGraphChannelBoundaryNb[i] -> SetLineColor(kGreen);
+      fGraphChannelBoundaryNb[i] -> SetLineWidth(2);
+    }
+  }
 
   this -> GetEntry(eventID);
 
@@ -756,8 +763,8 @@ void KBRun::RunEve(Long64_t eventID)
       else
         continue;
 
-      auto tracklet = (KBTracklet *) objSample;
-      if (tracklet -> DoDrawOnDetectorPlane())
+      auto trackletSample = (KBTracklet *) objSample;
+      if (trackletSample -> DoDrawOnDetectorPlane())
       {
         for (auto iTracklet = 0; iTracklet < numTracklets; ++iTracklet) {
           auto tracklet = (KBTracklet *) branch -> At(iTracklet);
@@ -812,13 +819,6 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
     fHistChannelBuffer -> SetStats(0);
   }
 
-  if (fGraphChannelBoundary == nullptr) {
-    fGraphChannelBoundary = new TGraph();
-    fGraphChannelBoundary -> SetLineColor(kRed);
-    fGraphChannelBoundary -> SetLineWidth(2);
-  }
-  fGraphChannelBoundary -> Set(0);
-
   KBTpc *tpc = (KBTpc *) fDetector;
   KBPadPlane *padplane = tpc -> GetPadPlane();
   Int_t id = padplane -> FindPadID(x, y);
@@ -827,17 +827,43 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
     return;
   }
 
+
   KBPad *pad = padplane -> GetPad(id);
   pad -> SetHist(fHistChannelBuffer,"pao");
   pad -> Print();
+  {
+    if (fGraphChannelBoundary == nullptr) {
+      fGraphChannelBoundary = new TGraph();
+      fGraphChannelBoundary -> SetLineColor(kRed);
+      fGraphChannelBoundary -> SetLineWidth(2);
+    }
+    fGraphChannelBoundary -> Set(0);
 
-  vector<TVector2> *corners = pad -> GetPadCorners();
-  for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
-    TVector2 corner = corners -> at(iCorner);
+    auto corners = pad -> GetPadCorners();
+    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
+      TVector2 corner = corners -> at(iCorner);
+      fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
+    }
+    TVector2 corner = corners -> at(0);
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
-  TVector2 corner = corners -> at(0);
-  fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
+
+  for (Int_t i = 0; i < 20; ++i)
+    fGraphChannelBoundaryNb[i] -> Set(0);
+
+  auto nbs = pad -> GetNeighborPadArray();
+  Int_t numNbs = nbs -> size();
+  for (auto iNb = 0; iNb < numNbs; ++iNb) {
+    auto nb = (KBPad *) nbs -> at(iNb);
+    auto corners = nb -> GetPadCorners();
+    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
+      TVector2 corner = corners -> at(iCorner);
+      fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
+    }
+    TVector2 corner = corners -> at(0);
+    fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
+
+  }
 
   fHistChannelBuffer -> Draw("l");
   fCvsChannelBuffer -> Modified();
@@ -845,6 +871,8 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
 
   ((TCanvas *) fCvsDetectorPlaneArray -> At(0)) -> cd();
   fGraphChannelBoundary -> Draw("samel");
+  for (auto iNb = 0; iNb < numNbs; ++iNb)
+    fGraphChannelBoundaryNb[iNb] -> Draw("samel");
 }
 
 bool KBRun::CheckFileExistence(TString fileName)

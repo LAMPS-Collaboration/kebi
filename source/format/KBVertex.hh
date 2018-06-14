@@ -10,20 +10,6 @@
 #include <iostream>
 using namespace std;
 
-class KBVSSet
-{
-  public:
-    KBVSSet(Int_t i=-1, Double_t x=0, Double_t s=0, Int_t n=0)
-    : fI(i), fX(x), fS(s), fN(n) {}
-
-    void Print() { cout << fI << " " << fX << " " << fS << " " << fN << endl; }
-
-    Int_t fI;
-    Double_t fX;
-    Double_t fS;
-    Int_t fN;
-};
-
 class KBVertex : public KBContainer
 {
   public:
@@ -36,12 +22,11 @@ class KBVertex : public KBContainer
     TVector3 GetPosition() const { return fPosition; }
 
     void AddTrack(KBTracklet* hit);
-    vector<KBTracklet*> *GetTrackArray() { return &fTrackArray; }
-    vector<Int_t> *GetTrackIDArray() { return &fTrackIDArray; }
-    Int_t GetNumTracks() const { return fTrackIDArray.size(); }
 
-    void AddSSet(KBVSSet set) { fSSetArray.push_back(set); }
-    vector<KBVSSet> *GetSSetArray() { return &fSSetArray; }
+    vector<Int_t>       *GetTrackIDArray() { return &fTrackIDArray; }
+    vector<KBTracklet*> *GetTrackArray()   { return &fTrackArray; }
+
+    Int_t GetNumTracks() const { return fTrackIDArray.size(); }
 
 #ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
@@ -54,10 +39,8 @@ class KBVertex : public KBContainer
   private:
     TVector3 fPosition;
 
+    vector<Int_t>       fTrackIDArray;
     vector<KBTracklet*> fTrackArray; //!
-    vector<Int_t> fTrackIDArray;
-
-    vector<KBVSSet> fSSetArray;
 
   ClassDef(KBVertex, 1)
 };

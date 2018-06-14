@@ -27,6 +27,8 @@
 class KBODRFitter
 {
   public:
+    static KBODRFitter* GetFitter();
+
     KBODRFitter();
     virtual ~KBODRFitter();
 
@@ -93,6 +95,9 @@ class KBODRFitter
 
     Double_t fRMSLine; /// Root mean square of the line fit
     Double_t fRMSPlane; /// Root mean square of the plane fit
+
+  private:
+    static KBODRFitter *fInstance;
 
   ClassDef(KBODRFitter, 1)
 };
