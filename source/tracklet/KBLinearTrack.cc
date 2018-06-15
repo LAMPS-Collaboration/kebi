@@ -41,7 +41,12 @@ void KBLinearTrack::Print(Option_t *) const
   cout << "                  to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
 }
 
-KBTrackFitter *KBLinearTrack::CreateTrackFitter() const { return new KBLinearTrackFitter(); }
+bool KBLinearTrack::Fit()
+{
+  return KBLinearTrackFitter::GetFitter() -> Fit(this);
+}
+
+KBTrackFitter *KBLinearTrack::CreateTrackFitter() const { return KBLinearTrackFitter::GetFitter(); }
 
 TVector3 KBLinearTrack::Momentum(Double_t) const { return KBGeoLine::Direction(); } 
 TVector3 KBLinearTrack::PositionAtHead()   const { return KBGeoLine::GetPoint2(); } 

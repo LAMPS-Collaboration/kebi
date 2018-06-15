@@ -7,6 +7,8 @@
 class KBLinearTrackFitter : public KBTrackFitter
 {
   public:
+    static KBLinearTrackFitter* GetFitter();
+
     KBLinearTrackFitter();
     virtual ~KBLinearTrackFitter() {}
 
@@ -14,6 +16,8 @@ class KBLinearTrackFitter : public KBTrackFitter
 
   private:
     KBODRFitter *fODRFitter;
+
+    static KBLinearTrackFitter *fInstance;
 
   ClassDef(KBLinearTrackFitter, 1)
 };

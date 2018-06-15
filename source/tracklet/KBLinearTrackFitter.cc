@@ -4,9 +4,18 @@
 
 ClassImp(KBLinearTrackFitter)
 
+KBLinearTrackFitter* KBLinearTrackFitter::fInstance = nullptr;
+
+KBLinearTrackFitter* KBLinearTrackFitter::GetFitter() {
+  if (fInstance != nullptr)
+    return fInstance;
+  return new KBLinearTrackFitter();
+}
+
 KBLinearTrackFitter::KBLinearTrackFitter()
 {
-  fODRFitter = new KBODRFitter();
+  fInstance = this;
+  fODRFitter = KBODRFitter::GetFitter();
 }
 
 bool KBLinearTrackFitter::Fit(KBTracklet *track)

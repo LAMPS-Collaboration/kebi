@@ -15,6 +15,8 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
     void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
 
+    virtual bool Fit();
+
     void SetQuality(Double_t val);
     Double_t GetQuality();
 
