@@ -29,6 +29,7 @@ TEveElement *KBTracklet::CreateEveElement()
 void KBTracklet::SetEveElement(TEveElement *element)
 {
   auto line = (TEveLine *) element;
+  line -> SetElementName("Tracklet");
   line -> Reset();
 
   line -> SetLineColor(kRed);

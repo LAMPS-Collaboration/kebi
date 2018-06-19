@@ -700,6 +700,8 @@ void KBRun::RunEve(Long64_t eventID)
         eveObj = (KBContainer *) branch -> At(iObject);
         TEveElement *eveElement = eveObj -> CreateEveElement();
         eveObj -> SetEveElement(eveElement);
+        TString name = eveElement -> GetElementName();
+        eveElement -> SetElementName(name+Form("_%d",iObject));
         gEve -> AddElement(eveElement);
         fEveElementList.push_back(eveElement);
       }

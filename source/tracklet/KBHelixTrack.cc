@@ -556,7 +556,7 @@ KBHelixTrack::ExtrapolateToPointAlpha(TVector3 pointGiven, TVector3 &pointOnHeli
     {
       alpha1 = alpha1 - 2*TMath::Pi();
       point1.SetK(point1.K() - 2*TMath::Pi()*fAlphaSlope);
-      k1 = std::abs(point1.Y() - pointGiven2.K());
+      k1 = std::abs(point1.K() - pointGiven2.K());
 
       if (std::abs(k0) < std::abs(k1))
         break;
