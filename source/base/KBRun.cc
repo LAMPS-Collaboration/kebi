@@ -724,21 +724,35 @@ void KBRun::RunEve(Long64_t eventID)
     {
       auto padplane = (KBPadPlane *) plane;
 
+      bool exist_hit = false;
+      bool exist_pad = false;
+
       if (hitArray != nullptr)
+        exist_hit = true;
+      if (padArray != nullptr)
+        exist_pad = true;
+
+      if (!exist_hit && !exist_pad)
+        continue;
+
+      if (exist_hit)
       {
+        kb_info << "Filling Hits to PadPlane" << endl;
         padplane -> Clear();
         padplane -> SetHitArray(hitArray);
-        padplane -> FillDataToHist("hit");
+        if (!exist_pad)
+          padplane -> FillDataToHist("hit");
       }
-      else if (padArray != nullptr)
+
+      if (exist_pad)
       {
-        padplane -> Clear();
+        kb_info << "Filling Pads to PadPlane" << endl;
+        if (!exist_hit)
+          padplane -> Clear();
         padplane -> SetPadArray(padArray);
         //padplane -> FillDataToHist("raw");
         padplane -> FillDataToHist("out");
       }
-      else
-        return;
     }
 
     auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
@@ -868,6 +882,13 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   }
 
   fHistChannelBuffer -> Draw("l");
+
+  for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
+    auto hit = pad -> GetHit(iHit);
+    auto f1 = hit -> GetPulseFunction();
+    f1 -> Draw("samel");
+  }
+
   fCvsChannelBuffer -> Modified();
   fCvsChannelBuffer -> Update();
 
