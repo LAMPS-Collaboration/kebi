@@ -1,7 +1,7 @@
 #include "KBRun.hh"
 #include "KBPSATask.hh"
 #include "KBChannelHit.hh"
-#include "KBHit.hh"
+#include "KBTpcHit.hh"
 
 #include <vector>
 #include <iostream>
@@ -30,7 +30,7 @@ bool KBPSATask::Init()
   for (auto iPlane = 0; iPlane < fNPlanes; iPlane++)
     fPadPlane[iPlane] = fTpc -> GetPadPlane(iPlane);
 
-  fHitArray = new TClonesArray("KBHit", 5000);
+  fHitArray = new TClonesArray("KBTpcHit", 5000);
   run -> RegisterBranch("Hit", fHitArray, true);
 
   if (fPSA == nullptr)
@@ -69,7 +69,7 @@ void KBPSATask::Exec(Option_t*)
       Double_t x,y,z;
       fTpc -> IJKToXYZ(pad->GetI(),pad->GetJ(),k,x,y,z);
 
-      auto hit = (KBHit *) fHitArray -> ConstructedAt(idx);
+      auto hit = (KBTpcHit *) fHitArray -> ConstructedAt(idx);
       hit -> SetHitID(idx);
       hit -> SetPadID(pad -> GetPadID());
       hit -> SetX(x);

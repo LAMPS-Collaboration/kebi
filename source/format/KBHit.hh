@@ -1,6 +1,7 @@
 #ifndef KBHIT_HH
 #define KBHIT_HH
 
+#include "KBWPointCluster.hh"
 #include "KBContainer.hh"
 
 #ifdef ACTIVATE_EVE
@@ -13,8 +14,14 @@
 #include <vector>
 using namespace std;
 
-class KBHit : public KBContainer
+class KBHit : public KBWPointCluster
 {
+  protected:
+    Int_t fHitID = -1;
+    Int_t fTrackID = -1;
+
+    vector<Int_t> fTrackCandArray;  //!
+
   public :
     KBHit() { Clear(); };
     virtual ~KBHit() {};
@@ -23,57 +30,32 @@ class KBHit : public KBContainer
     virtual void Print(Option_t *option = "") const;
     virtual void Copy (TObject &object) const;
 
-    virtual TF1 *GetPulseFunction(Option_t *option = "");
-
     void SetHitID(Int_t id);
-    void SetPadID(Int_t id);
     void SetTrackID(Int_t id);
-
-    void SetPosition(TVector3 pos);
     void SetX(Double_t x);
     void SetY(Double_t y);
     void SetZ(Double_t z);
-    void SetPosSigma(TVector3 sig);
     void SetDX(Double_t dx);
     void SetDY(Double_t dy);
     void SetDZ(Double_t dz);
-
-    void SetSection(Int_t section);
-    void SetRow(Int_t row);
-    void SetLayer(Int_t layer);
-
-    void SetTb(Double_t tb);
     void SetCharge(Double_t charge);
-    void AddHit(KBHit *hit);
+
+    virtual void AddHit(KBHit *hit);
 
     Int_t GetHitID() const;
-    Int_t GetPadID() const;
     Int_t GetTrackID() const;
-
-    TVector3 GetPosition() const;
     Double_t GetX() const;
     Double_t GetY() const;
     Double_t GetZ() const;
-
-    TVector3 GetPosSigma() const;
     Double_t GetDX() const;
     Double_t GetDY() const;
     Double_t GetDZ() const;
-
-    Int_t GetSection() const;
-    Int_t GetRow() const;
-    Int_t GetLayer() const;
-    Double_t GetTb() const;
     Double_t GetCharge() const;
-
-    //////////////////////////////////////////////////
 
     vector<Int_t> *GetTrackCandArray();
     Int_t GetNumTrackCands();
     void AddTrackCand(Int_t id);
     void RemoveTrackCand(Int_t trackID);
-
-    //////////////////////////////////////////////////
 
 #ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
@@ -83,44 +65,7 @@ class KBHit : public KBContainer
     virtual void AddToEveSet(TEveElement *eveSet);
 #endif
 
-  protected:
-    Int_t fHitID = -1;
-    Int_t fPadID = -1;
-    Int_t fTrackID = -1;
-
-    TVector3 fPosition = TVector3(-999,-999,-999);
-    TVector3 fPosSigma = TVector3(-999,-999,-999);
-
-    Int_t fSection = -999;
-    Int_t fRow = -999;
-    Int_t fLayer = -999;
-
-    Double_t fTb = -1;
-    Double_t fCharge = 0;
-
-    vector<Int_t> fTrackCandArray;  //!
-
   ClassDef(KBHit, 1)
-};
-
-class KBHitSortSectionRow {
-  public:
-    KBHitSortSectionRow();
-    bool operator() (KBHit* h1, KBHit* h2) {
-      if (h1 -> GetSection() == h2 -> GetSection())
-        return h1 -> GetRow() < h2 -> GetRow();
-      return h1 -> GetSection() < h2 -> GetSection();
-    }
-};
-
-class KBHitSortSectionLayer {
-  public:
-    KBHitSortSectionLayer();
-    bool operator() (KBHit* h1, KBHit* h2) {
-      if (h1 -> GetSection() == h2 -> GetSection())
-        return h1 -> GetLayer() < h2 -> GetLayer();
-      return h1 -> GetSection() < h2 -> GetSection();
-    }
 };
 
 class KBHitSortDirection {

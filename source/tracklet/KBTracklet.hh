@@ -72,7 +72,7 @@ class KBTracklet : public KBContainer
     virtual bool DoDrawOnDetectorPlane();
     virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
 
-  ClassDef(KBTracklet, 1)
+  ClassDef(KBTracklet, 2)
 };
 
 #endif

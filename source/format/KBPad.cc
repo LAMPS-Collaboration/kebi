@@ -164,12 +164,12 @@ Double_t *KBPad::GetBufferOut() { return fBufferOut; }
 void KBPad::AddNeighborPad(KBPad *pad) { fNeighborPadArray.push_back(pad); }
 vector<KBPad *> *KBPad::GetNeighborPadArray() { return &fNeighborPadArray; }
 
-void KBPad::AddHit(KBHit *hit) { fHitArray.push_back(hit); }
+void KBPad::AddHit(KBTpcHit *hit) { fHitArray.push_back(hit); }
 Int_t KBPad::GetNumHits() const { return fHitArray.size(); }
-KBHit *KBPad::GetHit(Int_t idx) { return fHitArray.at(idx); }
+KBTpcHit *KBPad::GetHit(Int_t idx) { return fHitArray.at(idx); }
 void KBPad::ClearHits() { fHitArray.clear(); }
 
-KBHit *KBPad::PullOutNextFreeHit()
+KBTpcHit *KBPad::PullOutNextFreeHit()
 {
   Int_t n = fHitArray.size();
   if (n == 0)
@@ -186,7 +186,7 @@ KBHit *KBPad::PullOutNextFreeHit()
   return nullptr;
 }
 
-void KBPad::PullOutHits(vector<KBHit *> *hits)
+void KBPad::PullOutHits(vector<KBTpcHit *> *hits)
 {
   Int_t n = fHitArray.size();
   if (n == 0)

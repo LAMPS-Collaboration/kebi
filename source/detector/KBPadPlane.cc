@@ -66,7 +66,7 @@ void KBPadPlane::SetHitArray(TClonesArray *hitArray)
   Int_t numHits = hitArray -> GetEntries();
   for (auto iHit = 0; iHit < numHits; ++iHit)
   {
-    auto hit = (KBHit *) hitArray -> At(iHit);
+    auto hit = (KBTpcHit *) hitArray -> At(iHit);
     auto padID = hit -> GetPadID();
     if (padID < 0)
       continue;
@@ -76,7 +76,7 @@ void KBPadPlane::SetHitArray(TClonesArray *hitArray)
   }
 }
 
-void KBPadPlane::AddHit(KBHit *hit)
+void KBPadPlane::AddHit(KBTpcHit *hit)
 {
   auto pad = GetPadFast(hit -> GetPadID());
   pad -> AddHit(hit);
@@ -170,7 +170,7 @@ void KBPadPlane::ResetHitMap()
   fFreePadIdx = 0;
 }
 
-KBHit *KBPadPlane::PullOutNextFreeHit()
+KBTpcHit *KBPadPlane::PullOutNextFreeHit()
 {
   if (fFreePadIdx == fChannelArray -> GetEntriesFast() - 1)
     return nullptr;
@@ -185,7 +185,7 @@ KBHit *KBPadPlane::PullOutNextFreeHit()
   return hit;
 }
 
-void KBPadPlane::PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neighborHits)
+void KBPadPlane::PullOutNeighborHits(vector<KBTpcHit*> *hits, vector<KBTpcHit*> *neighborHits)
 {
   for (auto hit : *hits) {
     auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
@@ -195,7 +195,7 @@ void KBPadPlane::PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neigh
   }
 }
 
-void KBPadPlane::PullOutNeighborHits(TVector2 p, Int_t range, vector<KBHit*> *neighborHits)
+void KBPadPlane::PullOutNeighborHits(TVector2 p, Int_t range, vector<KBTpcHit*> *neighborHits)
 {
   vector<KBPad *> neighborsUsed;
   vector<KBPad *> neighborsTemp;

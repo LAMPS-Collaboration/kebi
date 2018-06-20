@@ -50,6 +50,16 @@ void KBWPointCluster::Clear(Option_t *opt)
     fCov[i][j] = 0;
 }
 
+void KBWPointCluster::Copy(TObject &obj) const
+{
+  KBWPoint::Copy(obj);
+  auto wpc = (KBWPointCluster &) obj;
+
+  for (auto i = 0; i < 3; ++i)
+  for (auto j = 0; j < 3; ++j)
+    wpc.SetCov(i, j, fCov[i][j]);
+}
+
 void KBWPointCluster::Add(KBWPoint wp)
 {
   auto w = wp.w();
@@ -72,3 +82,59 @@ void KBWPointCluster::Add(KBWPoint wp)
 
   fW = ww;
 }
+
+void KBWPointCluster::SetCov(Double_t cov[][3])
+{
+  for (int i = 0; i < 3; ++i)
+  for (int j = 0; j < 3; ++j)
+    fCov[i][j] = cov[i][j];
+}
+
+void KBWPointCluster::SetCov(Int_t i, Int_t j, Double_t cov)
+{
+  fCov[i][j] = cov;
+}
+
+void KBWPointCluster::SetPosSigma(Double_t sigx, Double_t sigy, Double_t sigz)
+{
+  fCov[0][0] = sigx * sigx;
+  fCov[1][1] = sigy * sigy;
+  fCov[2][2] = sigz * sigz;
+}
+
+void KBWPointCluster::SetPosSigma(TVector3 sig)
+{
+  fCov[0][0] = sig.X() * sig.X();
+  fCov[1][1] = sig.Y() * sig.Y();
+  fCov[2][2] = sig.Z() * sig.Z();
+}
+
+TVector3 KBWPointCluster::GetPosSigma()
+{
+  return TVector3(sqrt(fCov[0][0]), sqrt(fCov[1][1]), sqrt(fCov[2][2]));
+}
+
+#ifdef ACTIVATE_EVE
+bool KBWPointCluster::DrawByDefault() { return false; }
+bool KBWPointCluster::IsEveSet() { return true; }
+
+TEveElement *KBWPointCluster::CreateEveElement()
+{
+  auto pointSet = new TEvePointSet("WPointCluster");
+  pointSet -> SetMarkerColor(kViolet);
+  pointSet -> SetMarkerSize(1);
+  pointSet -> SetMarkerStyle(20);
+
+  return pointSet;
+}
+
+void KBWPointCluster::SetEveElement(TEveElement *)
+{
+}
+
+void KBWPointCluster::AddToEveSet(TEveElement *eveSet)
+{
+  auto pointSet = (TEvePointSet *) eveSet;
+  pointSet -> SetNextPoint(fX, fY, fZ);
+}
+#endif

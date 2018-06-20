@@ -3,25 +3,23 @@
 
 #include "TVector3.h"
 
-#include "KBContainer.hh"
+#include "KBHit.hh"
 #include "KBTracklet.hh"
 
 #include <vector>
 #include <iostream>
 using namespace std;
 
-class KBVertex : public KBContainer
+class KBVertex : public KBHit
 {
   public:
     KBVertex();
-    virtual ~KBVertex() {}
+    virtual ~KBVertex() { Clear(); }
 
-    void Clear(Option_t *option = "");
+    virtual void Clear(Option_t *option = "");
+    virtual void Copy (TObject &object) const;
 
-    void SetPosition(TVector3 v) { fPosition = v; }
-    TVector3 GetPosition() const { return fPosition; }
-
-    void AddTrack(KBTracklet* hit);
+    void AddTrack(KBTracklet* track);
 
     vector<Int_t>       *GetTrackIDArray() { return &fTrackIDArray; }
     vector<KBTracklet*> *GetTrackArray()   { return &fTrackArray; }
@@ -32,13 +30,10 @@ class KBVertex : public KBContainer
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void SetEveElement(TEveElement *);
     virtual void AddToEveSet(TEveElement *eveSet);
 #endif
 
   private:
-    TVector3 fPosition;
-
     vector<Int_t>       fTrackIDArray;
     vector<KBTracklet*> fTrackArray; //!
 

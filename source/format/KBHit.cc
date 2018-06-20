@@ -10,125 +10,58 @@ ClassImp(KBHit)
 
 void KBHit::Clear(Option_t *)
 {
+  KBWPointCluster::Clear();
+
   fHitID = -1;
-  fPadID = -1;
   fTrackID = -1;
-
-  fPosition.SetXYZ(-999,-999,-999);
-  fPosSigma.SetXYZ(-999,-999,-999);
-
-  fSection = -999;
-  fRow = -999;
-  fLayer = -999;
-
-  fTb = -1;
-  fCharge = 0;
 
   fTrackCandArray.clear();
 }
 
 void KBHit::Print(Option_t *option) const
 {
-  if (TString(option) == "s") {
-    cout << "[KBHit] "
-         << setw(6) << fHitID
-         << setw(4) << fRow
-         << setw(4) << fLayer
-         << setw(12) << fTb
-         << setw(12) << fCharge << endl;
-    return;
-  }
-
-  cout << "[KBHit]" << endl;
-  cout << "  Hit-ID           : " << fHitID << endl;
-  cout << "  Pad-ID           : " << fPadID << endl;
-  cout << "  Track-ID         : " << fTrackID << endl;
-  cout << "  Position         : (" << fPosition.X() << ", " << fPosition.Y() << ", " << fPosition.Z() << ") " << endl;
-  cout << "  (tb, Charge)     : (" << fTb << ", " << fCharge << ")" << endl;
+  cout << "ID|XYZ|Charge: "
+    << setw(4)  << fHitID << " |"
+    << setw(4)  << fHitID << " |"
+    << setw(12) << fX
+    << setw(12) << fY
+    << setw(12) << fZ << " |"
+    << setw(12) << fW << endl;
 }
 
 void KBHit::Copy(TObject &obj) const
 {
-  TObject::Copy(obj);
+  KBWPointCluster::Copy(obj);
   auto hit = (KBHit &) obj;
 
   hit.SetHitID(fHitID);
-  hit.SetPadID(fPadID);
   hit.SetTrackID(fTrackID);
-
-  hit.SetPosition(fPosition);
-  hit.SetPosSigma(fPosSigma);
-
-  hit.SetSection(fSection);
-  hit.SetRow(fRow);
-  hit.SetLayer(fLayer);
-
-  hit.SetTb(fTb);
-  hit.SetCharge(fCharge);
-}
-
-TF1 *KBHit::GetPulseFunction(Option_t *)
-{
-  auto pulseGen = KBPulseGenerator::GetPulseGenerator();
-  auto f1 = pulseGen -> GetPulseFunction("pulse");
-  f1 -> SetParameters(fCharge, fTb);
-  return f1;
 }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
-void KBHit::SetPadID(Int_t id) { fPadID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
-
-void KBHit::SetPosition(TVector3 pos) { fPosition = pos; }
-void KBHit::SetPosSigma(TVector3 sig) { fPosSigma = sig; }
-
-void KBHit::SetX(Double_t x) { fPosition.SetX(x); }
-void KBHit::SetY(Double_t y) { fPosition.SetY(y); }
-void KBHit::SetZ(Double_t z) { fPosition.SetZ(z); }
-void KBHit::SetDX(Double_t dx) { fPosSigma.SetX(dx); }
-void KBHit::SetDY(Double_t dy) { fPosSigma.SetY(dy); }
-void KBHit::SetDZ(Double_t dz) { fPosSigma.SetZ(dz); }
-
-void KBHit::SetSection(Int_t section) { fSection = section; }
-void KBHit::SetRow(Int_t row) { fRow = row; }
-void KBHit::SetLayer(Int_t layer) { fLayer = layer; }
-
-void KBHit::SetTb(Double_t tb) { fTb = tb; }
-void KBHit::SetCharge(Double_t charge) { fCharge = charge; }
+void KBHit::SetX(Double_t x) { fX = x; }
+void KBHit::SetY(Double_t y) { fY = y; }
+void KBHit::SetZ(Double_t z) { fZ = z; }
+void KBHit::SetDX(Double_t dx) { fCov[0][0] = dx * dx; }
+void KBHit::SetDY(Double_t dy) { fCov[1][1] = dy * dy; }
+void KBHit::SetDZ(Double_t dz) { fCov[2][2] = dz * dz; }
+void KBHit::SetCharge(Double_t charge) { fW = charge; }
 
 void KBHit::AddHit(KBHit *hit)
 {
-  auto charge = hit -> GetCharge();
-  fPosition.SetX((fCharge*fPosition.X() + charge*hit->GetX()) / (fCharge + charge));
-  fPosition.SetY((fCharge*fPosition.Y() + charge*hit->GetY()) / (fCharge + charge));
-  fPosition.SetZ((fCharge*fPosition.Z() + charge*hit->GetZ()) / (fCharge + charge));
-  fCharge += charge;
-
-  //TODO: Update fPosSigma and add hit-ids
+  KBWPointCluster::Add((KBWPoint &) hit);
 }
 
-Int_t KBHit::GetHitID() const { return fHitID; }
-Int_t KBHit::GetPadID() const { return fPadID; }
+Int_t KBHit::GetHitID()   const { return fHitID; }
 Int_t KBHit::GetTrackID() const { return fTrackID; }
-
-TVector3 KBHit::GetPosition() const { return fPosition; }
-Double_t KBHit::GetX() const { return fPosition.X(); }
-Double_t KBHit::GetY() const { return fPosition.Y(); }
-Double_t KBHit::GetZ() const { return fPosition.Z(); }
-
-TVector3 KBHit::GetPosSigma() const { return fPosSigma; }
-Double_t KBHit::GetDX() const { return fPosSigma.X(); }
-Double_t KBHit::GetDY() const { return fPosSigma.Y(); }
-Double_t KBHit::GetDZ() const { return fPosSigma.Z(); }
-
-Int_t KBHit::GetSection() const { return fSection; }
-Int_t KBHit::GetRow() const { return fRow; }
-Int_t KBHit::GetLayer() const { return fLayer; }
-
-Double_t KBHit::GetTb() const { return fTb; }
-Double_t KBHit::GetCharge() const { return fCharge; }
-
-/////////////////////////////////////////////////////////////////////////////////
+Double_t KBHit::GetX()  const { return fX; }
+Double_t KBHit::GetY()  const { return fY; }
+Double_t KBHit::GetZ()  const { return fZ; }
+Double_t KBHit::GetDX() const { return sqrt(fCov[0][0]); }
+Double_t KBHit::GetDY() const { return sqrt(fCov[1][1]); }
+Double_t KBHit::GetDZ() const { return sqrt(fCov[2][2]); }
+Double_t KBHit::GetCharge() const { return fW; }
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }
 Int_t KBHit::GetNumTrackCands() { return fTrackCandArray.size(); }
@@ -145,8 +78,6 @@ void KBHit::RemoveTrackCand(Int_t trackID)
   }
   fTrackCandArray.push_back(-1);
 }
-
-/////////////////////////////////////////////////////////////////////////////////
 
 #ifdef ACTIVATE_EVE
 bool KBHit::DrawByDefault() { return true; }
@@ -169,6 +100,6 @@ void KBHit::SetEveElement(TEveElement *)
 void KBHit::AddToEveSet(TEveElement *eveSet)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fPosition.X(),fPosition.Y(),fPosition.Z());
+  pointSet -> SetNextPoint(fX, fY, fZ);
 }
 #endif

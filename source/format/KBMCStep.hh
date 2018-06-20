@@ -1,6 +1,7 @@
 #ifndef KBMCSTEP_HH
 #define KBMCSTEP_HH
 
+#include "TObject.h"
 #include "KBContainer.hh"
 
 #ifdef ACTIVATE_EVE
@@ -48,7 +49,7 @@ class KBMCStep : public KBContainer
     Double_t fTime;
     Double_t fEdep;
 
-  ClassDef(KBMCStep, 2)
+  ClassDef(KBMCStep, 3)
 };
 
 #endif

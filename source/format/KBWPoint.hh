@@ -1,12 +1,17 @@
 #ifndef KBWPOINT_HH
 #define KBWPOINT_HH
 
-#include "TObject.h"
+#include "KBContainer.hh"
 #include "TError.h"
+#include "TVector3.h"
+#ifdef ACTIVATE_EVE
+#include "TEveElement.h"
+#include "TEvePointSet.h"
+#endif
 
 /// position data with weight
 
-class KBWPoint : public TObject
+class KBWPoint : public KBContainer
 {
   public:
     KBWPoint();
@@ -14,8 +19,14 @@ class KBWPoint : public TObject
 
     virtual void Print(Option_t *option = "") const;
     virtual void Clear(Option_t *option = "");
+    virtual void Copy (TObject &object) const;
 
     void Set(Double_t x, Double_t y, Double_t z, Double_t w = 1);
+    void SetW(Double_t w);
+    void SetPosition(Double_t x, Double_t y, Double_t z);
+    void SetPosition(TVector3 pos);
+
+    TVector3 GetPosition() { return TVector3(fX, fY, fZ); }
 
     Double_t x() { return fX; }
     Double_t y() { return fY; }
@@ -54,6 +65,14 @@ class KBWPoint : public TObject
       }
       return 0.;
     }
+
+#ifdef ACTIVATE_EVE
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *element);
+    virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
   protected:
     Double_t fX;

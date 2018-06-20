@@ -39,11 +39,11 @@ class KBPadPlane : public KBDetectorPlane
     Double_t GetPlaneK();
 
     virtual void ResetHitMap();
-    void AddHit(KBHit *hit);
+    void AddHit(KBTpcHit *hit);
 
-    virtual KBHit *PullOutNextFreeHit();
-    void PullOutNeighborHits(vector<KBHit*> *hits, vector<KBHit*> *neighborHits);
-    void PullOutNeighborHits(TVector2 p, Int_t range, vector<KBHit*> *neighborHits);
+    virtual KBTpcHit *PullOutNextFreeHit();
+    void PullOutNeighborHits(vector<KBTpcHit*> *hits, vector<KBTpcHit*> *neighborHits);
+    void PullOutNeighborHits(TVector2 p, Int_t range, vector<KBTpcHit*> *neighborHits);
 
     void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);
     TObjArray *GetPadArray();

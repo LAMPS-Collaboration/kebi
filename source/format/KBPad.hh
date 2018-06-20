@@ -2,7 +2,7 @@
 #define KBPAD_HH
 
 #include "KBChannel.hh"
-#include "KBHit.hh"
+#include "KBTpcHit.hh"
 
 #include "TObject.h"
 #include "TH1D.h"
@@ -80,13 +80,13 @@ class KBPad : public KBChannel
     void AddNeighborPad(KBPad *pad);
     vector<KBPad *> *GetNeighborPadArray();
 
-    void AddHit(KBHit *hit);
+    void AddHit(KBTpcHit *hit);
     Int_t GetNumHits() const;
-    KBHit *GetHit(Int_t idx);
+    KBTpcHit *GetHit(Int_t idx);
 
     void ClearHits();
-    KBHit *PullOutNextFreeHit();
-    void PullOutHits(vector<KBHit *> *hits);
+    KBTpcHit *PullOutNextFreeHit();
+    void PullOutHits(vector<KBTpcHit *> *hits);
 
     bool IsGrabed() const;
     void Grab();
@@ -120,7 +120,7 @@ class KBPad : public KBChannel
     Double_t fBufferOut[512];
 
     vector<KBPad *> fNeighborPadArray; //!
-    vector<KBHit *> fHitArray; //!
+    vector<KBTpcHit *> fHitArray; //!
 
     bool fGrabed = false; //!
 
