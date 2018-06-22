@@ -66,7 +66,7 @@ Double_t KBMCStep::GetEdep()  const { return fEdep; }
 
 
 #ifdef ACTIVATE_EVE
-bool KBMCStep::DrawByDefault() { return true; }
+bool KBMCStep::DrawByDefault() { return false; }
 bool KBMCStep::IsEveSet() { return true; }
 
 TEveElement *KBMCStep::CreateEveElement()

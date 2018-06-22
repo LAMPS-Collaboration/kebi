@@ -189,7 +189,6 @@ bool KBRun::Init()
 
   if (fInputFileName.IsNull() == false) {
     kb_out << endl;
-    kb_print << "Input file : " << fInputFileName << endl;
     if (!CheckFileExistence(fInputFileName)) {
       kb_print << "given input file deos not exist!" << endl;
       return false;
@@ -201,10 +200,13 @@ bool KBRun::Init()
 
     fInputTree = new TChain(fInputTreeName);
     fInputTree -> AddFile(fInputFileName);
+    kb_print << "Input file : " << fInputFileName << endl;
 
     Int_t nInputs = fInputFileNameArray.size();
-    for (Int_t i = idxInput; i < nInputs; i++)
+    for (Int_t i = idxInput; i < nInputs; i++) {
       fInputTree -> AddFile(fInputFileNameArray[i]);
+      kb_print << "Input file : " << fInputFileNameArray[i] << endl;
+    }
 
     fNumEntries = fInputTree -> GetEntries();
     kb_info << fInputTree -> GetName() << " tree containing " << fInputTree -> GetEntries() << " entries." << endl;
@@ -669,21 +671,34 @@ void KBRun::RunEve(Long64_t eventID)
     fEveElementList.pop_back();
   }
 
+  TObjArray *eveBranchNames = fEveOption.Tokenize(":");
+  auto numSelectedBranches = eveBranchNames -> GetEntries();
+
+  if (numSelectedBranches != 0)
+    fNBranches = numSelectedBranches;
+
   for (Int_t iBranch = 0; iBranch < fNBranches; ++iBranch)
   {
-    TClonesArray *branch = (TClonesArray *) fBranchPtr[iBranch];
-    TObject *objSample = nullptr;
-
-    if (branch -> GetEntries() != 0) {
-      objSample = branch -> At(0);
-      if (objSample -> InheritsFrom("KBContainer") == false)
-        continue;
+    TClonesArray *branch = nullptr;
+    if (numSelectedBranches != 0) {
+      TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
+      branch = (TClonesArray *) fBranchPtrMap[branchName];
     }
     else
+      branch = (TClonesArray *) fBranchPtr[iBranch];
+
+    if (branch -> GetEntries() == 0)
       continue;
 
-    kb_info << "Drawing " << objSample -> ClassName() << endl;
+    auto objSample = branch -> At(0);
+    if (objSample -> InheritsFrom("KBContainer") == false)
+      continue;
+
     KBContainer *eveObj = (KBContainer *) objSample;
+    if (numSelectedBranches == 0 && !eveObj -> DrawByDefault())
+      continue;
+
+    kb_info << "Drawing " << eveObj -> ClassName() << endl;
     if (eveObj -> IsEveSet()) {
       TEveElement *eveSet = eveObj -> CreateEveElement();
       Int_t nObjects = branch -> GetEntries();
@@ -792,6 +807,8 @@ void KBRun::RunEve(Long64_t eventID)
 
   gStyle -> SetPalette(kBird); // @todo palette is changed when drawing top node because of TGeoMan(?)
 }
+
+void KBRun::SetEve(TString option) { fEveOption = option; }
 #endif
 
 void KBRun::Terminate(TObject *obj, TString message)
@@ -886,6 +903,7 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
     auto hit = pad -> GetHit(iHit);
     auto f1 = hit -> GetPulseFunction();
+    f1 -> SetNpx(500);
     f1 -> Draw("samel");
   }
 

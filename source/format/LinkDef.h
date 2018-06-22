@@ -26,4 +26,6 @@
 
 #pragma link C++ class KBVector3+;
 
+#pragma link C++ class KBMCRecoMatching+;
+
 #endif

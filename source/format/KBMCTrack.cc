@@ -1,4 +1,8 @@
 #include "KBMCTrack.hh"
+#include "TVector3.h"
+#ifdef ACTIVATE_EVE
+#include "TEveLine.h"
+#endif
 
 ClassImp(KBMCTrack)
 
@@ -48,3 +52,31 @@ TVector3 KBMCTrack::GetMomentum() const { return TVector3(fPX, fPY, fPZ); }
 
 void KBMCTrack::AddStep(KBMCStep *hit) { fStepArray.push_back(hit); }
 vector<KBMCStep *> *KBMCTrack::GetStepArray() { return &fStepArray; }
+
+#ifdef ACTIVATE_EVE
+bool KBMCTrack::DrawByDefault() { return true; }
+bool KBMCTrack::IsEveSet() { return false; }
+
+TEveElement *KBMCTrack::CreateEveElement()
+{
+  auto element = new TEveLine();
+
+  return element;
+}
+
+void KBMCTrack::SetEveElement(TEveElement *element)
+{
+  auto line = (TEveLine *) element;
+  line -> SetElementName("MCTrack");
+  line -> Reset();
+
+  line -> SetLineColor(kBlue);
+  line -> SetNextPoint(0,0,0);
+  auto pos = 1000*TVector3(fPX, fPY, fPZ).Unit();
+  line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
+}
+
+void KBMCTrack::AddToEveSet(TEveElement *)
+{
+}
+#endif

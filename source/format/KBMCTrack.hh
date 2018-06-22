@@ -7,7 +7,11 @@
 #include <vector>
 using namespace std;
 
-class KBMCTrack : public TObject
+#ifdef ACTIVATE_EVE
+#include "TEveElement.h"
+#endif
+
+class KBMCTrack : public KBContainer
 {
   public:
     KBMCTrack();
@@ -34,6 +38,14 @@ class KBMCTrack : public TObject
 
     void AddStep(KBMCStep *hit);
     vector<KBMCStep *> *GetStepArray();
+
+#ifdef ACTIVATE_EVE
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *);
+    virtual void AddToEveSet(TEveElement *);
+#endif
 
   private:
     Int_t fTrackID;

@@ -68,7 +68,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     TString GetDataPath();
 
     void SetInputFile(TString fileName, TString treeName = "data"); ///< Set input file and tree name
-    void AddInput(TString fileName); ///< Add friend to input file
+    void AddInput(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
     TChain *GetInputChain();
 
@@ -123,6 +123,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 
 #ifdef ACTIVATE_EVE
     void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
+    void SetEve(TString option);
 #endif
 
     static void ClickSelectedPadPlane();
@@ -183,6 +184,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 #ifdef ACTIVATE_EVE
     TEveEventManager *fEveEventManager = nullptr;
     std::vector<TEveElement *> fEveElementList;
+    TString fEveOption;
 #endif
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
