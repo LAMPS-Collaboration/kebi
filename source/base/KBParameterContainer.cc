@@ -168,8 +168,12 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
       AddFile(val, parName);
     }
     else if (parType == "b" || parType == "bool" || parType == "Bool_t") {
-      Bool_t val;
-      ss >> val;
+      TString sval;
+      ss >> sval;
+      sval.ToLower();
+      Bool_t val = false;
+      if (sval == "true" || sval == "1" || sval == "ktrue")
+        val = true;
       SetPar(parName, val);
     }
     else if (parType == "i" || parType == "int" || parType == "Int_t") {
