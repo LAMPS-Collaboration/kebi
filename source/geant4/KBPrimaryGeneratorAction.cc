@@ -4,6 +4,7 @@
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
+#include <G4strstreambuf.hh>
 
 KBPrimaryGeneratorAction::KBPrimaryGeneratorAction()
 {
@@ -28,6 +29,7 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   G4double vx, vy, vz, px, py, pz;
 
   fEventGenerator -> ReadNextEvent(vx, vy, vz);
+
   fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
 
   while (fEventGenerator -> ReadNextTrack(pdg, px, py, pz))
@@ -37,10 +39,12 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
     G4ThreeVector momentum(px,py,pz);
     fParticleGun -> SetParticleMomentumDirection(momentum.unit());
-    if (fReadMomentumOrEnergy)
-      fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
-    else
-      fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
+
+    G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+    if (fReadMomentumOrEnergy) fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
+    else                       fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
+    G4cout.rdbuf(oldBuffer);
+
     fParticleGun -> GeneratePrimaryVertex(anEvent);
   }
 }

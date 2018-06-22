@@ -24,6 +24,15 @@ KBG4RunManager::~KBG4RunManager()
   delete fMessenger;
 }
 
+void KBG4RunManager::Initialize()
+{
+  SetOutputFile(fPar->GetParString("G4OutputFile").Data());
+  SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+
+  G4RunManager::Initialize();
+}
+
+
 void KBG4RunManager::SetGeneratorFile(G4String value)
 {
   auto pga = (KBPrimaryGeneratorAction *) userPrimaryGeneratorAction;

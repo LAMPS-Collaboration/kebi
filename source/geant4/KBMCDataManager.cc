@@ -58,6 +58,7 @@ void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double
 
 void KBMCDataManager::NextEvent()
 { 
+  G4cout << "End of Event-" << fTree -> GetEntries() << G4endl;
   fTree -> Fill();
 
   fTrackArray -> Clear();

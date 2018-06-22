@@ -17,6 +17,8 @@ class KBG4RunManager : public G4RunManager, public KBParameterContainerHolder
     KBG4RunManager(const char *name);
     virtual ~KBG4RunManager();
 
+    virtual void Initialize();
+
     void SetGeneratorFile(G4String value);
     void SetOutputFile(G4String value);
     void AddParFile(G4String value);
