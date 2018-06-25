@@ -32,7 +32,12 @@ void KBTracklet::SetEveElement(TEveElement *element)
   line -> SetElementName("Tracklet");
   line -> Reset();
 
-  line -> SetLineColor(kRed);
+  line -> SetElementName(Form("Tracklet%d",fTrackID));
+
+  if (fParentID > -1)
+    line -> SetLineColor(kPink);
+  else
+    line -> SetLineColor(kGray);
 
   auto dr = 0.02;
   if (dr < 5./TrackLength())
@@ -47,6 +52,7 @@ void KBTracklet::SetEveElement(TEveElement *element)
 void KBTracklet::AddToEveSet(TEveElement *)
 {
 }
+#endif
 
 bool KBTracklet::DoDrawOnDetectorPlane()
 {
@@ -62,11 +68,10 @@ TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axi
 
   fTrajectoryOnPlane -> Set(0);
 
-  for (Double_t r = 0.; r < 1.0; r += 0.02) {
+  for (Double_t r = 0.; r < 1.001; r += 0.02) {
     auto pos = KBVector3(ExtrapolateByRatio(r),fReferenceAxis);
     fTrajectoryOnPlane -> SetPoint(fTrajectoryOnPlane->GetN(), pos.At(axis1), pos.At(axis2));
   }
 
   return fTrajectoryOnPlane;
 }
-#endif
