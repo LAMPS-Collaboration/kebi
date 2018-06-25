@@ -26,10 +26,10 @@ KBG4RunManager::~KBG4RunManager()
 
 void KBG4RunManager::Initialize()
 {
+  G4RunManager::Initialize();
+
   SetOutputFile(fPar->GetParString("G4OutputFile").Data());
   SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
-
-  G4RunManager::Initialize();
 }
 
 
