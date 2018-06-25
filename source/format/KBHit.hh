@@ -23,8 +23,9 @@ class KBHit : public KBWPointCluster
     vector<Int_t> fTrackCandArray;  //!
 
   public :
-    KBHit() { Clear(); };
-    virtual ~KBHit() {};
+    KBHit() { Clear(); }
+    KBHit(Double_t x, Double_t y, Double_t z, Double_t q) { Clear(); Set(x,y,z,q); }
+    virtual ~KBHit() {}
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;

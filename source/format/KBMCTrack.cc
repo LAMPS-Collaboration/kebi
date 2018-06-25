@@ -67,10 +67,29 @@ TEveElement *KBMCTrack::CreateEveElement()
 void KBMCTrack::SetEveElement(TEveElement *element)
 {
   auto line = (TEveLine *) element;
-  line -> SetElementName("MCTrack");
   line -> Reset();
 
-  line -> SetLineColor(kBlue);
+  if (fPDG == 211 || fPDG == -211) {
+    line -> SetElementName(Form("MCTrack%d_Pion",fTrackID));
+    line -> SetLineColor(kBlue-4);
+  }
+  if (fPDG == 2212) {
+    line -> SetElementName(Form("MCTrack%d_Proton",fTrackID));
+    line -> SetLineColor(kRed-7);
+  }
+  else if (fPDG == 2112) {
+    line -> SetElementName(Form("MCTrack%d_Neutron",fTrackID));
+    line -> SetLineColor(kGray);
+  }
+  else if (fPDG == 11 || fPDG == -11) {
+    line -> SetElementName(Form("MCTrack%d_Electron",fTrackID));
+    line -> SetLineColor(kGreen);
+  }
+  else {
+    line -> SetElementName(Form("MCTrack%d",fTrackID));
+    line -> SetLineColor(kMagenta+2);
+  }
+
   line -> SetNextPoint(0,0,0);
   auto pos = 1000*TVector3(fPX, fPY, fPZ).Unit();
   line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
