@@ -782,7 +782,14 @@ void KBRun::RunEve(Long64_t eventID)
 
     for (Int_t iBranch = 0; iBranch < fNBranches; ++iBranch)
     {
-      TClonesArray *branch = (TClonesArray *) fBranchPtr[iBranch];
+      TClonesArray *branch = nullptr;
+      if (numSelectedBranches != 0) {
+        TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
+        branch = (TClonesArray *) fBranchPtrMap[branchName];
+      }
+      else
+        branch = (TClonesArray *) fBranchPtr[iBranch];
+
       TObject *objSample = nullptr;
 
       Int_t numTracklets = branch -> GetEntries();

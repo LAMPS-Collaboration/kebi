@@ -69,6 +69,8 @@ class KBParameterContainer : public TObjArray
     Double_t GetParDouble(TString name); ///< Get Double_t type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     TString  GetParString(TString name); ///< Get TString  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
 
+    bool CheckPar(TString name);
+
     void ReplaceEnvironmentVariable(TString &val);
 
   private:

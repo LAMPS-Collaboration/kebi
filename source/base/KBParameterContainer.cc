@@ -353,3 +353,10 @@ TString KBParameterContainer::GetParString(TString name)
 
   return ((TNamed *) obj) -> GetTitle();
 }
+
+bool KBParameterContainer::CheckPar(TString name)
+{
+  if (FindObject(name) == nullptr)
+    return false;
+  return true;
+}
