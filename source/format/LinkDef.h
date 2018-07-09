@@ -22,7 +22,6 @@
 #pragma link C++ class KBPad+;
 
 #pragma link C++ class KBMCStep+;
-#pragma link C++ class KBMCTrack+;
 
 #pragma link C++ class KBVector3+;
 
