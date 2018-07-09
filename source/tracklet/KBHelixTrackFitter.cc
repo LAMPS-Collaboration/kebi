@@ -281,13 +281,8 @@ KBHelixTrackFitter::Fit(KBTracklet *tracklet)
       alphaMax = alphaLast;
   }
 
-  if (track -> IsPositiveChargeParticle()) {
-    track -> SetAlphaHead(alphaMin);
-    track -> SetAlphaTail(alphaMax);
-  } else {
-    track -> SetAlphaHead(alphaMax);
-    track -> SetAlphaTail(alphaMin);
-  }
+  track -> SetAlphaHead(alphaMax);
+  track -> SetAlphaTail(alphaMin);
 
   expA  /= weightSum;
   expA2 /= weightSum;

@@ -257,10 +257,24 @@ void KBHelixTrack::DetermineParticleCharge(TVector3 vertex)
   Double_t alpha;
   Double_t lVertex = ExtrapolateToPointAlpha(vertex, q, alpha);
 
-  if (std::abs(lVertex-lTail) > std::abs(lVertex - lHead))
-    fIsPositiveChargeParticle = false;
-  else
-    fIsPositiveChargeParticle = true;
+  if (std::abs(lVertex - lTail) > std::abs(lVertex - lHead)) {
+    auto a = fAlphaTail;
+    fAlphaTail = fAlphaHead;
+    fAlphaHead = a;
+  }
+
+  if (fAlphaTail < fAlphaHead) {
+    if (fAlphaSlope > 0)
+      fIsPositiveChargeParticle = false;
+    else
+      fIsPositiveChargeParticle = true;
+  }
+  else {
+    if (fAlphaSlope > 0)
+      fIsPositiveChargeParticle = true;
+    else
+      fIsPositiveChargeParticle = false;
+  }
 }
 
 void KBHelixTrack::SetIsPositiveChargeParticle(Bool_t val)  { fIsPositiveChargeParticle = val; }
@@ -470,28 +484,25 @@ TVector3 KBHelixTrack::PositionByAlpha(Double_t alpha) const
 
 TVector3 KBHelixTrack::Direction(Double_t alpha) const
 {
-  Double_t alphaTemp = alpha;
-  Double_t klength = KLengthInPeriod()/4.;
+  KBVector3 posCenter(fReferenceAxis,fIHelixCenter,fJHelixCenter,0);
 
-  Double_t alphaMid = (fAlphaHead + fAlphaTail) * 0.5;
-  if (alpha > alphaMid) 
-    alphaTemp += TMath::Pi()/2.;
-  else {
-    alphaTemp -= TMath::Pi()/2.;
-    klength *= -1;
-  }
+  Double_t alphaPointer = alpha;
 
-  KBVector3 center(fReferenceAxis);
-  center.SetIJK(fIHelixCenter, fJHelixCenter, 0);
+  if (fAlphaTail < fAlphaHead) alphaPointer += TMath::Pi()/2.;
+  else                         alphaPointer -= TMath::Pi()/2.;
 
-  KBVector3 direction = KBVector3(PositionByAlpha(alphaTemp), fReferenceAxis) - center;
-
+  KBVector3 posPointer(PositionByAlpha(alphaPointer), fReferenceAxis);
+  KBVector3 direction = posPointer - posCenter;
+  auto directionz = direction.Z();
   direction.SetK(0);
-  direction.SetMag(0.5*TMath::Pi()*fHelixRadius);
-  direction.SetK(klength);
-  direction = KBVector3(direction.Unit(),fReferenceAxis);
+  direction.SetMag(2*TMath::Pi()*fHelixRadius);
 
-  return direction.GetXYZ();
+  if (directionz > 0) direction.SetK(+abs(KLengthInPeriod()));
+  else                direction.SetK(-abs(KLengthInPeriod()));
+
+  auto unitDirection = direction.GetXYZ().Unit();
+
+  return unitDirection;
 }
 
 Double_t 

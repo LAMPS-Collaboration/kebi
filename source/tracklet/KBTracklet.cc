@@ -43,7 +43,7 @@ void KBTracklet::SetEveElement(TEveElement *element)
   if (dr < 5./TrackLength())
     dr = 5./TrackLength();
 
-  for (Double_t r = 0.; r < 1.0; r += dr) {
+  for (Double_t r = 0.; r < 1.0001; r += dr) {
     auto pos = ExtrapolateByRatio(r);
     line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
   }
