@@ -39,11 +39,11 @@ void KBMCDataManager::SetDetector(Int_t detectorID)
   fStepArrayList -> Add(stepArray);
 }
 
-void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz)
+void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
 {
   fTrackID = trackID;
   KBMCTrack *track = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
-  track -> SetMCTrack(trackID, parentID, pdg, px, py, pz);
+  track -> SetMCTrack(trackID, parentID, pdg, px, py, pz, vx, vy, vz);
 }
 
 void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
