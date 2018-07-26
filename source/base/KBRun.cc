@@ -348,7 +348,7 @@ void KBRun::CreateParameterFile(TString name)
     name = name + ".par";
   fPar -> SaveAs(name);
 
-  Terminate(this);
+  if (fAutoTerminate) Terminate(this);
 }
 
 bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
@@ -521,7 +521,7 @@ void KBRun::Run()
 
   CheckOut();
 
-  Terminate(this);
+  if (fAutoTerminate) Terminate(this);
 }
 
 void KBRun::EndOfEvent() { fSignalEndOfEvent = true; }
@@ -817,6 +817,8 @@ void KBRun::RunEve(Long64_t eventID)
 
 void KBRun::SetEve(TString option) { fEveOption = option; }
 #endif
+
+void KBRun::SetAutoTermination(Bool_t val) { fAutoTerminate = val; }
 
 void KBRun::Terminate(TObject *obj, TString message)
 {

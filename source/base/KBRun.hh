@@ -129,6 +129,7 @@ class KBRun : public KBTask, public KBParameterContainerHolder
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
 
+    void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
   private:
@@ -195,6 +196,8 @@ class KBRun : public KBTask, public KBParameterContainerHolder
 
     TString fLogFileName;
     TString fHash;
+
+    Bool_t fAutoTerminate = true;
 
   private:
     static KBRun *fInstance;
