@@ -50,7 +50,7 @@ void KBHit::SetCharge(Double_t charge) { fW = charge; }
 
 void KBHit::AddHit(KBHit *hit)
 {
-  KBWPointCluster::Add((KBWPoint &) hit);
+  KBWPointCluster::Add((KBWPoint &) *hit);
 }
 
 Int_t KBHit::GetHitID()   const { return fHitID; }
