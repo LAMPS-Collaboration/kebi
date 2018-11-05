@@ -18,7 +18,7 @@ class KBTracklet : public KBContainer
     Int_t fTrackID = -1;
     Int_t fParentID = -1;  ///< Vertex ID
 
-    KBHitList *fHitList = nullptr;  //!
+    KBHitList fHitList;  //!
 
     KBVector3::Axis fReferenceAxis = KBVector3::kZ; // B field axis
 
@@ -28,14 +28,15 @@ class KBTracklet : public KBContainer
     KBTracklet() {}
     virtual ~KBTracklet() {}
 
+    virtual void PropagateMC();
+
     void SetTrackID(Int_t val) { fTrackID = val; }
     Int_t GetTrackID() const { return fTrackID; }
 
     void SetParentID(Int_t val) { fParentID = val; }
     Int_t GetParentID() const { return fParentID; }
 
-    void SetHitList(KBHitList *list) { fHitList = list; }
-    KBHitList *GetHitList() { return fHitList; }
+    KBHitList *GetHitList() { return &fHitList; }
 
     void SetReferenceAxis(KBVector3::Axis axis) { fReferenceAxis = axis; }
     KBVector3::Axis GetReferenceAxis() const { return fReferenceAxis; }

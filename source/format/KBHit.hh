@@ -3,6 +3,7 @@
 
 #include "KBWPointCluster.hh"
 #include "KBContainer.hh"
+#include "KBHitList.hh"
 
 #ifdef ACTIVATE_EVE
 #include "TEveElement.h"
@@ -20,6 +21,8 @@ class KBHit : public KBWPointCluster
     Int_t fHitID = -1;
     Int_t fTrackID = -1;
 
+    KBHitList fHitList;
+
     vector<Int_t> fTrackCandArray;  //!
 
   public :
@@ -30,6 +33,10 @@ class KBHit : public KBWPointCluster
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
     virtual void Copy (TObject &object) const;
+
+    virtual void PropagateMC();
+
+    Bool_t IsCluster();
 
     void SetHitID(Int_t id);
     void SetTrackID(Int_t id);
@@ -42,6 +49,9 @@ class KBHit : public KBWPointCluster
     void SetCharge(Double_t charge);
 
     virtual void AddHit(KBHit *hit);
+    virtual void RemoveHit(KBHit *hit);
+
+    KBHitList *GetHitList() { return &fHitList; }
 
     Int_t GetHitID() const;
     Int_t GetTrackID() const;
@@ -66,7 +76,7 @@ class KBHit : public KBWPointCluster
     virtual void AddToEveSet(TEveElement *eveSet);
 #endif
 
-  ClassDef(KBHit, 1)
+  ClassDef(KBHit, 2)
 };
 
 class KBHitSortDirection {

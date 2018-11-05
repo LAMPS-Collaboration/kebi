@@ -21,12 +21,14 @@ class KBPad : public KBChannel
     virtual void Print(Option_t *option = "") const;
     virtual void Draw(Option_t *option = "");
 
+    void DrawMCID(Option_t *option = "mc");
+
     virtual Bool_t IsSortable() const;
     virtual Int_t Compare(const TObject *obj) const;
 
 
-    void SetPad(KBPad* pad);
-    void CopyPadData(KBPad* pad);
+    void SetPad(KBPad* padRef); // copy from padRef
+    void CopyPadData(KBPad* padRef); // copy from padRef
 
     void SetActive(bool active = true);
     bool IsActive() const;
@@ -67,7 +69,7 @@ class KBPad : public KBChannel
     Int_t GetRow() const;
     Int_t GetLayer() const;
 
-    void FillBufferIn(Int_t idx, Double_t val);
+    void FillBufferIn(Int_t idx, Double_t val, Int_t trackID = -1);
     void SetBufferIn(Double_t *buffer);
     Double_t *GetBufferIn();
 
@@ -92,8 +94,20 @@ class KBPad : public KBChannel
     void Grab();
     void LetGo();
 
+    /// option (default is "")
+    /// p : Add Pad[ID] to main title
+    /// a : Add AsAd,AGET,Channel-IDs to main title
+    /// mc: Draw MCID and line at corresponding tb
+    /// o : Draw output buffer
+    /// r : Draw raw buffer
+    /// tb: Draw input buffer (not written by default)
     void SetHist(TH1D *hist, Option_t *option = "");
     TH1D *GetHist(Option_t *option = "");
+
+    Int_t             GetNumMCIDs()      { return fMCIDArray.size(); }
+    vector<Int_t>    *GetMCIDArray()     { return &fMCIDArray; }
+    vector<Double_t> *GetMCWeightArray() { return &fMCWeightArray; }
+    vector<Double_t> *GetMCTbArray()     { return &fMCTbArray; }
 
   private:
     bool fActive = false; //!
@@ -121,6 +135,10 @@ class KBPad : public KBChannel
 
     vector<KBPad *> fNeighborPadArray; //!
     vector<KBTpcHit *> fHitArray; //!
+
+    vector<Int_t>    fMCIDArray;      ///< MC Track-ID
+    vector<Double_t> fMCWeightArray;  ///< Sum of weight of corresponding Track-ID
+    vector<Double_t> fMCTbArray;      ///< Tb of corresponding Track-ID
 
     bool fGrabed = false; //!
 

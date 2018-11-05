@@ -3,6 +3,7 @@
 #ifdef ACTIVATE_EVE
 #include "TEvePointSet.h"
 #endif
+#include "TMath.h"
 #include <iostream>
 #include <iomanip>
 
@@ -16,17 +17,23 @@ void KBHit::Clear(Option_t *)
   fTrackID = -1;
 
   fTrackCandArray.clear();
+
+  fHitList.Clear();
 }
 
 void KBHit::Print(Option_t *option) const
 {
-  cout << "ID|XYZ|Charge: "
-    << setw(4)  << fHitID << " |"
-    << setw(4)  << fHitID << " |"
+  cout << "HTM-ID|XYZ|Charge: "
+    << setw(4)  << fHitID
+    << setw(4)  << fTrackID
+    << setw(4)  << fMCID << " |"
     << setw(12) << fX
     << setw(12) << fY
     << setw(12) << fZ << " |"
     << setw(12) << fW << endl;
+
+  if (TString(option).Index("r")>=0)
+    fHitList.Print("r");
 }
 
 void KBHit::Copy(TObject &obj) const
@@ -36,7 +43,93 @@ void KBHit::Copy(TObject &obj) const
 
   hit.SetHitID(fHitID);
   hit.SetTrackID(fTrackID);
+
+  auto numHits = fHitList.GetNumHits();
+  for (auto i = 0; i < numHits; ++i)
+    hit.AddHit(fHitList.GetHit(i));
 }
+
+void KBHit::PropagateMC()
+{
+  if (!IsCluster())
+    return;
+
+  auto hitArray = fHitList.GetHitArray();
+  vector<Int_t> mcIDs;
+  vector<Int_t> counts;
+
+  for (auto component : *hitArray) {
+    auto mcIDCoponent = component -> GetMCID();
+
+    Int_t numMCIDs = mcIDs.size();
+    Int_t idxFound = -1;
+    for (Int_t idx = 0; idx < numMCIDs; ++idx) {
+      if (mcIDs[idx] == mcIDCoponent) {
+        idxFound = idx;
+        break;
+      }
+    }
+    if (idxFound == -1) {
+      mcIDs.push_back(mcIDCoponent);
+      counts.push_back(1);
+    }
+    else {
+      counts[idxFound] = counts[idxFound] + 1;
+    }
+  }
+
+  auto maxCount = 0;
+  for (auto count : counts)
+    if (count > maxCount)
+      maxCount = count;
+
+  vector<Int_t> iIDCandidates;
+  for (auto iID = 0; iID < Int_t(counts.size()); ++iID)
+    if (counts[iID] == maxCount)
+      iIDCandidates.push_back(iID);
+
+
+  //TODO @todo
+  if (iIDCandidates.size() == 1)
+  {
+    auto iID = iIDCandidates[0];
+    auto mcIDFinal = mcIDs[iID];
+
+    auto errorFinal = 0.;
+    for (auto component : *hitArray)
+      if (component -> GetMCID() == mcIDFinal)
+        errorFinal += component -> GetMCError();
+
+    errorFinal = errorFinal/counts[iID];
+    Double_t purity = Double_t(counts[iID])/hitArray->size();
+    SetMCID(mcIDFinal, errorFinal, purity);
+  }
+  else
+  {
+    auto mcIDFinal = 0;
+    auto errorFinal = DBL_MAX;
+    Double_t purity = -1;
+
+    for (auto iID : iIDCandidates) {
+      auto mcIDCand = mcIDs[iID];
+
+      auto errorCand = 0.;
+      for (auto component : *hitArray)
+        if (component -> GetMCID() == mcIDCand)
+          errorCand += component -> GetMCError();
+      errorCand = errorCand/counts[iID];
+
+      if (errorCand < errorFinal) {
+        mcIDFinal = mcIDCand;
+        errorFinal = errorCand;
+        purity = Double_t(counts[iID])/hitArray->size();
+      }
+    }
+    SetMCID(mcIDFinal, errorFinal, purity);
+  }
+}
+
+Bool_t KBHit::IsCluster() { return fHitList.GetNumHits() == 0 ? false : true; }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
@@ -51,6 +144,13 @@ void KBHit::SetCharge(Double_t charge) { fW = charge; }
 void KBHit::AddHit(KBHit *hit)
 {
   KBWPointCluster::Add((KBWPoint &) *hit);
+  fHitList.AddHit(hit);
+}
+
+void KBHit::RemoveHit(KBHit *hit)
+{
+  KBWPointCluster::Remove((KBWPoint &) *hit);
+  fHitList.RemoveHit(hit);
 }
 
 Int_t KBHit::GetHitID()   const { return fHitID; }

@@ -5,14 +5,91 @@
 
 ClassImp(KBTracklet)
 
+void KBTracklet::PropagateMC()
+{
+  auto hitArray = fHitList.GetHitArray();
+  vector<Int_t> mcIDs;
+  vector<Int_t> counts;
+
+  for (auto component : *hitArray) {
+    auto mcIDCoponent = component -> GetMCID();
+
+    Int_t numMCIDs = mcIDs.size();
+    Int_t idxFound = -1;
+    for (Int_t idx = 0; idx < numMCIDs; ++idx) {
+      if (mcIDs[idx] == mcIDCoponent) {
+        idxFound = idx;
+        break;
+      }
+    }
+    if (idxFound == -1) {
+      mcIDs.push_back(mcIDCoponent);
+      counts.push_back(1);
+    }
+    else {
+      counts[idxFound] = counts[idxFound] + 1;
+    }
+  }
+
+  auto maxCount = 0;
+  for (auto count : counts)
+    if (count > maxCount)
+      maxCount = count;
+
+  vector<Int_t> iIDCandidates;
+  for (auto iID = 0; iID < Int_t(counts.size()); ++iID)
+    if (counts[iID] == maxCount)
+      iIDCandidates.push_back(iID);
+
+
+  //TODO @todo
+  if (iIDCandidates.size() == 1)
+  {
+    auto iID = iIDCandidates[0];
+    auto mcIDFinal = mcIDs[iID];
+
+    auto errorFinal = 0.;
+    for (auto component : *hitArray)
+      if (component -> GetMCID() == mcIDFinal)
+        errorFinal += component -> GetMCError();
+
+    errorFinal = errorFinal/counts[iID];
+    Double_t purity = Double_t(counts[iID])/hitArray->size();
+    SetMCID(mcIDFinal, errorFinal, purity);
+  }
+  else
+  {
+    auto mcIDFinal = 0;
+    auto errorFinal = DBL_MAX;
+    Double_t purity = -1;
+
+    for (auto iID : iIDCandidates) {
+      auto mcIDCand = mcIDs[iID];
+
+      auto errorCand = 0.;
+      for (auto component : *hitArray)
+        if (component -> GetMCID() == mcIDCand)
+          errorCand += component -> GetMCError();
+      errorCand = errorCand/counts[iID];
+
+      if (errorCand < errorFinal) {
+        mcIDFinal = mcIDCand;
+        errorFinal = errorCand;
+        purity = Double_t(counts[iID])/hitArray->size();
+      }
+    }
+    SetMCID(mcIDFinal, errorFinal, purity);
+  }
+}
+
 void KBTracklet::AddHit(KBHit *hit)
 {
-  fHitList -> AddHit(hit);
+  fHitList.AddHit(hit);
 }
 
 void KBTracklet::RemoveHit(KBHit *hit)
 {
-  fHitList -> RemoveHit(hit);
+  fHitList.RemoveHit(hit);
 }
 
 #ifdef ACTIVATE_EVE

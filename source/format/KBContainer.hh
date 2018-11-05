@@ -8,9 +8,17 @@
 
 class KBContainer : public TObject
 {
+  protected:
+    Int_t fMCID = -1;
+    Double_t fMCError = -1;
+    Double_t fMCPurity = -1;
+
   public:
     KBContainer();
     virtual ~KBContainer();
+
+    virtual void Clear(Option_t *option = "");
+    virtual void Copy (TObject &object) const;
 
 #ifdef ACTIVATE_EVE
     virtual bool DrawByDefault()              { return false; } ///< return true if to be displayed on eve.
@@ -20,7 +28,13 @@ class KBContainer : public TObject
     virtual void AddToEveSet(TEveElement *)   {} ///< Add TEveElement to this eve-set
 #endif
 
-  ClassDef(KBContainer, 1)
+    virtual void SetMCID(Int_t id, Double_t error = 0, Double_t purity = 0) { fMCID = id; fMCError = error; fMCPurity = purity; }
+    Int_t GetMCID() const { return fMCID; }
+    Int_t GetMCError() const { return fMCError; } /// mm
+
+    virtual void PropagateMC() {};
+
+  ClassDef(KBContainer, 2)
 };
 
 #endif

@@ -213,7 +213,11 @@ void KBHelixTrack::FinalizeHits()
   for (auto hit : fMainHits) {
     fMainHitIDs.push_back(hit->GetHitID());
     hit -> SetTrackID(fTrackID);
+
+    fHitList.AddHit(hit); //@todo XXX
   }
+
+  PropagateMC(); //@todo XXX
 }
 
 void KBHelixTrack::SetGenfitID(Int_t idx)   { fGenfitID = idx; }

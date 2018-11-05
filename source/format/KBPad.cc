@@ -1,3 +1,6 @@
+#include "TLine.h"
+#include "TText.h"
+
 #include "KBPad.hh"
 
 #include <iomanip>
@@ -13,6 +16,10 @@ void KBPad::Clear(Option_t *)
   memset(fBufferIn, 0, sizeof(Double_t)*512);
   memset(fBufferRaw, 0, sizeof(Short_t)*512);
   memset(fBufferOut, 0, sizeof(Double_t)*512);
+
+  fMCIDArray.clear();
+  fMCWeightArray.clear();
+  fMCTbArray.clear();
 
   ClearHits();
 
@@ -32,10 +39,46 @@ void KBPad::Print(Option_t *option) const
   cout << "  (Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
   cout << "  Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
   cout << "  Position              : (" << fI << ", " << fJ << ") " << endl;
+  Int_t numMCID = fMCIDArray.size();
+  cout << "  MC-ID (co. Tb [mm]),  : ";
+  for (auto iMC = 0; iMC < numMCID; ++iMC)
+    cout << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
+  cout << endl;
 }
 
 void KBPad::Draw(Option_t *option)
 {
+  cout << "[KBPad::Draw(option)] is replaced to GetHist(option)->Draw(); DrawMCID(option);" << endl;
+  GetHist(option) -> Draw();
+  DrawMCID(option);
+}
+
+void KBPad::DrawMCID(Option_t *option)
+{
+  TString optionString = TString(option);
+  optionString.ToLower();
+
+  Int_t numMCIDs = fMCIDArray.size();
+  if (numMCIDs != 0 && optionString.Index("mc") >= 0)
+  {
+    auto wgsum = 0.;
+    for (auto iMC = 0; iMC < numMCIDs; ++iMC)
+      wgsum += fMCWeightArray.at(iMC);
+    auto line = new TLine(); line -> SetLineColor(kBlue-4);
+    auto text = new TText(); text -> SetTextAlign(12); text -> SetTextFont(122);
+    for (auto iMC = 0; iMC < numMCIDs; ++iMC) {
+      auto id = fMCIDArray.at(iMC);
+      auto tb = fMCTbArray.at(iMC);
+      auto wg = fMCWeightArray.at(iMC);
+
+      Int_t lw = 10*wg/wgsum;
+      text -> DrawText(tb+1,4095*(0.9-iMC*0.1),Form("%d (%.2f | %d)",id,tb,lw));
+
+      if (lw < 1) lw = 1;
+      line -> SetLineWidth(lw);
+      line -> DrawLine(tb,0,tb,4095*(0.9-iMC*0.1));
+    }
+  }
 }
 
 Bool_t KBPad::IsSortable() const { return true; }
@@ -60,30 +103,40 @@ Int_t KBPad::Compare(const TObject *obj) const
   }
 }
 
-void KBPad::SetPad(KBPad *pad)
+void KBPad::SetPad(KBPad *padRef)
 {
-  fID = pad -> GetPadID();
-  fPlaneID = pad -> GetPlaneID();
-  fAsAdID = pad -> GetAsAdID();
-  fAGETID = pad -> GetAGETID();
-  fChannelID = pad -> GetChannelID();
+  fID = padRef -> GetPadID();
+  fPlaneID = padRef -> GetPlaneID();
+  fAsAdID = padRef -> GetAsAdID();
+  fAGETID = padRef -> GetAGETID();
+  fChannelID = padRef -> GetChannelID();
 
-  fI = pad -> GetI();
-  fJ = pad -> GetJ();
+  fI = padRef -> GetI();
+  fJ = padRef -> GetJ();
 
-  fSection = pad -> GetSection();
-  fRow = pad -> GetRow();
-  fLayer = pad -> GetLayer();
+  fSection = padRef -> GetSection();
+  fRow = padRef -> GetRow();
+  fLayer = padRef -> GetLayer();
 
-  fBaseLine = pad -> GetBaseLine();
-  fNoiseAmp = pad -> GetNoiseAmplitude();
+  fBaseLine = padRef -> GetBaseLine();
+  fNoiseAmp = padRef -> GetNoiseAmplitude();
 }
 
-void KBPad::CopyPadData(KBPad* pad)
+void KBPad::CopyPadData(KBPad* padRef)
 {
-  SetBufferIn(pad->GetBufferIn());
-  SetBufferRaw(pad->GetBufferRaw());
-  SetBufferOut(pad->GetBufferOut());
+  SetBufferIn(padRef->GetBufferIn());
+  SetBufferRaw(padRef->GetBufferRaw());
+  SetBufferOut(padRef->GetBufferOut());
+
+  auto is = padRef -> GetMCIDArray();
+  auto ws = padRef -> GetMCWeightArray();
+  auto ts = padRef -> GetMCTbArray();
+  Int_t numMCID = is -> size();
+  for (auto iMC = 0; iMC < numMCID; ++iMC) {
+    fMCIDArray.push_back(is->at(iMC));
+    fMCWeightArray.push_back(ws->at(iMC));
+    fMCTbArray.push_back(ts->at(iMC));
+  }
 }
 
 void KBPad::SetActive(bool active) { fActive = active; }
@@ -151,7 +204,37 @@ Int_t KBPad::GetSection() const { return fSection; }
 Int_t KBPad::GetRow() const { return fRow; }
 Int_t KBPad::GetLayer() const { return fLayer; } 
 
-void KBPad::FillBufferIn(Int_t idx, Double_t val) { fActive = true; fBufferIn[idx] += val; }
+void KBPad::FillBufferIn(Int_t tbin, Double_t val, Int_t trackID)
+{
+  fActive = true;
+  fBufferIn[tbin] += val;
+  if (trackID != -1) {
+    Int_t numTracks = fMCIDArray.size();
+    Int_t idxFound = -1;
+    for (Int_t idx = 0; idx < numTracks; ++idx) {
+      if (fMCIDArray[idx] == trackID) {
+        idxFound = idx;
+        break;
+      }
+    }
+    if (idxFound == -1) {
+      fMCIDArray.push_back(trackID);
+      fMCWeightArray.push_back(val);
+      fMCTbArray.push_back(tbin);
+    }
+    else {
+      auto w = fMCWeightArray[idxFound];
+      auto tb = fMCTbArray[idxFound];
+
+      auto ww = w + val;
+      fMCWeightArray[idxFound] = ww;
+
+      tb = (w*tb + val*tbin)/ww;
+      fMCTbArray[idxFound] = tb;
+    }
+  }
+}
+
 void KBPad::SetBufferIn(Double_t *buffer) { memcpy(fBufferIn, buffer, sizeof(Double_t)*512); }
 Double_t *KBPad::GetBufferIn() { return fBufferIn; }
 
@@ -211,6 +294,7 @@ TH1D *KBPad::GetHist(Option_t *option)
 
 void KBPad::SetHist(TH1D *hist, Option_t *option)
 {
+  cout << "[KBPad::SetHist/GetHist] option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw)]" << endl;
   hist -> Reset();
 
   TString optionString = TString(option);
@@ -226,9 +310,10 @@ void KBPad::SetHist(TH1D *hist, Option_t *option)
   if (optionString.Index("p") >= 0) {
     name = name + namePad;
     firstNameOn = true;
-  } if (firstNameOn) name = name + "_";
+  }
 
   if (optionString.Index("a") >= 0) {
+    if (firstNameOn) name = name + "_";
     name = name + nameID;
     firstNameOn = true;
   }
@@ -249,5 +334,6 @@ void KBPad::SetHist(TH1D *hist, Option_t *option)
       hist -> SetBinContent(tb+1, fBufferIn[tb]);
   }
 
-  hist -> GetYaxis() -> SetRangeUser(0,4095);
+  Double_t maxHeight = 4095;
+  hist -> GetYaxis() -> SetRangeUser(0,maxHeight);
 }
