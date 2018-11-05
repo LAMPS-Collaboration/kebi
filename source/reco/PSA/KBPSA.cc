@@ -32,4 +32,5 @@ void KBPSA::SetParameters(KBParameterContainer *par)
   auto nTbs = par -> GetParInt("nTbs");
   fTbEnd = fTbStart + nTbs - 1;
   fThreshold = par -> GetParDouble("ADCThreshold");
+  fDynamicRange = par -> GetParDouble("dynamicRange");
 }

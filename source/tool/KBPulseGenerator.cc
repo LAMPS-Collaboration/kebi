@@ -38,6 +38,7 @@ void KBPulseGenerator::Initialize(TString fileName)
 
   fileName = kebi + "/input/" + fileName;
 
+  cout << "[KBPulseGenerator::Initialize] Using " << fileName << endl;
   ifstream file(fileName);
   string line;
 
@@ -65,6 +66,8 @@ void KBPulseGenerator::Initialize(TString fileName)
 
     fPulseData[iData].Init(line);
     Double_t value = fPulseData[iData].fValue;
+    if (iData == 0)
+      fThresholdRatio = value;
 
     if (value > max) {
       max = value;
@@ -72,7 +75,7 @@ void KBPulseGenerator::Initialize(TString fileName)
     }
   }
 
-  Double_t c = 1/max;
+  Double_t c = 1./max;
   Double_t valuePre = 0, valueCur = 0;
   fTbAtThreshold = 0;
   fTbAtTail = 0;
@@ -106,7 +109,6 @@ KBPulseGenerator::Pulse(Double_t x, Double_t amp, Double_t tb0)
     return 0;
 
   Int_t tbInStep = tb / fStepSize;
-
   if (tbInStep > fNumDataPoints - 2) 
     return 0;
 
@@ -167,6 +169,7 @@ KBPulseGenerator::Print()
   cout << " == Timebucket at peak : " << fTbAtMax << endl; 
   cout << " == Timebucket difference from threshold to peak : " 
        << fTbAtMax - fTbAtThreshold << endl; 
+  cout << " == Number of degree of freedom : " << fNDFTbs << endl;
 }
 
 void

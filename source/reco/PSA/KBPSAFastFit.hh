@@ -22,19 +22,18 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
      * Find hits from the pad, pass hits to hitArray
      * Process is done as below:
      *  1. FindPeak()
-     *  2. FitPulse()
-     *     - LSFitPulse()
-     *  3. LSFitPulse()
+     *  2. FitPulse(), LSFitPulse()
+     *  3. TestPulse()
      */
     virtual void AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray);
 
-    /**
+    /** 1.
      * Find the first peak from adc time-bucket starting from input tbCurrent
      * tbCurrent and tbStart becomes time-bucket of the peak and starting point
      */
     Bool_t FindPeak(Double_t *adc, Int_t &tbCurrent, Int_t &tbStart);
 
-    /**
+    /** 2.
      * Perform least square fitting with the the pulse around tbStart ~ tbPeak.
      * This process is Iteration based process using method LSFitPuse();
      */
@@ -42,19 +41,22 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
                     Double_t &tbHit, Double_t &amplitude, 
                     Double_t &squareSum, Int_t &ndf);
 
-    /**
+    /** 2.1
      * Perform least square fitting with the fixed parameter tbStart and ndf.
      * This process is analytic. The amplitude is choosen imidiatly.
      */
-    void LSFitPulse(Double_t *buffer, Double_t tbStart, 
-                    Int_t ndf, Double_t &chi2, Double_t &amplitude);
+    void LSFitPulse(Double_t *buffer, Double_t tbStart, Int_t ndf,
+                    Double_t &chi2, Double_t &amplitude);
 
-    /**
-     * Test pulse with previous pulse and currently found pulse.
-     * Returns true is current pulse is distinguished to be real pulse
+    /** 3.
+     * Test pulse with the previous pulse
+     * If the pulse is not distinguishable from the previous pulse, return false.
+     * If the pulse is distinguishable, subtract pulse distribution from adc,
+     * and return true
      */
-    Bool_t TestPulse(Double_t *adc, Double_t tbHitPre, Double_t amplitudePre, 
-                     Double_t tbHit, Double_t amplitude);
+    Bool_t TestPulse(Double_t *adc,
+                     Double_t tbHitPre, Double_t amplitudePre,
+                     Double_t tbHit,    Double_t amplitude);
 
   private:
     Double_t fThresholdOneTbStep;
@@ -88,7 +90,7 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
      *
      * for beta, see fBetaCut.
      */
-    Double_t fAlpha = 20.;
+    Double_t fAlpha = 50.;
 
     /**
      * The default cut for beta. If beta becomes lower than fBetaCut
@@ -103,7 +105,7 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
      * This cut is redefined as effective threhold for each pulses 
      * betaCut = fBetaCut * peak^2
      */
-    Double_t fBetaCut = 1.e-3; 
+    Double_t fBetaCut = 1.e-8;
 
   ClassDef(KBPSAFastFit, 1)
 };

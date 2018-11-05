@@ -27,8 +27,8 @@ KBPSAFastFit::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
   memcpy(&adc, buffer, sizeof(Double_t)*512);
 
   // Found peak information
-  Int_t tbCurrent = fTbStart;
-  Int_t tbStart;
+  Int_t tbPointer = fTbStart; // start of tb for analysis = 0
+  Int_t tbStartOfPulse;
 
   // Fitted hit information
   Double_t tbHit;
@@ -40,13 +40,14 @@ KBPSAFastFit::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
   Double_t tbHitPre = fTbStart;
   Double_t amplitudePre = 0;
 
-  while (FindPeak(adc, tbCurrent, tbStart)) 
-  {
-    if (tbStart > fTbStartCut - 1)
+  while (FindPeak(adc, /*get->*/tbPointer, tbStartOfPulse)) {
+    if (tbStartOfPulse > fTbStartCut - 1) // if the pulse distribution is too short
       break;
 
-    if (FitPulse(adc, tbStart, tbCurrent, tbHit, amplitude, squareSum, ndf) == false)
+    if (FitPulse(adc, tbStartOfPulse, tbPointer, /*get->*/tbHit, amplitude, squareSum, ndf) == false)
       continue;
+
+    // Pulse is found!
 
     if (TestPulse(adc, tbHitPre, amplitudePre, tbHit, amplitude)) 
     {
@@ -54,49 +55,48 @@ KBPSAFastFit::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
 
       tbHitPre = tbHit;
       amplitudePre = amplitude;
-
-      tbCurrent = Int_t(tbHit) + 9;
+      tbPointer = Int_t(tbHit) + 9;
     }
   }
 }
 
 Bool_t
 KBPSAFastFit::FindPeak(Double_t *adc, 
-                          Int_t &tbCurrent, 
-                          Int_t &tbStart)
+                          Int_t &tbPointer,
+                          Int_t &tbStartOfPulse)
 {
   Int_t countAscending      = 0;
   Int_t countAscendingBelow = 0;
 
-  for (; tbCurrent < fTbEnd; tbCurrent++)
+  for (; tbPointer < fTbEnd; tbPointer++)
   {
-    Double_t diff = adc[tbCurrent] - adc[tbCurrent - 1];
+    Double_t diff = adc[tbPointer] - adc[tbPointer - 1];
 
     // If adc difference of step is above threshold
     if (diff > fThresholdOneTbStep) 
     {
-      if (adc[tbCurrent] > fThreshold) countAscending++;
+      if (adc[tbPointer] > fThreshold) countAscending++;
       else countAscendingBelow++;
     }
     else 
     {
       // If acended step is below 5, 
       // or negative pulse is bigger than the found pulse, continue
-      if (countAscending < fNumAscending || ((countAscendingBelow >= countAscending) && (-adc[tbCurrent - 1 - countAscending - countAscendingBelow] > adc[tbCurrent - 1]))) 
+      if (countAscending < fNumAscending || ((countAscendingBelow >= countAscending) && (-adc[tbPointer - 1 - countAscending - countAscendingBelow] > adc[tbPointer - 1])))
       {
         countAscending = 0;
         countAscendingBelow = 0;
         continue;
       }
 
-      tbCurrent -= 1;
-      if (adc[tbCurrent] < fThreshold)
+      tbPointer -= 1;
+      if (adc[tbPointer] < fThreshold)
         continue;
 
       // Peak is found!
-      tbStart = tbCurrent - countAscending;
-      while (adc[tbStart] < adc[tbCurrent] * 0.05)
-        tbStart++;
+      tbStartOfPulse = tbPointer - countAscending;
+      while (adc[tbStartOfPulse] < adc[tbPointer] * 0.05)
+        tbStartOfPulse++;
 
       return true;
     }
@@ -107,7 +107,7 @@ KBPSAFastFit::FindPeak(Double_t *adc,
 
 Bool_t
 KBPSAFastFit::FitPulse(Double_t *adc, 
-                          Int_t tbStart,
+                          Int_t tbStartOfPulse,
                           Int_t tbPeak,
                        Double_t &tbHit, 
                        Double_t &amplitude,
@@ -116,9 +116,10 @@ KBPSAFastFit::FitPulse(Double_t *adc,
 {
   Double_t adcPeak = adc[tbPeak];
 
-  if (adcPeak > 3500) // if peak value is larger than 3500(mostly saturated)
+  // if peak value is larger than fDynamicRange, the pulse is saturated
+  if (adcPeak > fDynamicRange)
   {
-    ndf = tbPeak - tbStart;
+    ndf = tbPeak - tbStartOfPulse;
     if (ndf > fNDFTbs) ndf = fNDFTbs;
   }
 
@@ -131,7 +132,7 @@ KBPSAFastFit::FitPulse(Double_t *adc,
   Double_t beta = 0;    // -(lsCur-lsPre)/(tbCur-tbPre)/ndf.
   Double_t dTb = - 0.1; // Time-bucket step to next fit
 
-  Double_t tbPre = tbStart + 1; // Pulse starting time-bucket of previous fit
+  Double_t tbPre = tbStartOfPulse + 1; // Pulse starting time-bucket of previous fit
   Double_t tbCur = tbPre + dTb; // Pulse starting time-bucket of current fit
 
   LSFitPulse(adc, tbPre, ndf, lsPre, amplitude);
@@ -152,20 +153,19 @@ KBPSAFastFit::FitPulse(Double_t *adc,
 
     tbCur = tbPre + dTb;
     if (tbCur < 0 || tbCur > fTbStartCut)
-    {
       return false;
-    }
 
     LSFitPulse(adc, tbCur, ndf, lsCur, amplitude);
     beta = -(lsCur - lsPre) / (tbCur - tbPre) / ndf;
 
     numIteration++;
 
-    if (abs(beta) < betaCut)
-    {
+    if (abs(beta) < betaCut) {
+      // break at second true flag of doubleCheckFlag
+      // >> break if the fit is good enough at two times check
       if (doubleCheckFlag == true)
         break;
-      else
+      else // first true flag of doubleCheckFlag
         doubleCheckFlag = true;
     }
     else
@@ -175,11 +175,11 @@ KBPSAFastFit::FitPulse(Double_t *adc,
       break;
   }
 
-  if (beta > 0) {
+  if (beta > 0) { // pre-fit is better
     tbHit = tbPre;
     squareSum = lsPre;
   }
-  else {
+  else { // current-fit is better
     tbHit = tbCur;
     squareSum = lsCur;
   }
@@ -188,16 +188,20 @@ KBPSAFastFit::FitPulse(Double_t *adc,
 }
 
 void 
-KBPSAFastFit::LSFitPulse(Double_t *buffer, Double_t tbStart, Int_t ndf, Double_t &chi2, Double_t &amplitude)
+KBPSAFastFit::LSFitPulse(Double_t *buffer,
+                         Double_t tbStartOfPulse,
+                         Int_t    ndf,
+                         Double_t &chi2,
+                         Double_t &amplitude)
 {
   Double_t refy = 0;
   Double_t ref2 = 0;
 
   for (Int_t iTbPulse = 0; iTbPulse < ndf; iTbPulse++) {
-    Int_t tb = tbStart + iTbPulse;
+    Int_t tb = tbStartOfPulse + iTbPulse;
     Double_t y = buffer[tb];
 
-    Double_t ref = Pulse(tb + 0.5, 1, tbStart);
+    Double_t ref = Pulse(tb + 0.5, 1, tbStartOfPulse);
     refy += ref * y;
     ref2 += ref * ref;
   }
@@ -212,9 +216,9 @@ KBPSAFastFit::LSFitPulse(Double_t *buffer, Double_t tbStart, Int_t ndf, Double_t
 
   chi2 = 0;
   for (Int_t iTbPulse = 0; iTbPulse < ndf; iTbPulse++) {
-    Int_t tb = tbStart + iTbPulse;
+    Int_t tb = tbStartOfPulse + iTbPulse;
     Double_t val = buffer[tb];
-    Double_t ref = Pulse(tb + 0.5, amplitude, tbStart);
+    Double_t ref = Pulse(tb + 0.5, amplitude, tbStartOfPulse);
     chi2 += (val - ref) * (val - ref);
   }
 }

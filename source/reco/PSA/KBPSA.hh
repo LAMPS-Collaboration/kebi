@@ -24,6 +24,7 @@ class KBPSA
     Int_t fTbStart = 0;
     Int_t fTbEnd = 512;
     Double_t fThreshold = 100;
+    Double_t fDynamicRange = 4000;
 
   ClassDef(KBPSA, 1)
 };

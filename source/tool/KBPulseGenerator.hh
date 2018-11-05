@@ -68,7 +68,7 @@ class KBPulseGenerator
     Double_t fStepSize;
 
     /** Ratio height compare to peak height where pulse starts to rise **/
-    Double_t fThresholdRatio = 0.05;
+    Double_t fThresholdRatio;// = 0.05;
 
     /** Number of the pulse function(TF1*) created by this class */
     Int_t fNumF1 = 0;
