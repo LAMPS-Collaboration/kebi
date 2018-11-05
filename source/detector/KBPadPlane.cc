@@ -82,7 +82,7 @@ void KBPadPlane::AddHit(KBTpcHit *hit)
   pad -> AddHit(hit);
 }
 
-void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val)
+void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val, Int_t trackID)
 {
   Int_t id = FindPadID(i, j);
   if (id < 0)
@@ -90,7 +90,7 @@ void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val)
 
   KBPad *pad = (KBPad *) fChannelArray -> At(id);
   if (pad != nullptr)
-    pad -> FillBufferIn(tb, val);
+    pad -> FillBufferIn(tb, val, trackID);
 }
 
 void KBPadPlane::FillDataToHist(Option_t *option)

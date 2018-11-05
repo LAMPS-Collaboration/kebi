@@ -3,6 +3,7 @@
 #include "KBChannelHit.hh"
 #include "KBTpcHit.hh"
 
+#include <cmath>
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -57,6 +58,11 @@ void KBPSATask::Exec(Option_t*)
     vector<KBChannelHit> hitArray;
     fPSA -> AnalyzeChannel(bufferOut, &hitArray);
 
+    auto idArray = pad -> GetMCIDArray();
+    auto tbArray = pad -> GetMCTbArray();
+
+    //if (hitArray.size() == 1 && pad -> GetNumMCIDs() == 1) //XXX
+    //if (pad -> GetNumMCIDs() == 1) //XXX
     for (auto channelHit : hitArray) {
 
       ///@todo build pad plane dependent code
@@ -80,7 +86,20 @@ void KBPSATask::Exec(Option_t*)
       hit -> SetSection(pad -> GetSection());
       hit -> SetRow(pad -> GetRow());
       hit -> SetLayer(pad -> GetLayer());
-      //hit -> Change();
+
+      Int_t atMC = 0;
+      Double_t dist = 100.;
+      Int_t numMCs = idArray -> size();
+      for (Int_t iMC = 0; iMC < numMCs; ++iMC) {
+        Double_t dtb = hit -> GetTb() - tbArray -> at(iMC);
+        if (abs(dtb) < abs(dist)) {
+          dist = dtb;
+          atMC = iMC;
+        }
+      }
+      if (dist < 10) //XXX
+        hit -> SetMCID(idArray -> at(atMC), dist*fTbTime*fDriftVelocity);
+        //hit -> SetMCID(idArray -> at(atMC), dist);
 
       idx++;
     }
