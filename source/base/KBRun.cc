@@ -911,10 +911,13 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
 
   for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
     auto hit = pad -> GetHit(iHit);
+    hit -> Print();
     auto f1 = hit -> GetPulseFunction();
     f1 -> SetNpx(500);
     f1 -> Draw("samel");
   }
+
+  pad -> DrawMCID("mc");
 
   fCvsChannelBuffer -> Modified();
   fCvsChannelBuffer -> Update();
