@@ -26,6 +26,7 @@ class KBWPointCluster : public KBWPoint
     virtual void Copy (TObject &object) const;
 
     void Add(KBWPoint wp);
+    void Remove(KBWPoint wp);
 
     void SetCov(Double_t cov[][3]);
     void SetCov(Int_t i, Int_t j, Double_t cov);

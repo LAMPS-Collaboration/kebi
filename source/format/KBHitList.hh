@@ -2,9 +2,11 @@
 #define KBHITLIST_HH
 
 #include "TObject.h"
-#include "KBHit.hh"
 #include <vector>
+#include <iomanip>
 using namespace std;
+
+class KBHit;
 
 class KBHitList : public TObject
 {
@@ -13,12 +15,16 @@ class KBHitList : public TObject
     virtual ~KBHitList() {}
 
     virtual void Clear(Option_t *option = "");
+    virtual void Print(Option_t *option = "") const;
 
-    void AddHit(KBHit* hit);
+    void AddHit(KBHit *hit);
     void RemoveHit(KBHit *hit);
 
     vector<KBHit*> *GetHitArray();
     vector<Int_t> *GetHitIDArray();
+
+    Int_t GetNumHits() const;
+    KBHit *GetHit(Int_t idx) const;
 
   private:
     vector<KBHit*> fHitArray; //!

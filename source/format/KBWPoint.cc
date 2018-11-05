@@ -42,7 +42,7 @@ void KBWPoint::Clear(Option_t *)
 
 void KBWPoint::Copy(TObject &obj) const
 {
-  TObject::Copy(obj);
+  KBContainer::Copy(obj);
   auto wp = (KBWPoint &) obj;
 
   wp.Set(fX, fY, fZ, fW);

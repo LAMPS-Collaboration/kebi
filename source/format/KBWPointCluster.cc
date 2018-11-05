@@ -62,11 +62,11 @@ void KBWPointCluster::Copy(TObject &obj) const
 
 void KBWPointCluster::Add(KBWPoint wp)
 {
-  auto w = wp.w();
-  auto ww = fW + w;
+  auto wi = wp.w();
+  auto ww = fW + wi;
 
   for (int i = 0; i < 3; ++i)
-    operator[](i) = (fW*operator[](i) + w*wp[i])/ww;
+    operator[](i) = (fW*operator[](i) + wi*wp[i])/ww;
 
   if (fW == 0) {
     for (int i = 0; i < 3; ++i)
@@ -77,7 +77,30 @@ void KBWPointCluster::Add(KBWPoint wp)
   else {
     for (int i = 0; i < 3; ++i)
     for (int j = 0; j < 3; ++j)
-      fCov[i][j] = fW*fCov[i][j]/ww + w*(operator[](i)-wp[i])*(operator[](j)-wp[j])/fW;
+      fCov[i][j] = fW*fCov[i][j]/ww + wi*(operator[](i)-wp[i])*(operator[](j)-wp[j])/fW;
+  }
+
+  fW = ww;
+}
+
+void KBWPointCluster::Remove(KBWPoint wp)
+{
+  auto wi = -wp.w();
+  auto ww = fW + wi;
+
+  for (int i = 0; i < 3; ++i)
+    operator[](i) = (fW*operator[](i) + wi*wp[i])/ww;
+
+  if (fW == 0) {
+    for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      fCov[i][j] = 0;
+  }
+
+  else {
+    for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      fCov[i][j] = fW*fCov[i][j]/ww + wi*(operator[](i)-wp[i])*(operator[](j)-wp[j])/fW;
   }
 
   fW = ww;

@@ -28,15 +28,15 @@ class KBWPoint : public KBContainer
 
     TVector3 GetPosition() { return TVector3(fX, fY, fZ); }
 
-    Double_t x() { return fX; }
-    Double_t y() { return fY; }
-    Double_t z() { return fZ; }
-    Double_t w() { return fW; }
+    Double_t x() const { return fX; }
+    Double_t y() const { return fY; }
+    Double_t z() const { return fZ; }
+    Double_t w() const { return fW; }
 
-    Double_t X() { return fX; }
-    Double_t Y() { return fY; }
-    Double_t Z() { return fZ; }
-    Double_t W() { return fW; }
+    Double_t X() const { return fX; }
+    Double_t Y() const { return fY; }
+    Double_t Z() const { return fZ; }
+    Double_t W() const { return fW; }
 
     inline Double_t & operator[](int i) {
       switch(i) {
