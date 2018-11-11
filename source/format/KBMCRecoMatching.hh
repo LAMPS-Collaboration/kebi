@@ -3,6 +3,8 @@
 
 #include "TObject.h"
 #include "TVector3.h"
+#include <vector>
+using namespace std;
 
 class KBMCRecoMatching : public TObject
 {
@@ -14,27 +16,51 @@ class KBMCRecoMatching : public TObject
     virtual void Print(Option_t *option = "") const;
     virtual void Copy (TObject &object) const;
 
+    /**
+     * KBMCRecoMatching::Status
+     * - kNotFound: only MC is set
+     * - kFake: only Reco is set
+     * - kFound: both MC and Reco is set
+     */
+
     enum Status { kNotFound, kMatched, kFake };
-    void SetIsMatched();
-    void SetIsNotFound();
-    void SetIsFake();
-    void SetStatus(Status val);
 
-    bool IsMatched();  ///< MC and Reco tracks are matched
-    bool IsNotFound(); ///< Only MCID is set. Not found in reconstruction
-    bool IsFake();     ///< Only RecoID is set. Fake track
-    Status GetStatus();
+    void SetIsMatched()         { fStatus = kMatched; }
+    void SetIsNotFound()        { fStatus = kNotFound; }
+    void SetIsFake()            { fStatus = kFake; }
+    void SetStatus(Status stat) { fStatus = stat; }
 
-    void Set(Int_t mcid, TVector3 mcp, Int_t recoid, TVector3 recop);
-    void SetMCID(Int_t val);
-    void SetMCMomentum(TVector3 p);
-    void SetRecoID(Int_t val);
-    void SetRecoMomentum(TVector3 p);
+    bool IsMatched()   const { return fStatus == kMatched  ? true : false; }
+    bool IsNotFound()  const { return fStatus == kNotFound ? true : false; }
+    bool IsFake()      const { return fStatus == kFake     ? true : false; }
+    Status GetStatus() const { return fStatus; }
 
-       Int_t GetMCID();
-    TVector3 GetMCMomentum();
-       Int_t GetRecoID();
-    TVector3 GetRecoMomentum();
+    /** */
+
+    void SetMCID(Int_t id)           { fMCID = id; }
+    void SetMCMomentum(TVector3 p)   { fMCMomentum = p; }
+    void SetRecoID(Int_t id)         { fRecoID = id; }
+    void SetRecoMomentum(TVector3 p) { fRecoMomentum = p; }
+
+    void Set    (Int_t mcid, TVector3 mcp, Int_t recoid, TVector3 recop);
+    void SetMC  (Int_t id, TVector3 p);
+    void SetReco(Int_t id, TVector3 p);
+
+       Int_t GetMCID()         const { return fMCID; }
+    TVector3 GetMCMomentum()   const { return fMCMomentum; }
+       Int_t GetRecoID()       const { return fRecoID; }
+    TVector3 GetRecoMomentum() const { return fRecoMomentum; }
+
+    /**
+     * If reco candidate exist, one can add candidate by AddRecoCand(id, p)
+     */
+
+    void AddRecoCand(Int_t id, TVector3 p);
+    void SetRecoCand(Int_t idx, Int_t id, TVector3 p);
+
+    Int_t GetNumRecoCand() const { return fRecoIDCand.size(); }
+    Int_t GetRecoIDCand(Int_t idx) const { return fRecoIDCand.at(idx); }
+    TVector3 GetRecoMomentumCand(Int_t idx) const { return fRecoMomentumCand.at(idx); }
 
   private:
     Status fStatus; ///< Matching status
@@ -45,7 +71,10 @@ class KBMCRecoMatching : public TObject
        Int_t fRecoID;        ///< position in array of KBTrack 
     TVector3 fRecoMomentum;  ///< Reconstructed momentum
 
-  ClassDef(KBMCRecoMatching, 1)
+    vector<Int_t>    fRecoIDCand;        ///< candidate reco ID
+    vector<TVector3> fRecoMomentumCand;  ///< candidate reco momentum
+
+  ClassDef(KBMCRecoMatching, 2)
 };
 
 #endif
