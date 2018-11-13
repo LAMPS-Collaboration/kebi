@@ -1,5 +1,6 @@
 #include "TLine.h"
 #include "TText.h"
+#include "TF1.h"
 
 #include "KBPad.hh"
 
@@ -51,6 +52,7 @@ void KBPad::Draw(Option_t *option)
   cout << "[KBPad::Draw(option)] is replaced to GetHist(option)->Draw(); DrawMCID(option);" << endl;
   GetHist(option) -> Draw();
   DrawMCID(option);
+  DrawHit(option);
 }
 
 void KBPad::DrawMCID(Option_t *option)
@@ -77,6 +79,22 @@ void KBPad::DrawMCID(Option_t *option)
       if (lw < 1) lw = 1;
       line -> SetLineWidth(lw);
       line -> DrawLine(tb,0,tb,4095*(0.9-iMC*0.1));
+    }
+  }
+}
+
+void KBPad::DrawHit(Option_t *option)
+{
+  TString optionString = TString(option);
+  optionString.ToLower();
+
+  Int_t numHits = fHitArray.size();
+  if (numHits != 0 && optionString.Index("h") >= 0)
+  {
+    for (auto hit : fHitArray) {
+      auto pulse = hit -> GetPulseFunction();
+      pulse -> SetNpx(500);
+      pulse -> Draw("samel");
     }
   }
 }
@@ -329,7 +347,7 @@ void KBPad::SetHist(TH1D *hist, Option_t *option)
   } else if (optionString.Index("r") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
       hist -> SetBinContent(tb+1, fBufferRaw[tb]);
-  } else if (optionString.Index("tb") >= 0) {
+  } else if (optionString.Index("i") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
       hist -> SetBinContent(tb+1, fBufferIn[tb]);
   }

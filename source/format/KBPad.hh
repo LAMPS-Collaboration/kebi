@@ -19,9 +19,19 @@ class KBPad : public KBChannel
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "") const;
-    virtual void Draw(Option_t *option = "");
+
+    /// option (default is "")
+    /// * p : Add Pad[ID] to main title
+    /// * a : Add AsAd,AGET,Channel-IDs to main title
+    /// * mc: Draw MCID and line at corresponding tb
+    /// * o : Draw output buffer
+    /// * r : Draw raw buffer
+    /// * i : Draw input buffer (not written by default)
+    /// * h : Draw hit
+    virtual void Draw(Option_t *option = "mcoh");
 
     void DrawMCID(Option_t *option = "mc");
+    void DrawHit(Option_t *option = "h");
 
     virtual Bool_t IsSortable() const;
     virtual Int_t Compare(const TObject *obj) const;
@@ -95,13 +105,14 @@ class KBPad : public KBChannel
     void LetGo();
 
     /// option (default is "")
-    /// p : Add Pad[ID] to main title
-    /// a : Add AsAd,AGET,Channel-IDs to main title
-    /// mc: Draw MCID and line at corresponding tb
-    /// o : Draw output buffer
-    /// r : Draw raw buffer
-    /// tb: Draw input buffer (not written by default)
-    void SetHist(TH1D *hist, Option_t *option = "");
+    /// * p : Add Pad[ID] to main title
+    /// * a : Add AsAd,AGET,Channel-IDs to main title
+    /// * mc: Draw MCID and line at corresponding tb
+    /// * o : Draw output buffer
+    /// * r : Draw raw buffer
+    /// * i : Draw input buffer (not written by default)
+    /// * h : Draw hit
+    void SetHist(TH1D *hist, Option_t *option = "mcoh");
     TH1D *GetHist(Option_t *option = "");
 
     Int_t             GetNumMCIDs()      { return fMCIDArray.size(); }

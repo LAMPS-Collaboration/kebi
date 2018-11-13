@@ -18,6 +18,15 @@ void KBVertex::Clear(Option_t *)
   fTrackIDArray.clear();
 }
 
+void KBVertex::Print(Option_t *option) const
+{
+  cout << "[KBVertex] at ("
+    << setw(12) << fX <<","
+    << setw(12) << fY <<","
+    << setw(12) << fZ
+    << ") containing " << GetNumTracks() << "tracks" << endl;
+}
+
 void KBVertex::Copy(TObject &obj) const
 {
   KBHit::Copy(obj);
