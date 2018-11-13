@@ -30,16 +30,21 @@ class KBMCTrack : public KBTracklet
     void SetVZ(Double_t val);
 
     void SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx = 0, Double_t vy = 0, Double_t vz = 0);
+    void AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz);
+
+    Int_t GetNumVertices() const;
 
     Int_t GetPDG() const;
-    Double_t GetPX() const;
-    Double_t GetPY() const;
-    Double_t GetPZ() const;
-    TVector3 GetMomentum() const;
+    Double_t GetPX(Int_t idx = 0) const;
+    Double_t GetPY(Int_t idx = 0) const;
+    Double_t GetPZ(Int_t idx = 0) const;
+    TVector3 GetMomentum(Int_t idx = 0) const;
 
-    Double_t GetVX() const;
-    Double_t GetVY() const;
-    Double_t GetVZ() const;
+    Double_t GetVX(Int_t idx = 0) const;
+    Double_t GetVY(Int_t idx = 0) const;
+    Double_t GetVZ(Int_t idx = 0) const;
+    TVector3 GetVertex(Int_t idx = 0) const;
+
     TVector3 GetPrimaryPosition() const;
 
     void AddStep(KBMCStep *hit);
@@ -70,16 +75,16 @@ class KBMCTrack : public KBTracklet
 
   protected:
     Int_t fPDG;
-    Double_t fPX;
-    Double_t fPY;
-    Double_t fPZ;
-    Double_t fVX;
-    Double_t fVY;
-    Double_t fVZ;
+    vector<Double_t> fPX;
+    vector<Double_t> fPY;
+    vector<Double_t> fPZ;
+    vector<Double_t> fVX;
+    vector<Double_t> fVY;
+    vector<Double_t> fVZ;
 
     vector<KBMCStep *> fStepArray; //!
   
-  ClassDef(KBMCTrack, 2)
+  ClassDef(KBMCTrack, 3)
 };
 
 #endif

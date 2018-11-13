@@ -32,7 +32,6 @@ void KBG4RunManager::Initialize()
   SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
 }
 
-
 void KBG4RunManager::SetGeneratorFile(G4String value)
 {
   auto pga = (KBPrimaryGeneratorAction *) userPrimaryGeneratorAction;
@@ -47,6 +46,7 @@ void KBG4RunManager::SetOutputFile(G4String value)
   fPar -> ReplaceEnvironmentVariable(s);
   auto data = new KBMCDataManager(s.Data());
   data -> SetParameterContainer(fPar);
+  data -> SetStepPersistency(fPar->GetParBool("MCStepPersistency"));
 
   for (auto copyNo : fCopyNoArray) {
     G4cout << "Set detector " << copyNo << G4endl;

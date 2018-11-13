@@ -1,5 +1,4 @@
 #include "KBMCDataManager.hh"
-#include "KBMCTrack.hh"
 #include "KBMCStep.hh"
 #include "globals.hh"
 
@@ -18,6 +17,8 @@ KBMCDataManager::~KBMCDataManager()
 {
 }
 
+void KBMCDataManager::SetStepPersistency(bool persistence) { fStepPersistency = persistence; }
+
 void KBMCDataManager::Init()
 {
   fFile = new TFile(fName,"recreate");
@@ -32,6 +33,7 @@ void KBMCDataManager::Init()
 
 void KBMCDataManager::SetDetector(Int_t detectorID)
 {
+  if (!fStepPersistency) return;
   auto stepArray = new TClonesArray("KBMCStep", 10000);
   stepArray -> SetName(Form("MCStep%d", detectorID));
 
@@ -42,12 +44,18 @@ void KBMCDataManager::SetDetector(Int_t detectorID)
 void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
 {
   fTrackID = trackID;
-  KBMCTrack *track = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
-  track -> SetMCTrack(trackID, parentID, pdg, px, py, pz, vx, vy, vz);
+  fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
+  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, vx, vy, vz);
+}
+
+void KBMCDataManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+{
+  fCurrentTrack -> AddVertex(px, py, pz, vx, vy, vz);
 }
 
 void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
 {
+  if (!fStepPersistency) return;
   auto stepArray = (TClonesArray *) fStepArrayList -> FindObject(Form("MCStep%d", detectorID));
   if (stepArray == nullptr)
     return;
@@ -63,6 +71,8 @@ void KBMCDataManager::NextEvent()
 
   fTrackArray -> Clear();
   TIter it(fStepArrayList);
+
+  if (!fStepPersistency) return;
   while (auto stepArray = (TClonesArray *) it.Next())
     stepArray -> Clear();
 }
@@ -70,7 +80,7 @@ void KBMCDataManager::NextEvent()
 void KBMCDataManager::EndOfRun() 
 { 
   fFile -> cd();
-  G4cout << "[KBMCDataManager] Writing file " << fFile -> GetName() << endl;
+  G4cout << "[KBMCDataManager] Writing file " << fFile -> GetName() << G4endl;
   fTree -> Write(); 
   fPar -> Write(fPar->GetName(),TObject::kSingleKey);
   fFile -> Close();

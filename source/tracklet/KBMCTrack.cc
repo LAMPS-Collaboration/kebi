@@ -24,51 +24,65 @@ void KBMCTrack::Clear(Option_t *option)
   fParentID = -1;
 
   fPDG = -1;
-  fPX = -999;
-  fPY = -999;
-  fPZ = -999;
-  fVX = -999;
-  fVY = -999;
-  fVZ = -999;
+  fPX.clear(); fPX.push_back(-999);
+  fPY.clear(); fPY.push_back(-999);
+  fPZ.clear(); fPZ.push_back(-999);
+  fVX.clear(); fVX.push_back(-999);
+  fVY.clear(); fVY.push_back(-999);
+  fVZ.clear(); fVZ.push_back(-999);
 }
 
 void KBMCTrack::Print(Option_t *) const
 {
-  cout << "[KBMCTrack] Momentum: (" << setw(12) << fPX << "," << setw(12) << fPY << "," << setw(12) << fPZ << ")" << endl;
-  cout << "    Primary position: (" << setw(12) << fVX << "," << setw(12) << fVY << "," << setw(12) << fVZ << ")" << endl;
+  cout << "[KBMCTrack] Momentum: (" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << ")" << endl;
+  cout << "    Primary position: (" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
 }
 
 void KBMCTrack::SetPDG(Int_t val)      { fPDG = val; }
-void KBMCTrack::SetPX(Double_t val)    { fPX = val; }  
-void KBMCTrack::SetPY(Double_t val)    { fPY = val; }
-void KBMCTrack::SetPZ(Double_t val)    { fPZ = val; }
-void KBMCTrack::SetVX(Double_t val)    { fVX = val; }
-void KBMCTrack::SetVY(Double_t val)    { fVY = val; }
-void KBMCTrack::SetVZ(Double_t val)    { fVZ = val; }
+void KBMCTrack::SetPX(Double_t val)    { fPX[0] = val; }
+void KBMCTrack::SetPY(Double_t val)    { fPY[0] = val; }
+void KBMCTrack::SetPZ(Double_t val)    { fPZ[0] = val; }
+void KBMCTrack::SetVX(Double_t val)    { fVX[0] = val; }
+void KBMCTrack::SetVY(Double_t val)    { fVY[0] = val; }
+void KBMCTrack::SetVZ(Double_t val)    { fVZ[0] = val; }
 
 void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
 {
   fTrackID = trackID;
   fParentID = parentID;
   fPDG = pdg;
-  fPX = px;
-  fPY = py;
-  fPZ = pz;
-  fVX = vx;
-  fVY = vy;
-  fVZ = vz;
+  fPX[0] = px;
+  fPY[0] = py;
+  fPZ[0] = pz;
+  fVX[0] = vx;
+  fVY[0] = vy;
+  fVZ[0] = vz;
 }
 
-Int_t KBMCTrack::GetPDG() const { return fPDG; }
-Double_t KBMCTrack::GetPX() const { return fPX; }
-Double_t KBMCTrack::GetPY() const { return fPY; }
-Double_t KBMCTrack::GetPZ() const { return fPZ; }
-TVector3 KBMCTrack::GetMomentum() const { return TVector3(fPX, fPY, fPZ); }
+void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+{
+  fPX.push_back(px);
+  fPY.push_back(py);
+  fPZ.push_back(pz);
+  fVX.push_back(vx);
+  fVY.push_back(vy);
+  fVZ.push_back(vz);
+}
 
-Double_t KBMCTrack::GetVX() const { return fVX; }
-Double_t KBMCTrack::GetVY() const { return fVY; }
-Double_t KBMCTrack::GetVZ() const { return fVZ; }
-TVector3 KBMCTrack::GetPrimaryPosition() const { return TVector3(fVX, fVY, fVZ); }
+Int_t KBMCTrack::GetNumVertices() const { return (Int_t) fPX.size(); }
+
+Int_t KBMCTrack::GetPDG() const { return fPDG; }
+Double_t KBMCTrack::GetPX(Int_t idx) const { return fPX[idx]; }
+Double_t KBMCTrack::GetPY(Int_t idx) const { return fPY[idx]; }
+Double_t KBMCTrack::GetPZ(Int_t idx) const { return fPZ[idx]; }
+TVector3 KBMCTrack::GetMomentum(Int_t idx) const { return TVector3(fPX[idx], fPY[idx], fPZ[idx]); }
+
+Double_t KBMCTrack::GetVX(Int_t idx) const { return fVX[idx]; }
+Double_t KBMCTrack::GetVY(Int_t idx) const { return fVY[idx]; }
+Double_t KBMCTrack::GetVZ(Int_t idx) const { return fVZ[idx]; }
+TVector3 KBMCTrack::GetVertex(Int_t idx) const { return TVector3(fVX[idx], fVY[idx], fVZ[idx]); }
+
+TVector3 KBMCTrack::GetPrimaryPosition() const { return TVector3(fVX[0], fVY[0], fVZ[0]); }
 
 void KBMCTrack::AddStep(KBMCStep *hit) { fStepArray.push_back(hit); }
 vector<KBMCStep *> *KBMCTrack::GetStepArray() { return &fStepArray; }
@@ -122,8 +136,15 @@ void KBMCTrack::SetEveElement(TEveElement *element)
     line -> SetLineColor(kMagenta+2);
   }
 
-  line -> SetNextPoint(fVX, fVY, fVZ);
-  line -> SetNextPoint(fPX, fPY, fPZ);
+  Int_t numVertices = fPX.size();
+  if (numVertices==1) {
+    line -> SetNextPoint(fVX[0], fVY[0], fVZ[0]);
+    line -> SetNextPoint(fPX[0], fPY[0], fPZ[0]);
+  }
+  else {
+    for (auto idx = 0; idx < numVertices; ++idx)
+      line -> SetNextPoint(fVX[idx], fVY[idx], fVZ[idx]);
+  }
 }
 
 void KBMCTrack::AddToEveSet(TEveElement *)
