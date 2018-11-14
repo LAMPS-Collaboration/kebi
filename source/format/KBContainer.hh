@@ -30,7 +30,8 @@ class KBContainer : public TObject
 
     virtual void SetMCID(Int_t id, Double_t error = 0, Double_t purity = 0) { fMCID = id; fMCError = error; fMCPurity = purity; }
     Int_t GetMCID() const { return fMCID; }
-    Int_t GetMCError() const { return fMCError; } /// mm
+    Double_t GetMCError() const { return fMCError; } /// mm
+    Double_t GetMCPurity() const { return fMCPurity; } /// mm
 
     virtual void PropagateMC() {};
 
