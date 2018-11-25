@@ -5,7 +5,6 @@
 
 #include "KBTask.hh"
 #include "KBParameterContainer.hh"
-#include "KBParameterContainerHolder.hh"
 #include "KBDetector.hh"
 
 #include "KBTpc.hh"
@@ -32,7 +31,7 @@
 #include <fstream>
 using namespace std;
 
-class KBRun : public KBTask, public KBParameterContainerHolder
+class KBRun : public KBTask
 {
   public:
     static KBRun* GetRun(); ///< Get KBRun static pointer.

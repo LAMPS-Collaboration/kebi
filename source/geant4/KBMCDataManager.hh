@@ -5,13 +5,13 @@
 #include "TTree.h"
 #include "TClonesArray.h"
 
-#include "KBParameterContainerHolder.hh"
+#include "KBGlobal.hh"
 #include "KBMCTrack.hh"
 
 #include <vector>
 using namespace std;
 
-class KBMCDataManager : public KBParameterContainerHolder
+class KBMCDataManager : public KBGlobal
 {
   public:
     static KBMCDataManager* Instance();

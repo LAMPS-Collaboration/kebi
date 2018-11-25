@@ -4,10 +4,11 @@
 #include "TObjArray.h"
 #include "TNamed.h"
 #include "TParameter.h"
+#include "KBVector3.hh"
 
 /**
  * List of parameters <[parameter name], [parameter values]>
- * parameter type features Bool_t, Int_t, Double_t, TString.
+ * parameter type features Bool_t, Int_t, Double_t, TString, KBVector3::Axis.
  *
  * Structure of parameter file should be list of : [name] [type_initial] [value]
  * Each elemets are divided by space.
@@ -19,6 +20,7 @@
  *   - i for Int_t
  *   - d for Double_t
  *   - s for TString
+ *   - a for KBVector3::Axis
  * @param value Value of parameter. TString value do not accept space.
  *
  * ex)\n
@@ -68,6 +70,7 @@ class KBParameterContainer : public TObjArray
     Int_t    GetParInt(TString name);    ///< Get Int_t    type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     Double_t GetParDouble(TString name); ///< Get Double_t type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     TString  GetParString(TString name); ///< Get TString  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+    KBVector3::Axis  GetParAxis(TString name);   ///< Get KBVector3::Axis  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
 
     bool CheckPar(TString name);
 

@@ -7,6 +7,6 @@
 #pragma link C++ class KBTask+;
 #pragma link C++ class KBRun+;
 #pragma link C++ class KBParameterContainer+;
-#pragma link C++ class KBParameterContainerHolder+;
+#pragma link C++ class KBGlobal+;
 
 #endif

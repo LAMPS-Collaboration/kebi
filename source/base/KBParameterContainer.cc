@@ -52,7 +52,12 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
           newpar = true;
         }
         TString value = par -> GetTitle();
-        out << left << setw(25) << key << "  s  " << value;
+        if (value.Index("AXIS_PARAMETER_")==0) {
+          value.ReplaceAll("AXIS_PARAMETER_","");
+          out << left << setw(25) << key << "  a  " << value;
+        }
+        else
+          out << left << setw(25) << key << "  s  " << value;
         if (newpar)
           out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
         out << endl;
@@ -192,6 +197,13 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
       ReplaceEnvironmentVariable(val);
       SetPar(parName, val);
     }
+    else if (parType == "a" || parType == "Axis" || parType == "KBVector3::Axis") {
+      TString val;
+      ss >> val;
+      if (val.Index("AXIS_PARAMETER_")<0)
+        val = TString("AXIS_PARAMETER_") + val;
+      SetPar(parName, val);
+    }
     else
       countParameters--;
   }
@@ -221,7 +233,12 @@ void KBParameterContainer::Print(Option_t *option) const
       TNamed *par = (TNamed *) obj;
       TString key = par -> GetName();
       TString value = par -> GetTitle();
-      cout << left << "  " << setw(25) << key << "  s  " << value << endl;
+      if (value.Index("AXIS_PARAMETER_")==0) {
+        value.ReplaceAll("AXIS_PARAMETER_","");
+        cout << left << "  " << setw(25) << key << "  a  " << value << endl;
+      }
+      else
+        cout << left << "  " << setw(25) << key << "  s  " << value << endl;
     }
     else if (className == "TParameter<int>") {
       TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
@@ -352,6 +369,26 @@ TString KBParameterContainer::GetParString(TString name)
   }
 
   return ((TNamed *) obj) -> GetTitle();
+}
+
+KBVector3::Axis KBParameterContainer::GetParAxis(TString name)
+{
+  TObject *obj = FindObject(name);
+
+  if (obj != nullptr) {
+    TString value = ((TNamed *) obj) -> GetTitle();
+    if (value.Index("AXIS_PARAMETER_")==0) {
+      value.ReplaceAll("AXIS_PARAMETER_","");
+      return KBVector3::GetAxis(value);
+    }
+  }
+
+  cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+  if (fDebugMode)
+    SetPar(TString("NEWPAR")+name, TString("AXIS_PARAMETER_DOES_NOT_EXIST"));
+  else
+    gApplication -> Terminate();
+  return KBVector3::kNon;
 }
 
 bool KBParameterContainer::CheckPar(TString name)

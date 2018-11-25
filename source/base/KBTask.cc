@@ -62,5 +62,3 @@ void KBTask::SetRank(Int_t rank)
   while ( (task = dynamic_cast<KBTask*>(iter())) )
     task -> SetRank(fRank+1);
 }
-
-Int_t KBTask::GetRank() { return fRank; }

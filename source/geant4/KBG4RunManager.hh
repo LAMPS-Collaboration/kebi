@@ -5,12 +5,12 @@
 #include "G4VPhysicalVolume.hh"
 #include "KBMCDataManager.hh"
 #include "KBG4RunMessenger.hh"
-#include "KBParameterContainerHolder.hh"
+#include "KBGlobal.hh"
 #include "globals.hh"
 
 class KBG4RunMessenger;
 
-class KBG4RunManager : public G4RunManager, public KBParameterContainerHolder
+class KBG4RunManager : public G4RunManager, public KBGlobal
 {
   public:
     KBG4RunManager();
