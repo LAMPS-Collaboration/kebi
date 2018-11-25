@@ -1,7 +1,7 @@
 #ifndef KBWPOINT_HH
 #define KBWPOINT_HH
 
-#include "KBContainer.hh"
+#include "KBContainerMCTagged.hh"
 #include "TError.h"
 #include "TVector3.h"
 #ifdef ACTIVATE_EVE
@@ -11,7 +11,7 @@
 
 /// position data with weight
 
-class KBWPoint : public KBContainer
+class KBWPoint : public KBContainerMCTagged
 {
   public:
     KBWPoint();

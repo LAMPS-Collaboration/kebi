@@ -7,23 +7,17 @@ ClassImp(KBVector3)
 
 void KBVector3::Print(Option_t *) const
 {
-       if (fReferenceAxis == KBVector3::kZ)  cout << "[KBVector3] Reference axis : z" << endl;
-  else if (fReferenceAxis == KBVector3::kY)  cout << "[KBVector3] Reference axis : y" << endl;
-  else if (fReferenceAxis == KBVector3::kX)  cout << "[KBVector3] Reference axis : x" << endl;
-  else if (fReferenceAxis == KBVector3::kMZ) cout << "[KBVector3] Reference axis : -z" << endl;
-  else if (fReferenceAxis == KBVector3::kMY) cout << "[KBVector3] Reference axis : -y" << endl;
-  else if (fReferenceAxis == KBVector3::kMX) cout << "[KBVector3] Reference axis : -x" << endl;
-  else                                       cout << "[KBVector3] Reference axis : Non" << endl;
+  cout << "[KBVector3] Reference axis : " << fReferenceAxis << endl;
   cout << "          > (i,j,k) = ("<<I()<<","<<J()<<","<<K()<<")" << endl;
   cout << "          > (x,y,z) = ("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
 }
 
 void KBVector3::Clear(Option_t *)
 {
-  SetX(-999);
-  SetY(-999);
-  SetZ(-999);
-  fReferenceAxis = KBVector3::kY;
+  SetX(0);
+  SetY(0);
+  SetZ(0);
+  fReferenceAxis = KBVector3::kNon;
 }
 
 void KBVector3::SetReferenceAxis(KBVector3::Axis referenceAxis)
@@ -43,30 +37,36 @@ void KBVector3::SetReferenceAxis(KBVector3::Axis referenceAxis)
 
 KBVector3::Axis KBVector3::GetReferenceAxis() const { return fReferenceAxis; }
 
-Double_t KBVector3::At(KBVector3::Axis axis) const
+Double_t KBVector3::At(KBVector3::Axis ka) const
 {
-       if (axis == KBVector3::kX) return X();
-  else if (axis == KBVector3::kY) return Y();
-  else if (axis == KBVector3::kZ) return Z();
-  else if (axis == KBVector3::kI) return I();
-  else if (axis == KBVector3::kJ) return J();
-  else if (axis == KBVector3::kK) return K();
-
-  cout << "[KBVector3] Error! Reference axis should be one of; kX(1), kY(2), kZ(3), kI(7), kJ(8), kK(9)" << endl;
+       if (ka == KBVector3::kX) return X();
+  else if (ka == KBVector3::kY) return Y();
+  else if (ka == KBVector3::kZ) return Z();
+  else if (ka == KBVector3::kI) return I();
+  else if (ka == KBVector3::kJ) return J();
+  else if (ka == KBVector3::kK) return K();
+  else if (ka == KBVector3::kMX) return -X();
+  else if (ka == KBVector3::kMY) return -Y();
+  else if (ka == KBVector3::kMZ) return -Z();
+  else
+    cout << "[KBVector3] Error! Cannot use method At() for axis kNon" << endl;
 
   return -999;
 }
 
-void KBVector3::AddAt(Double_t value, KBVector3::Axis axis)
+void KBVector3::AddAt(Double_t value, Axis ka, bool ignoreNegative)
 {
-       if (axis == KBVector3::kX) SetX(X()+value);
-  else if (axis == KBVector3::kY) SetY(Y()+value);
-  else if (axis == KBVector3::kZ) SetZ(Z()+value);
-  else if (axis == KBVector3::kI) SetI(I()+value);
-  else if (axis == KBVector3::kJ) SetJ(J()+value);
-  else if (axis == KBVector3::kK) SetK(K()+value);
-  else 
-    cout << "[KBVector3] Error! Reference axis should be one of; kX(1), kY(2), kZ(3), kI(7), kJ(8), kK(9)" << endl;
+       if (ka == KBVector3::kX) SetX(X()+value);
+  else if (ka == KBVector3::kY) SetY(Y()+value);
+  else if (ka == KBVector3::kZ) SetZ(Z()+value);
+  else if (ka == KBVector3::kI) SetI(I()+value);
+  else if (ka == KBVector3::kJ) SetJ(J()+value);
+  else if (ka == KBVector3::kK) SetK(K()+value);
+  else if (ka == KBVector3::kMX) { if (ignoreNegative) SetX(X()+value); else SetX(X()-value); }
+  else if (ka == KBVector3::kMY) { if (ignoreNegative) SetY(Y()+value); else SetY(Y()-value); }
+  else if (ka == KBVector3::kMZ) { if (ignoreNegative) SetZ(Z()+value); else SetZ(Z()-value); }
+  else
+    cout << "[KBVector3] Error! Cannot use method AddAt() for axis kNon" << endl;
 }
 
 void KBVector3::SetIJKR(Double_t i, Double_t j, Double_t k, KBVector3::Axis referenceAxis)

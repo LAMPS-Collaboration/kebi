@@ -73,26 +73,26 @@ void KBHelixTrack::Print(Option_t *) const
   else if (fReferenceAxis == KBVector3::kY) center = TString("(z,x): ")+center;
   else if (fReferenceAxis == KBVector3::kZ) center = TString("(x,y): ")+center;
 
-  cout << left << " KBHelixTrack, units in [mm] [radian] [ADC]" << endl;
-  cout << " - " << setw(13) << "Track ID"     << " : " << fTrackID << endl;
-  //cout << " - " << setw(13) << "Parent ID"    << " : " << fParentID << endl;
-  cout << " - " << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
-  cout << " - " << setw(13) << "# of Hits"    << " : " << fMainHits.size() << endl;
+  kc_raw << left;
+  kc_info << setw(13) << "Track ID"     << " : " << fTrackID << endl;
+  kc_info << setw(13) << "Parent ID"    << " : " << fParentID << endl;
+  kc_info << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
+  kc_info << setw(13) << "# of Hits"    << " : " << fMainHits.size() << endl;
 
   if (fFitStatus != KBHelixTrack::kHelix && fFitStatus != KBHelixTrack::kGenfitTrack)
     return;
 
-  cout << " - " << setw(13) << "Helix Center" << " : " << center << " [mm]" << endl;
-  cout << " - " << setw(13) << "Helix Radius" << " : " << fHelixRadius << " [mm]" << endl;
-  cout << " - " << setw(13) << "Dip Angle"    << " : " << DipAngle() << endl;
-  cout << " - " << setw(13) << "Fit RMS-w/h"  << " : " << fRMSW << " / " << fRMSH << " [mm]" << endl;
-  cout << " - " << setw(13) << "Charge"       << " : " << fChargeSum << " [ADC]" << endl;;
-  cout << " - " << setw(13) << "Track Length" << " : " << TrackLength() << " [mm]" << endl;;
-  cout << " - " << setw(13) << "Momentum"     << " : " << Momentum().Mag() << " [MeV]" << endl;;
+  kc_info << setw(13) << "Helix Center" << " : " << center << " [mm]" << endl;
+  kc_info << setw(13) << "Helix Radius" << " : " << fHelixRadius << " [mm]" << endl;
+  kc_info << setw(13) << "Dip Angle"    << " : " << DipAngle() << endl;
+  kc_info << setw(13) << "Fit RMS-w/h"  << " : " << fRMSW << " / " << fRMSH << " [mm]" << endl;
+  kc_info << setw(13) << "Charge"       << " : " << fChargeSum << " [ADC]" << endl;;
+  kc_info << setw(13) << "Track Length" << " : " << TrackLength() << " [mm]" << endl;;
+  kc_info << setw(13) << "Momentum"     << " : " << Momentum().Mag() << " [MeV]" << endl;;
 
   if (fFitStatus == KBHelixTrack::kGenfitTrack) {
-    cout << " - " << setw(13) << "GF-Momentum"  << " : " << fGenfitMomentum << " [MeV]" << endl;;
-    cout << " - " << setw(13) << "dEdx (70 %)"  << " : " << GetdEdxWithCut(0, 0.7) << " [ADC/mm]" << endl;;
+    kc_info << setw(13) << "GF-Momentum"  << " : " << fGenfitMomentum << " [MeV]" << endl;;
+    kc_info << setw(13) << "dEdx (70 %)"  << " : " << GetdEdxWithCut(0, 0.7) << " [ADC/mm]" << endl;;
   }
 }
 

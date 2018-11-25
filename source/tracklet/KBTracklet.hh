@@ -3,7 +3,7 @@
 
 #include "TGraph.h"
 
-#include "KBContainer.hh"
+#include "KBContainerMCTagged.hh"
 
 #include "KBHitList.hh"
 #include "KBHit.hh"
@@ -12,7 +12,7 @@
 
 class KBTrackFitter;
 
-class KBTracklet : public KBContainer
+class KBTracklet : public KBContainerMCTagged
 {
   protected:
     Int_t fTrackID = -1;

@@ -10,9 +10,9 @@ KBVertex::KBVertex()
   Clear();
 }
 
-void KBVertex::Clear(Option_t *)
+void KBVertex::Clear(Option_t *option)
 {
-  KBHit::Clear();
+  KBHit::Clear(option);
 
   fTrackArray.clear();
   fTrackIDArray.clear();
@@ -20,7 +20,7 @@ void KBVertex::Clear(Option_t *)
 
 void KBVertex::Print(Option_t *option) const
 {
-  cout << "[KBVertex] at ("
+  kc_info << "at ("
     << setw(12) << fX <<","
     << setw(12) << fY <<","
     << setw(12) << fZ

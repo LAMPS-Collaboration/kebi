@@ -2,11 +2,9 @@
 
 ClassImp(KBChannelBufferS)
 
-void KBChannelBufferS::Clear(Option_t *)
+void KBChannelBufferS::Clear(Option_t *option)
 {
-  fID = -1;
-  fPos1 = TVector3(-999,-999,-999);
-  fPos2 = TVector3(-999,-999,-999);
+  KBChannelBufferX::Clear(option);
 
   for (auto iTb = 0; iTb < fN; ++iTb)
     fArray[iTb] = 0;

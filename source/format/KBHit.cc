@@ -9,21 +9,21 @@
 
 ClassImp(KBHit)
 
-void KBHit::Clear(Option_t *)
+void KBHit::Clear(Option_t *option)
 {
-  KBWPointCluster::Clear();
+  KBWPointCluster::Clear(option);
 
   fHitID = -1;
   fTrackID = -1;
 
   fTrackCandArray.clear();
 
-  fHitList.Clear();
+  fHitList.Clear(option);
 }
 
 void KBHit::Print(Option_t *option) const
 {
-  cout << "HTM-ID|XYZ|Charge: "
+  kc_info << "HTM-ID|XYZ|Charge: "
     << setw(4)  << fHitID
     << setw(4)  << fTrackID
     << setw(4)  << fMCID << " |"

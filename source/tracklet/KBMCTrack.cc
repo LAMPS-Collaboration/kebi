@@ -34,8 +34,8 @@ void KBMCTrack::Clear(Option_t *option)
 
 void KBMCTrack::Print(Option_t *) const
 {
-  cout << "[KBMCTrack] Momentum: (" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << ")" << endl;
-  cout << "    Primary position: (" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
+  kc_info << "        Momentum: (" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << ")" << endl;
+  kc_info << "Primary position: (" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
 }
 
 void KBMCTrack::SetPDG(Int_t val)      { fPDG = val; }

@@ -10,6 +10,8 @@ KBHitList::KBHitList()
 
 void KBHitList::Clear(Option_t *option)
 {
+  TObject::Clear(option);
+
   fHitArray.clear();
   fHitIDArray.clear();
 }
@@ -22,7 +24,7 @@ void KBHitList::Print(Option_t *option) const
 
   if (fHitArray.size()!=0) {
     for (auto hit : fHitArray) {
-      cout << ref
+      kc_info << ref
         << setw(4)  << hit -> GetHitID()
         << setw(4)  << hit -> GetTrackID()
         << setw(4)  << hit -> GetMCID() << " |"
@@ -34,10 +36,10 @@ void KBHitList::Print(Option_t *option) const
   }
   else {
     ref = "              IDs: ";
-    cout << ref;
+    kc_info << ref;
     for (auto hitID : fHitIDArray)
-      cout << setw(4) << hitID;
-    cout << endl;
+      kc_raw << setw(4) << hitID;
+    kc_raw << endl;
   }
 }
 

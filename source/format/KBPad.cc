@@ -10,8 +10,10 @@ using namespace std;
 
 ClassImp(KBPad)
 
-void KBPad::Clear(Option_t *)
+void KBPad::Clear(Option_t *option)
 {
+  KBChannel::Clear(option);
+
   fActive = false;
 
   memset(fBufferIn, 0, sizeof(Double_t)*512);
@@ -30,26 +32,26 @@ void KBPad::Clear(Option_t *)
 void KBPad::Print(Option_t *option) const
 {
   if (TString(option) == "s") {
-    cout << "[KBPad] " << setw(6) << fID << setw(4) << fSection << setw(4) << fRow << setw(4) << fLayer << endl;
+    kc_info << setw(6) << fID << setw(4) << fSection << setw(4) << fRow << setw(4) << fLayer << endl;
     return;
   }
 
-  cout << "[KBPad]" << endl;
-  cout << "  Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")" << endl;
-  cout << "  AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
-  cout << "  (Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
-  cout << "  Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
-  cout << "  Position              : (" << fI << ", " << fJ << ") " << endl;
+  kc_info << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")" << endl;
+  kc_info << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
+  kc_info << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
+  kc_info << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
+  kc_info << "Position              : (" << fI << ", " << fJ << ") " << endl;
+
   Int_t numMCID = fMCIDArray.size();
-  cout << "  MC-ID (co. Tb [mm]),  : ";
+  kc_info << "  MC-ID (co. Tb [mm]),  : ";
   for (auto iMC = 0; iMC < numMCID; ++iMC)
-    cout << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
-  cout << endl;
+    kc_raw << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
+  kc_raw << endl;
 }
 
 void KBPad::Draw(Option_t *option)
 {
-  cout << "[KBPad::Draw(option)] is replaced to GetHist(option)->Draw(); DrawMCID(option);" << endl;
+  kc_info << "replaced to GetHist(option)->Draw(); DrawMCID(option);" << endl;
   GetHist(option) -> Draw();
   DrawMCID(option);
   DrawHit(option);
@@ -312,7 +314,7 @@ TH1D *KBPad::GetHist(Option_t *option)
 
 void KBPad::SetHist(TH1D *hist, Option_t *option)
 {
-  cout << "[KBPad::SetHist/GetHist] option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw)]" << endl;
+  kc_info << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw)]" << endl;
   hist -> Reset();
 
   TString optionString = TString(option);

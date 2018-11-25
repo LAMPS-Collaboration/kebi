@@ -8,9 +8,9 @@
 
 ClassImp(KBTpcHit)
 
-void KBTpcHit::Clear(Option_t *)
+void KBTpcHit::Clear(Option_t *option)
 {
-  KBHit::Clear();
+  KBHit::Clear(option);
 
   fPadID = -1;
   fSection = -999;
@@ -23,7 +23,7 @@ void KBTpcHit::Clear(Option_t *)
 
 void KBTpcHit::Print(Option_t *option) const
 {
-  cout << "ID|XYZ|Charge|SRL|Tb: "
+  kc_info << "ID|XYZ|Charge|SRL|Tb: "
     << setw(4)  << fHitID << " |"
     << setw(12) << fX
     << setw(12) << fY

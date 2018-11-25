@@ -17,24 +17,24 @@ void KBWPointCluster::Print(Option_t *opt) const
   optstr.ToLower();
 
   if (optstr.Index("c")>=0) {
-    cout << "CovXX: "
+    kc_info << "CovXX: "
          << setw(12) << fCov[0][0]
          << setw(12) << fCov[1][1]
          << setw(12) << fCov[2][2] << endl;
 
-    cout << "CovXY: "
+    kc_info << "CovXY: "
          << setw(12) << fCov[0][1]
          << setw(12) << fCov[1][2]
          << setw(12) << fCov[2][0] << endl;
   }
 
   if (optstr.Index("e")>=0) {
-    cout << "ErrXX: "
+    kc_info << "ErrXX: "
          << setw(12) << fCov[0][0]/sqrt(fW)
          << setw(12) << fCov[1][1]/sqrt(fW)
          << setw(12) << fCov[2][2]/sqrt(fW) << endl;
 
-    cout << "ErrXY: "
+    kc_info << "ErrXY: "
          << setw(12) << fCov[0][1]/sqrt(fW)
          << setw(12) << fCov[1][2]/sqrt(fW)
          << setw(12) << fCov[2][0]/sqrt(fW) << endl;

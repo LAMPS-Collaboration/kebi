@@ -10,6 +10,9 @@
 #pragma link C++ class KBChannelBufferX+;
 #pragma link C++ class KBChannelBufferS+;
 #pragma link C++ class KBChannelBufferD+;
+#pragma link C++ class KBPad+;
+
+#pragma link C++ class KBContainerMCTagged+;
 
 #pragma link C++ class KBWPoint+;
 #pragma link C++ class KBWPointCluster+;
@@ -18,11 +21,9 @@
 #pragma link C++ class KBHitList+;
 #pragma link C++ class KBVertex+;
 #pragma link C++ class KBChannelHit+;
-
-#pragma link C++ class KBPad+;
+#pragma link C++ class KBChannelBar+;
 
 #pragma link C++ class KBMCStep+;
-
 #pragma link C++ class KBVector3+;
 
 #pragma link C++ class KBMCRecoMatching+;

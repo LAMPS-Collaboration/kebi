@@ -8,16 +8,12 @@ KBContainer::~KBContainer()
 {
 }
 
-void KBContainer::Clear(Option_t *)
+void KBContainer::Clear(Option_t *option)
 {
-  fMCID = -1;
-  fMCError = -1;
+  TObject::Clear(option);
 }
 
 void KBContainer::Copy(TObject &obj) const
 {
   TObject::Copy(obj);
-  auto container = (KBContainer &) obj;
-
-  container.SetMCID(fMCID, fMCError, fMCPurity);
 }

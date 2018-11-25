@@ -1,13 +1,14 @@
 #ifndef KBCHANNEL_HH
 #define KBCHANNEL_HH
 
+#include "KBContainer.hh"
 #include "KBChannelHit.hh"
 
 #include "TObject.h"
 #include "TObjArray.h"
 #include "TVector3.h"
 
-class KBChannel : public TObject
+class KBChannel : public KBContainer
 {
   public:
     KBChannel() { Clear(); }
@@ -22,10 +23,10 @@ class KBChannel : public TObject
     TObjArray *GetChannelHitArray();
 
     void SetPos1(TVector3 pos);
-    TVector3 GetPos1();
+    TVector3 GetPos1() const;
 
     void SetPos2(TVector3 pos);
-    TVector3 GetPos2();
+    TVector3 GetPos2() const;
 
   protected:
     Int_t fID = -1;
