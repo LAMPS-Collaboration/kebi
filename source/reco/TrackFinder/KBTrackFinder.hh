@@ -1,10 +1,9 @@
 #ifndef KBTRACKFINDER_HH
 #define KBTRACKFINDER_HH
 
-#include "KBParameterContainerHolder.hh"
 #include "KBTask.hh"
 
-class KBTrackFinder : public KBTask, public KBParameterContainerHolder
+class KBTrackFinder : public KBTask
 {
   public:
     KBTrackFinder();
