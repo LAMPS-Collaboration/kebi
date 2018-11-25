@@ -11,6 +11,7 @@
 class KBPadPlane : public KBDetectorPlane
 {
   public:
+    KBPadPlane();
     KBPadPlane(const char *name, const char *title);
     virtual ~KBPadPlane() {};
 

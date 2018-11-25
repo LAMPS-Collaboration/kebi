@@ -5,21 +5,25 @@ using namespace std;
 
 ClassImp(KBDetector)
 
+KBDetector::KBDetector()
+:KBDetector("KBDetector","default detector class")
+{
+}
+
 KBDetector::KBDetector(const char *name, const char *title)
 :TNamed(name, title), fDetectorPlaneArray(new TObjArray())
 {
 }
 
-void KBDetector::Print(Option_t *) const
+void KBDetector::Print(Option_t *option) const
 {
-  cout << "[" << ClassName() << "] " << fName << ", " << fTitle << endl;
+  kb_info << fName << ", " << fTitle << endl;
 
   for (auto iPlane = 0; iPlane < fNPlanes; ++iPlane) {
     auto plane = (KBDetectorPlane *) fDetectorPlaneArray -> At(iPlane);
-    plane -> Print("child");
+    plane -> Print();
   }
 }
-
 
 TGeoManager *KBDetector::GetGeoManager()
 {
@@ -35,7 +39,10 @@ void KBDetector::SetTransparency(Int_t transparency)
 }
 
 
-void KBDetector::AddPlane(KBDetectorPlane *plane) { fDetectorPlaneArray -> Add(plane); }
+void KBDetector::AddPlane(KBDetectorPlane *plane) {
+  plane -> SetRank(fRank+1);
+  fDetectorPlaneArray -> Add(plane);
+}
 
 Int_t KBDetector::GetNPlanes() { return fNPlanes; }
 

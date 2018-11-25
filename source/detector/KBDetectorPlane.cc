@@ -5,8 +5,13 @@ using namespace std;
 
 ClassImp(KBDetectorPlane)
 
+KBDetectorPlane::KBDetectorPlane()
+:KBDetectorPlane("KBDetectorPlane","default detector-plane class")
+{
+}
+
 KBDetectorPlane::KBDetectorPlane(const char *name, const char *title)
-:TNamed(name,title), fChannelArray(new TObjArray())
+:TNamed(name, title), fChannelArray(new TObjArray())
 {
 }
 
@@ -20,10 +25,7 @@ void KBDetectorPlane::Clear(Option_t *)
 
 void KBDetectorPlane::Print(Option_t *option) const
 {
-  if (TString(option) == "child")
-    cout << "  ";
-
-  cout << "  [" << fName << "] " << "Detector plane containing " << fChannelArray -> GetEntries() << " channels" << endl;
+  kb_info << fName << " plane-" << fPlaneID << " containing " << fChannelArray -> GetEntries() << " channels" << endl;
 }
 
 void KBDetectorPlane::AddChannel(KBChannel *channel) { fChannelArray -> Add(channel); }

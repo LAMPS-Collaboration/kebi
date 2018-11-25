@@ -8,6 +8,11 @@ using namespace std;
 
 ClassImp(KBPadPlane)
 
+KBPadPlane::KBPadPlane()
+:KBPadPlane("KBPadPlane","TPC pad plane")
+{
+}
+
 KBPadPlane::KBPadPlane(const char *name, const char *title)
 :KBDetectorPlane(name, title)
 {
@@ -15,23 +20,21 @@ KBPadPlane::KBPadPlane(const char *name, const char *title)
 
 void KBPadPlane::Print(Option_t *option) const
 {
-  cout << "Pad Plane containing " << fChannelArray -> GetEntries() << " pads" << endl;
-
-  if (TString(option) == "detail") {
-    Int_t numChannels = fChannelArray -> GetEntries();
-    auto countPads = 0;
-    auto countHits = 0;
-    for (auto iChannel = 0; iChannel < numChannels; ++iChannel) {
-      auto pad = (KBPad *) fChannelArray -> At(iChannel);
-      Int_t numHits = pad -> GetNumHits();
-      if (numHits > 0) {
-        ++countPads;
-        countHits += numHits;
-      }
+  Int_t numChannels = fChannelArray -> GetEntries();
+  auto countPads = 0;
+  auto countHits = 0;
+  for (auto iChannel = 0; iChannel < numChannels; ++iChannel) {
+    auto pad = (KBPad *) fChannelArray -> At(iChannel);
+    Int_t numHits = pad -> GetNumHits();
+    if (numHits > 0) {
+      ++countPads;
+      countHits += numHits;
     }
-    cout << "number of active pads: " << countPads << endl;
-    cout << "number of hits: " << countHits << endl;
   }
+
+  kb_info << "Containing " << fChannelArray -> GetEntries() << " pads" << endl;
+  kb_info << "number of active pads: " << countPads << endl;
+  kb_info << "number of hits: " << countHits << endl;
 }
 
 KBPad *KBPadPlane::GetPadFast(Int_t idx) { return (KBPad *) fChannelArray -> At(idx); }
@@ -96,13 +99,13 @@ void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val,
 void KBPadPlane::FillDataToHist(Option_t *option)
 {
   if (fH2Plane == nullptr) {
-    cout << "[KBPadPlane] Pad plane histogram does not exist! Run GetHist(option) before filling buffer." << endl;
+    kb_info << "Pad plane histogram does not exist! Run GetHist(option) before filling buffer." << endl;
     return;
   }
 
   TString optionString = TString(option);
 
-  cout << "[KBPadPlane] " << "Filling " << optionString << " into pad-plane histogram" << endl;
+  kb_info << "Filling " << optionString << " into pad-plane histogram" << endl;
 
   KBPad *pad;
   TIter iterPads(fChannelArray);
@@ -249,7 +252,7 @@ TObjArray *KBPadPlane::GetPadArray() { return fChannelArray; }
 
 bool KBPadPlane::PadPositionChecker(bool checkCorners)
 {
-  cout << "[PadPositionChecker] Number of pads: " << fChannelArray -> GetEntries() << endl;
+  kb_info << "Number of pads: " << fChannelArray -> GetEntries() << endl;
 
   Int_t countM1 = 0;
   Int_t countBad = 0;
@@ -264,13 +267,12 @@ bool KBPadPlane::PadPositionChecker(bool checkCorners)
     auto center0 = pad -> GetPosition();
     auto padID0 = pad -> GetPadID();
     auto padID1 = FindPadID(center0.X(),center0.Y());
-    //cout << "Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad-> GetSection() << "," << pad-> GetRow() << "," << pad-> GetLayer() << ") >>> " << padID1 << endl;
 
     if (padID1 != padID0) {
       auto pad1 = (KBPad *) fChannelArray -> At(padID1);
       auto center1 = pad1 -> GetPosition();
-      cout << "Bad! Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad -> GetSection() << "," << pad -> GetRow() << "," << pad -> GetLayer() << ")"
-           << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
+      kb_warning << "Bad! Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad -> GetSection() << "," << pad -> GetRow() << "," << pad -> GetLayer() << ")"
+                 << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
       ++countBad;
     }
     if (checkCorners) {
@@ -280,29 +282,29 @@ bool KBPadPlane::PadPositionChecker(bool checkCorners)
         if (padID1 != padID0) {
           auto pad1 = (KBPad *) fChannelArray -> At(padID1);
           auto center1 = pad1 -> GetPosition();
-          cout << "     Corner(" << pos.X() << "," << pos.Y() << ")"
-               << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
+          kb_info << "     Corner(" << pos.X() << "," << pos.Y() << ")"
+                  << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
           ++countBad;
         }
       }
     }
   }
 
-  cout << " =================== Number of id = -1 pads: " << countM1 << endl;
+  kb_info << " =================== Number of id = -1 pads: " << countM1 << endl;
 
   if (countBad > 0) {
-    cout << " =================== Bad pad position exist!!!" << endl;
-    cout << " =================== Number of bad pads: " << countBad << endl;
+    kb_warning << " =================== Bad pad position exist!!!" << endl;
+    kb_warning << " =================== Number of bad pads: " << countBad << endl;
     return false;
   }
 
-  cout << " =================== All pads are good!" << endl;
+  kb_info << " =================== All pads are good!" << endl;
   return true;
 }
 
 bool KBPadPlane::PadNeighborChecker()
 {
-  cout << "[PadNeighborChecker] Number of pads: " << fChannelArray -> GetEntries() << endl;
+  kb_info << "Number of pads: " << fChannelArray -> GetEntries() << endl;
 
   auto distMax = 0.;
   KBPad *pad0 = 0;
@@ -326,7 +328,7 @@ bool KBPadPlane::PadNeighborChecker()
         }
       }
       if (!neighborToEachOther)
-        cout << "Pad:" << padID << " and Pad:" << padIDnb << " are not neighbor to each other!" << endl;
+        kb_info << "Pad:" << padID << " and Pad:" << padIDnb << " are not neighbor to each other!" << endl;
       auto dx = pos.X() - posnb.X();
       auto dy = pos.Y() - posnb.Y();
       auto dist = sqrt(dx*dx + dy*dy);
@@ -338,9 +340,11 @@ bool KBPadPlane::PadNeighborChecker()
     }
   }
 
-  cout << " =================== Maximum distance between neighbor pads: " << distMax << endl;
-  cout << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetPosition().X() << "," << pad0->GetPosition().Y() << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
-  cout << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y() << "|" << pad1-> GetSection() << "," << pad1 -> GetRow() << "," << pad1 -> GetLayer() << ")" << endl;
+  kb_info << " =================== Maximum distance between neighbor pads: " << distMax << endl;
+  kb_info << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetPosition().X() << "," << pad0->GetPosition().Y() 
+          << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
+  kb_info << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y()
+          << "|" << pad1-> GetSection() << "," << pad1 -> GetRow() << "," << pad1 -> GetLayer() << ")" << endl;
 
   return true;
 }

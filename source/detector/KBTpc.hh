@@ -9,6 +9,7 @@
 class KBTpc : public KBDetector
 {
   public:
+    KBTpc();
     KBTpc(const char *name, const char *title);
     virtual ~KBTpc() {};
 

@@ -1,7 +1,7 @@
 #ifndef KBDETECTOR_HH
 #define KBDETECTOR_HH
 
-#include "KBParameterContainerHolder.hh"
+#include "KBGlobal.hh"
 #include "KBDetectorPlane.hh"
 
 #include "TNamed.h"
@@ -9,9 +9,10 @@
 
 #include "TObjArray.h"
 
-class KBDetector : public TNamed, public KBParameterContainerHolder
+class KBDetector : public TNamed, public KBGlobal
 {
   public:
+    KBDetector();
     KBDetector(const char *name, const char *title);
     virtual ~KBDetector() {}
 

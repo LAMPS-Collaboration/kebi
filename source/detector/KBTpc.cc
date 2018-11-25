@@ -5,6 +5,11 @@ using namespace std;
 
 ClassImp(KBTpc)
 
+KBTpc::KBTpc()
+:KBTpc("KBTpc","TPC")
+{
+}
+
 KBTpc::KBTpc(const char *name, const char *title)
 :KBDetector(name, title)
 {

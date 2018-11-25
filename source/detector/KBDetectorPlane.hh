@@ -2,7 +2,7 @@
 #define KBDETECTORPLANE_HH
 
 #include "KBChannel.hh"
-#include "KBParameterContainerHolder.hh"
+#include "KBGlobal.hh"
 #include "KBVector3.hh"
 
 #include "TH2.h"
@@ -12,9 +12,10 @@
 #include "TObjArray.h"
 #include "TClonesArray.h"
 
-class KBDetectorPlane : public TNamed, public KBParameterContainerHolder
+class KBDetectorPlane : public TNamed, public KBGlobal
 {
   public:
+    KBDetectorPlane();
     KBDetectorPlane(const char *name, const char *title);
     virtual ~KBDetectorPlane() {};
 
