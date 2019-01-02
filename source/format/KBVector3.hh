@@ -70,14 +70,14 @@ class KBVector3 : public TVector3
     KBVector3(const TVector3 &p, Axis referenceAxis = kNon)
     :TVector3(p), fReferenceAxis(referenceAxis) {}
 
-    KBVector3(Double_t x0, Double_t y0, Double_t z0, Axis referenceAxis = kNon)
-    :TVector3(x0,y0,z0), fReferenceAxis(referenceAxis) {}
+    KBVector3(Double_t x, Double_t y, Double_t z, Axis referenceAxis = kNon)
+    :TVector3(x,y,z), fReferenceAxis(referenceAxis) {}
 
-    KBVector3(Axis referenceAxis, Double_t i0, Double_t j0, Double_t k0)
-    :fReferenceAxis(referenceAxis) { SetIJK(i0,j0,k0); }
+    KBVector3(Axis referenceAxis, Double_t i, Double_t j, Double_t k)
+    :fReferenceAxis(referenceAxis) { SetIJK(i,j,k); }
 
-    KBVector3(Axis referenceAxis, TVector3 p)
-    :fReferenceAxis(referenceAxis) { SetIJK(p.X(),p.Y(),p.Z()); }
+    KBVector3(Axis referenceAxis, TVector3 ijk)
+    :fReferenceAxis(referenceAxis) { SetIJK(ijk.X(),ijk.Y(),ijk.Z()); }
 
     virtual ~KBVector3() {}
 
@@ -93,7 +93,7 @@ class KBVector3 : public TVector3
       return *this;
     }
 
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
     virtual void Clear(Option_t *option = "");
 
     void SetReferenceAxis(Axis referenceAxis);
@@ -116,7 +116,7 @@ class KBVector3 : public TVector3
     TVector3 GetIJK();
 
   private:
-    Axis fReferenceAxis = KBVector3::kNon;
+    Axis fReferenceAxis = kNon;
 
   ClassDef(KBVector3, 1)
 };

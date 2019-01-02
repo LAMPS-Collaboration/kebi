@@ -18,16 +18,16 @@ class KBPad : public KBChannel
     virtual ~KBPad() {}
 
     virtual void Clear(Option_t *option = "");
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
 
     /// option (default is "")
-    /// * p : Add Pad[ID] to main title
-    /// * a : Add AsAd,AGET,Channel-IDs to main title
-    /// * mc: Draw MCID and line at corresponding tb
-    /// * o : Draw output buffer
-    /// * r : Draw raw buffer
-    /// * i : Draw input buffer (not written by default)
-    /// * h : Draw hit
+    /// - p : Add Pad[ID] to main title
+    /// - a : Add AsAd,AGET,Channel-IDs to main title
+    /// - mc: Draw MCID and line at corresponding tb
+    /// - o : Draw output buffer
+    /// - r : Draw raw buffer
+    /// - i : Draw input buffer (not written by default)
+    /// - h : Draw hit
     virtual void Draw(Option_t *option = "mcoh");
 
     void DrawMCID(Option_t *option = "mc");

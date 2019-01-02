@@ -23,16 +23,41 @@ void KBTpcHit::Clear(Option_t *option)
 
 void KBTpcHit::Print(Option_t *option) const
 {
-  kc_info << "ID|XYZ|Charge|SRL|Tb: "
-    << setw(4)  << fHitID << " |"
-    << setw(12) << fX
-    << setw(12) << fY
-    << setw(12) << fZ << " |"
-    << setw(12) << fW << " |"
-    << setw(4) << fSection
-    << setw(4) << fRow
-    << setw(4) << fLayer << " |"
-    << setw(4) << fTb << endl;
+  TString opts = TString(option);
+
+  TString title;
+  if (opts.Index(">")>=0) title += "> ";
+  if (opts.Index("t")>=0) title += "HTMP-ID|XYZ|Q|SRL|Tb: ";
+
+  if (opts.Index("s")>=0)
+    kc_info << title
+      << fHitID << ", " << fTrackID << ", " << fMCID << ", " << fPadID << " |"
+      << fX << ", " << fY << ", " << fZ << " |" << fW << " |"
+      << fSection << ", "<< fRow << ", "<< fLayer << " |" << fTb << endl;
+  else //if (opts.Index("a")>=0)
+    kc_info << title
+      << setw(4)  << fHitID
+      << setw(4)  << fTrackID
+      << setw(4)  << fMCID
+      << setw(4)  << fPadID << " |"
+      << setw(12) << fX
+      << setw(12) << fY
+      << setw(12) << fZ << " |"
+      << setw(12) << fW << " |"
+      << setw(4) << fSection
+      << setw(4) << fRow
+      << setw(4) << fLayer << " |"
+      << setw(4) << fTb << endl;
+
+  if (opts.Index("d")>=0) {
+    TString opts2 = opts;
+    opts2.ReplaceAll("d","");
+    if (opts.Index("t")>=0)
+      opts2.ReplaceAll("t",">");
+    else
+      opts2 = opts + ">";
+    fHitList.Print(opts2);
+  }
 }
 
 void KBTpcHit::Copy(TObject &obj) const

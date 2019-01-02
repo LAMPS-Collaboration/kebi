@@ -6,6 +6,17 @@
 #include "TEveElement.h"
 #endif
 
+#include "KBGlobal.hh"
+
+/**
+ * Print(Option_t *option), option convension
+ * - a (aligned)      : Aligned print format. [Default]
+ * - s (simple)       : Simplest print format. Suppress all aligned spacings if possible.
+ * - t (title)        : Print titles of contents. [Default]
+ * - d (daughter)     : Print daughter objects.
+ * - > (as reference) : Print as reference.
+ */
+
 class KBContainer : public TObject
 {
   public:
@@ -26,58 +37,12 @@ class KBContainer : public TObject
   ClassDef(KBContainer, 3)
 };
 
-#define kc_raw     KBLogC(this->ClassName(),__FUNCTION__,-1)
-#define kc_out     KBLogC(this->ClassName(),__FUNCTION__,0)
-#define kc_print   KBLogC(this->ClassName(),__FUNCTION__,1)
-#define kc_info    KBLogC(this->ClassName(),__FUNCTION__,2)
-#define kc_warning KBLogC(this->ClassName(),__FUNCTION__,3)
-#define kc_error   KBLogC(this->ClassName(),__FUNCTION__,4)
-#define kc_debug   KBLogC(__FILE__,__LINE__)
-
-#include <iostream>
-
-class KBLogC
-{
-  /// Logger class for containers
-  public:
-    KBLogC(TString name, const std::string &title, int option)
-    {
-      if (option == -1)
-        return;
-
-      //for (auto i=0; i<rank; ++i)
-      //  std::cout << "  ";
-
-      TString header = Form("[%s::%s] ", name.Data(), title.c_str());
-
-      switch (option)
-      {
-        case 0:  break;
-        case 1:  std::cout<<header; break;
-        case 2:  std::cout<<header<<"\033[0;32m"<<"info "    <<"\033[0m"; break;
-        case 3:  std::cout<<header<<"\033[0;33m"<<"warnning "<<"\033[0m"; break;
-        case 4:  std::cout<<header<<"\033[0;31m"<<"error "   <<"\033[0m"; break;
-        default: ;
-      }
-    }
-
-    KBLogC(const std::string &title ,int line)
-    {
-      TString header = Form("+%d %s ", line, title.c_str());
-      std::cout<<"\033[0;36m"<<"debug "<<"\033[0m "<<header;
-    }
-
-    template <class T> KBLogC &operator<<(const T &v)
-    {
-      std::cout << v;
-      return *this;
-    }
-
-    KBLogC &operator<<(std::ostream&(*f)(std::ostream&))
-    {
-      std::cout << *f;
-      return *this;
-    }
-};
+#define kc_raw     KBLog(this->ClassName(),__FUNCTION__,0,-1)
+#define kc_out     KBLog(this->ClassName(),__FUNCTION__,0,0)
+#define kc_print   KBLog(this->ClassName(),__FUNCTION__,0,1)
+#define kc_info    KBLog(this->ClassName(),__FUNCTION__,0,2)
+#define kc_warning KBLog(this->ClassName(),__FUNCTION__,0,3)
+#define kc_error   KBLog(this->ClassName(),__FUNCTION__,0,4)
+#define kc_debug   KBLog(__FILE__,__LINE__)
 
 #endif

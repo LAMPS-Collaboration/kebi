@@ -31,7 +31,7 @@ class KBHit : public KBWPointCluster
     virtual ~KBHit() {}
 
     virtual void Clear(Option_t *option = "");
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
 
     virtual void PropagateMC();

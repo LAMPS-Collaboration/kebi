@@ -9,35 +9,28 @@ ClassImp(KBWPointCluster)
 KBWPointCluster::KBWPointCluster() { Clear(); }
 KBWPointCluster::~KBWPointCluster() {}
 
-void KBWPointCluster::Print(Option_t *opt) const
+void KBWPointCluster::Print(Option_t *option) const
 {
-  KBWPoint::Print();
+  KBWPoint::Print(option);
 
-  auto optstr = TString(opt);
-  optstr.ToLower();
+  TString opts(option);
 
-  if (optstr.Index("c")>=0) {
-    kc_info << "CovXX: "
-         << setw(12) << fCov[0][0]
-         << setw(12) << fCov[1][1]
-         << setw(12) << fCov[2][2] << endl;
+  TString title1;
+  if (opts.Index(">")>=0) title1 += "> ";
+  if (opts.Index("t")>=0) title1 += "Cov-XX,YY,ZZ: ";
 
-    kc_info << "CovXY: "
-         << setw(12) << fCov[0][1]
-         << setw(12) << fCov[1][2]
-         << setw(12) << fCov[2][0] << endl;
+  TString title2;
+  if (opts.Index(">")>=0) title2 += "> ";
+  if (opts.Index("t")>=0) title2 += "Cov-XY,YZ,ZX: ";
+
+  if (opts.Index("s")>=0) {
+    kc_info << title1 << fCov[0][0] << ", " << fCov[1][1] << ", " << fCov[2][2] << endl;
+    kc_info << title2 << fCov[0][1] << ", " << fCov[1][2] << ", " << fCov[2][0] << endl;
   }
-
-  if (optstr.Index("e")>=0) {
-    kc_info << "ErrXX: "
-         << setw(12) << fCov[0][0]/sqrt(fW)
-         << setw(12) << fCov[1][1]/sqrt(fW)
-         << setw(12) << fCov[2][2]/sqrt(fW) << endl;
-
-    kc_info << "ErrXY: "
-         << setw(12) << fCov[0][1]/sqrt(fW)
-         << setw(12) << fCov[1][2]/sqrt(fW)
-         << setw(12) << fCov[2][0]/sqrt(fW) << endl;
+  else //if (opts.Index("a")>=0)
+  {
+    kc_info << title1 << setw(12) << fCov[0][0] << setw(12) << fCov[1][1] << setw(12) << fCov[2][2] << endl;
+    kc_info << title2 << setw(12) << fCov[0][1] << setw(12) << fCov[1][2] << setw(12) << fCov[2][0] << endl;
   }
 }
 

@@ -17,7 +17,7 @@ class KBVertex : public KBHit
     virtual ~KBVertex() { Clear(); }
 
     virtual void Clear(Option_t *option = "");
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
 
     void AddTrack(KBTracklet* track);

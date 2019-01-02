@@ -14,7 +14,7 @@ class KBMCStep : public KBContainer
     KBMCStep();
     virtual ~KBMCStep();
 
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
     virtual void Clear(Option_t *option = "");
 
     void SetTrackID(Int_t val);

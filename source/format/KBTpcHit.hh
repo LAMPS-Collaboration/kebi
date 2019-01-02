@@ -28,7 +28,7 @@ class KBTpcHit : public KBHit
     virtual ~KBTpcHit() {};
 
     virtual void Clear(Option_t *option = "");
-    virtual void Print(Option_t *option = "") const;
+    virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
 
     virtual TF1 *GetPulseFunction(Option_t *option = "");

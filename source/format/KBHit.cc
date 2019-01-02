@@ -23,17 +23,36 @@ void KBHit::Clear(Option_t *option)
 
 void KBHit::Print(Option_t *option) const
 {
-  kc_info << "HTM-ID|XYZ|Charge: "
-    << setw(4)  << fHitID
-    << setw(4)  << fTrackID
-    << setw(4)  << fMCID << " |"
-    << setw(12) << fX
-    << setw(12) << fY
-    << setw(12) << fZ << " |"
-    << setw(12) << fW << endl;
+  TString opts = TString(option);
 
-  if (TString(option).Index("r")>=0)
-    fHitList.Print("r");
+  TString title;
+  if (opts.Index(">")>=0) title += "> ";
+  if (opts.Index("t")>=0) title += "HTM-ID|XYZ|Q: ";
+
+  if (opts.Index("s")>=0)
+    kc_info << title
+      << fHitID << ", " << fTrackID << ", " << fMCID << " | "
+      << fX << ", " << fY << ", " << fZ << " | "
+      << fW << endl;
+  else //if (opts.Index("a")>=0)
+    kc_info << title
+      << setw(4)  << fHitID
+      << setw(4)  << fTrackID
+      << setw(4)  << fMCID << " |"
+      << setw(12) << fX
+      << setw(12) << fY
+      << setw(12) << fZ << " |"
+      << setw(12) << fW << endl;
+
+  if (opts.Index("d")>=0) {
+    TString opts2 = opts;
+    opts2.ReplaceAll("d","");
+    if (opts.Index("t")>=0)
+      opts2.ReplaceAll("t",">");
+    else
+      opts2 = opts + ">";
+    fHitList.Print(opts2);
+  }
 }
 
 void KBHit::Copy(TObject &obj) const

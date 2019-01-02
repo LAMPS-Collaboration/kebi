@@ -20,11 +20,14 @@ void KBVertex::Clear(Option_t *option)
 
 void KBVertex::Print(Option_t *option) const
 {
-  kc_info << "at ("
-    << setw(12) << fX <<","
-    << setw(12) << fY <<","
-    << setw(12) << fZ
-    << ") containing " << GetNumTracks() << "tracks" << endl;
+  TString opts = TString(option);
+
+  if (opts.Index("s")>=0)
+    kc_info << "Vertex at (" << fX << "," << fY << "," << fZ
+      << ") [mm] containing " << GetNumTracks() << "tracks" << endl;
+  else //if (opts.Index("a")>=0)
+    kc_info << "Vertex at (" << setw(12) << fX <<"," << setw(12) << fY <<"," << setw(12) << fZ
+      << ") [mm] containing " << GetNumTracks() << "tracks" << endl;
 }
 
 void KBVertex::Copy(TObject &obj) const

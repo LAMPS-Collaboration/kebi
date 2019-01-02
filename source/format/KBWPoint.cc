@@ -23,13 +23,22 @@ void KBWPoint::Set(Double_t x, Double_t y, Double_t z, Double_t w)
   fW = w;
 }
 
-void KBWPoint::Print(Option_t *) const
+void KBWPoint::Print(Option_t *option) const
 {
-  kc_info << "XYZ|W: "
-          << setw(12) << fX
-          << setw(12) << fY
-          << setw(12) << fZ << " |"
-          << setw(12) << fW << endl;
+  TString opts(option);
+
+  TString title;
+  if (opts.Index(">")>=0) title += "> ";
+  if (opts.Index("t")>=0) title += "XYZ|W: ";
+
+  if (opts.Index("s")>=0)
+    kc_info << title << fX << "," << fY << "," << fZ << " | " << fW << endl;
+  else //if (opts.Index("a")>=0)
+    kc_info << title
+      << setw(12) << fX
+      << setw(12) << fY
+      << setw(12) << fZ << " |"
+      << setw(12) << fW << endl;
 }
 
 void KBWPoint::Clear(Option_t *option)

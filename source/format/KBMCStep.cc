@@ -19,18 +19,28 @@ KBMCStep::~KBMCStep()
 {
 }
 
-void KBMCStep::Print(Option_t *) const
+void KBMCStep::Print(Option_t *option) const
 {
-  cout << "KBMCStep (xyz/et):"
-       << setw(12) << fX
-       << setw(12) << fY
-       << setw(12) << fZ << " / "
-       << setw(12) << fTime
-       << setw(12) << fEdep << endl;
+  TString opts(option);
+
+  TString title;
+  if (opts.Index(">")>=0) title += "> ";
+  if (opts.Index("t")>=0) title += "ID|XYZ|TE: ";
+
+  if (opts.Index("s")>=0)
+    kc_info << title << fTrackID << " | " << fX << ", " << fY << ", " << fZ
+      << " | " << fTime << ", " << fEdep << endl;
+  else //if (opts.Index("a")>=0)
+    kc_info << title
+      << setw(4)  << fTrackID
+      << setw(12) << fX
+      << setw(12) << fY
+      << setw(12) << fZ << " | "
+      << setw(12) << fTime
+      << setw(12) << fEdep << endl;
 }
 
-void KBMCStep::Clear(Option_t *option)
-{
+void KBMCStep::Clear(Option_t *option) {
   fTrackID = -1;
   fX = -999;
   fY = -999;

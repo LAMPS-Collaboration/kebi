@@ -31,19 +31,25 @@ void KBPad::Clear(Option_t *option)
 
 void KBPad::Print(Option_t *option) const
 {
-  if (TString(option) == "s") {
-    kc_info << setw(6) << fID << setw(4) << fSection << setw(4) << fRow << setw(4) << fLayer << endl;
+  TString opts(option);
+
+  if (opts.Index("s")) {
+    kc_info << "id:" << fID << " s:" << fSection << " r:" << fRow << " l:" << fLayer << endl;
     return;
   }
+  //else if (opts.Index("a"))
 
-  kc_info << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")" << endl;
+  kc_info << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
+  if (fActive) kc_raw << " is Active!" << endl;
+  else kc_raw << " is NOT Active." << endl;
+
   kc_info << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
   kc_info << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
   kc_info << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
   kc_info << "Position              : (" << fI << ", " << fJ << ") " << endl;
 
   Int_t numMCID = fMCIDArray.size();
-  kc_info << "  MC-ID (co. Tb [mm]),  : ";
+  kc_info << " > List of MC-IDs (co. Tb [mm]),  : ";
   for (auto iMC = 0; iMC < numMCID; ++iMC)
     kc_raw << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
   kc_raw << endl;
@@ -51,7 +57,8 @@ void KBPad::Print(Option_t *option) const
 
 void KBPad::Draw(Option_t *option)
 {
-  kc_info << "replaced to GetHist(option)->Draw(); DrawMCID(option);" << endl;
+  kc_info << "GetHist(o)->Draw(); DrawMCID(o); DrawHit(o);" << endl;
+
   GetHist(option) -> Draw();
   DrawMCID(option);
   DrawHit(option);
@@ -59,11 +66,11 @@ void KBPad::Draw(Option_t *option)
 
 void KBPad::DrawMCID(Option_t *option)
 {
-  TString optionString = TString(option);
-  optionString.ToLower();
+  TString opts(option);
+  opts.ToLower();
 
   Int_t numMCIDs = fMCIDArray.size();
-  if (numMCIDs != 0 && optionString.Index("mc") >= 0)
+  if (numMCIDs != 0 && opts.Index("mc") >= 0)
   {
     auto wgsum = 0.;
     for (auto iMC = 0; iMC < numMCIDs; ++iMC)
@@ -87,16 +94,19 @@ void KBPad::DrawMCID(Option_t *option)
 
 void KBPad::DrawHit(Option_t *option)
 {
-  TString optionString = TString(option);
-  optionString.ToLower();
+  TString opts(option);
+  opts.ToLower();
 
   Int_t numHits = fHitArray.size();
-  if (numHits != 0 && optionString.Index("h") >= 0)
-  {
-    for (auto hit : fHitArray) {
-      auto pulse = hit -> GetPulseFunction();
-      pulse -> SetNpx(500);
-      pulse -> Draw("samel");
+  if (opts.Index("h") >= 0) {
+    if (numHits == 0)
+      kc_warning << "No hit exist in pad." << endl;
+    else {
+      for (auto hit : fHitArray) {
+        auto pulse = hit -> GetPulseFunction();
+        pulse -> SetNpx(500);
+        pulse -> Draw("samel");
+      }
     }
   }
 }
@@ -314,11 +324,11 @@ TH1D *KBPad::GetHist(Option_t *option)
 
 void KBPad::SetHist(TH1D *hist, Option_t *option)
 {
-  kc_info << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw)]" << endl;
+  kc_info << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw) || i(input)] && h(hit)" << endl;
   hist -> Reset();
 
-  TString optionString = TString(option);
-  optionString.ToLower();
+  TString opts(option);
+  opts.ToLower();
 
   TString namePad = Form("Pad%03d",fID);
   TString nameID = Form("ID%d%d%02d",fAsAdID,fAGETID,fChannelID);
@@ -327,12 +337,12 @@ void KBPad::SetHist(TH1D *hist, Option_t *option)
 
   TString name;
 
-  if (optionString.Index("p") >= 0) {
+  if (opts.Index("p") >= 0) {
     name = name + namePad;
     firstNameOn = true;
   }
 
-  if (optionString.Index("a") >= 0) {
+  if (opts.Index("a") >= 0) {
     if (firstNameOn) name = name + "_";
     name = name + nameID;
     firstNameOn = true;
@@ -343,13 +353,13 @@ void KBPad::SetHist(TH1D *hist, Option_t *option)
 
   hist -> SetNameTitle(name,name+";Time Bucket;ADC");
 
-  if (optionString.Index("o") >= 0) {
+  if (opts.Index("o") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
       hist -> SetBinContent(tb+1, fBufferOut[tb]);
-  } else if (optionString.Index("r") >= 0) {
+  } else if (opts.Index("r") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
       hist -> SetBinContent(tb+1, fBufferRaw[tb]);
-  } else if (optionString.Index("i") >= 0) {
+  } else if (opts.Index("i") >= 0) {
     for (auto tb = 0; tb < 512; tb++)
       hist -> SetBinContent(tb+1, fBufferIn[tb]);
   }
