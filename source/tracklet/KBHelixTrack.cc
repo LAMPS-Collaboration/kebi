@@ -32,18 +32,6 @@ void KBHelixTrack::Clear(Option_t *)
   fKInitial     = -999;
   fAlphaSlope   = -999;
 
-  fChargeSum = 0;
-
-  fExpectationI = 0;
-  fExpectationK = 0;
-  fExpectationJ = 0;
-  fExpectationII = 0;
-  fExpectationKK = 0;
-  fExpectationJJ = 0;
-  fExpectationIJ = 0;
-  fExpectationJK = 0;
-  fExpectationKI = 0;
-
   fRMSW = -999;
   fRMSH = -999;
 
@@ -52,13 +40,6 @@ void KBHelixTrack::Clear(Option_t *)
 
   fIsPositiveChargeParticle = true;
 
-  //if (TString(option) == "C") DeleteHits();
-  //else {
-    fMainHits.clear();
-    fCandHits.clear();
-  //}
-
-  fMainHitIDs.clear();
   fdEdxArray.clear();
 
   fGenfitID = -999;
@@ -77,7 +58,7 @@ void KBHelixTrack::Print(Option_t *) const
   kc_info << setw(13) << "Track ID"     << " : " << fTrackID << endl;
   kc_info << setw(13) << "Parent ID"    << " : " << fParentID << endl;
   kc_info << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
-  kc_info << setw(13) << "# of Hits"    << " : " << fMainHits.size() << endl;
+  kc_info << setw(13) << "# of Hits"    << " : " << fHitList.GetNumHits() << endl;
 
   if (fFitStatus != KBHelixTrack::kHelix && fFitStatus != KBHelixTrack::kGenfitTrack)
     return;
@@ -86,7 +67,7 @@ void KBHelixTrack::Print(Option_t *) const
   kc_info << setw(13) << "Helix Radius" << " : " << fHelixRadius << " [mm]" << endl;
   kc_info << setw(13) << "Dip Angle"    << " : " << DipAngle() << endl;
   kc_info << setw(13) << "Fit RMS-w/h"  << " : " << fRMSW << " / " << fRMSH << " [mm]" << endl;
-  kc_info << setw(13) << "Charge"       << " : " << fChargeSum << " [ADC]" << endl;;
+  kc_info << setw(13) << "Charge"       << " : " << fHitList.GetW() << " [ADC]" << endl;;
   kc_info << setw(13) << "Track Length" << " : " << TrackLength() << " [mm]" << endl;;
   kc_info << setw(13) << "Momentum"     << " : " << Momentum().Mag() << " [MeV]" << endl;;
 
@@ -124,100 +105,46 @@ KBTrackFitter *KBHelixTrack::CreateTrackFitter() const { return KBHelixTrackFitt
 
 void KBHelixTrack::AddHit(KBHit *hit)
 {
-  KBVector3 pos(hit->GetPosition(),fReferenceAxis);
-  Double_t i = pos.I();
-  Double_t j = pos.J();
-  Double_t k = pos.K();
-  Double_t w = hit -> GetCharge();
-
-  Double_t W = fChargeSum + w;
-
-  fExpectationI = (fChargeSum * fExpectationI + w * i) / W;
-  fExpectationJ = (fChargeSum * fExpectationJ + w * j) / W;
-  fExpectationK = (fChargeSum * fExpectationK + w * k) / W;
-
-  fExpectationII = (fChargeSum * fExpectationII + w * i * i) / W;
-  fExpectationJJ = (fChargeSum * fExpectationJJ + w * j * j) / W;
-  fExpectationKK = (fChargeSum * fExpectationKK + w * k * k) / W;
-
-  fExpectationIJ = (fChargeSum * fExpectationIJ + w * i * j) / W;
-  fExpectationJK = (fChargeSum * fExpectationJK + w * j * k) / W;
-  fExpectationKI = (fChargeSum * fExpectationKI + w * k * i) / W;
-
-  fChargeSum = W;
-
-  fMainHits.push_back(hit);
+  fHitList.AddHit(hit);
 }
 
 void KBHelixTrack::RemoveHit(KBHit *hit)
 {
-  KBVector3 pos(hit->GetPosition(),fReferenceAxis);
-  Double_t i = pos.I();
-  Double_t j = pos.J();
-  Double_t k = pos.K();
-  Double_t w = hit -> GetCharge();
-
-  Double_t W = fChargeSum - w;
-
-  Int_t numHits = fMainHits.size();
-  for (auto iHit = 0; iHit < numHits; iHit++) {
-    if (fMainHits[iHit] == hit) {
-      fMainHits.erase(fMainHits.begin()+iHit);
-      break;
-    }
-  }
-
-  fExpectationI = (fChargeSum * fExpectationI - w * i) / W;
-  fExpectationJ = (fChargeSum * fExpectationJ - w * j) / W;
-  fExpectationK = (fChargeSum * fExpectationK - w * k) / W;
-
-  fExpectationII = (fChargeSum * fExpectationII - w * i * i) / W;
-  fExpectationJJ = (fChargeSum * fExpectationJJ - w * j * j) / W;
-  fExpectationKK = (fChargeSum * fExpectationKK - w * k * k) / W;
-
-  fExpectationIJ = (fChargeSum * fExpectationIJ - w * i * j) / W;
-  fExpectationJK = (fChargeSum * fExpectationJK - w * j * k) / W;
-  fExpectationKI = (fChargeSum * fExpectationKI - w * k * i) / W;
-
-  fChargeSum = W;
+  fHitList.RemoveHit(hit);
 }
 
 void KBHelixTrack::DeleteHits()
 {
-  for (auto hit : fMainHits)
+  auto hits = fHitList.GetHitArray();
+  for (auto hit : *hits)
     delete hit;
 
-  fMainHits.clear();
-
-  for (auto hit : fCandHits)
-    delete hit;
-
-  fCandHits.clear();
+  fHitList.Clear();
 }
 
 void KBHelixTrack::SortHits(bool increasing)
 {
+  auto hits = fHitList.GetHitArray();
   if (increasing) {
     auto sorting = KBHitSortByIncreasingLength(this);
-    sort(fMainHits.begin(), fMainHits.end(), sorting);
+    sort(hits->begin(), hits->end(), sorting);
   } else {
     auto sorting = KBHitSortByDecreasingLength(this);
-    sort(fMainHits.begin(), fMainHits.end(), sorting);
+    sort(hits->begin(), hits->end(), sorting);
   }
 }
 
 void KBHelixTrack::SortHitsByTimeOrder() { SortHits(fIsPositiveChargeParticle); }
 
+TVector3 KBHelixTrack::GetMean() { return fHitList.GetMean(); }
+
 void KBHelixTrack::FinalizeHits()
 {
-  for (auto hit : fMainHits) {
-    fMainHitIDs.push_back(hit->GetHitID());
+  auto hits = fHitList.GetHitArray();
+  for (auto hit : *hits)
     hit -> SetTrackID(fTrackID);
 
-    fHitList.AddHit(hit); //@todo XXX
-  }
-
-  PropagateMC(); //@todo XXX
+  PropagateMC();
 }
 
 void KBHelixTrack::SetGenfitID(Int_t idx)   { fGenfitID = idx; }
@@ -319,7 +246,7 @@ KBVector3 KBHelixTrack::GetPlaneNormal()   const { return KBVector3(fReferenceAx
 
 KBVector3 KBHelixTrack::PerpLine(TVector3 p) const
 {
-  KBVector3 mean = GetMean();
+  KBVector3 mean = fHitList.GetMean(fReferenceAxis);
   KBVector3 dir = GetLineDirection();
 
   KBVector3 pMinusMean = KBVector3(p,fReferenceAxis) - mean;
@@ -333,7 +260,7 @@ KBVector3 KBHelixTrack::PerpLine(TVector3 p) const
 KBVector3 KBHelixTrack::PerpPlane(TVector3 p) const
 {
   KBVector3 normal = GetPlaneNormal();
-  KBVector3 mean = GetMean();
+  KBVector3 mean = fHitList.GetMean(fReferenceAxis);
 
   Double_t perp = abs(normal * KBVector3(p, fReferenceAxis) - normal * mean) / sqrt(normal * normal);
   return perp * normal;
@@ -380,34 +307,7 @@ void KBHelixTrack::GetHelixParameters(Double_t &iCenter,
   }
 }
 
-Double_t KBHelixTrack::GetChargeSum()  const { return fChargeSum; }
-
-KBVector3 KBHelixTrack::GetMean()  const { KBVector3 v3(fReferenceAxis); v3.SetIJK(fExpectationI, fExpectationJ, fExpectationK); return v3; }
-Double_t KBHelixTrack::GetIMean() const { return fExpectationJ; }
-Double_t KBHelixTrack::GetJMean() const { return fExpectationI; }
-Double_t KBHelixTrack::GetKMean() const { return fExpectationK; }
-Double_t KBHelixTrack::GetJCov()  const { return CovWJJ()/fChargeSum; }
-Double_t KBHelixTrack::GetICov()  const { return CovWII()/fChargeSum; }
-
-Double_t KBHelixTrack::CovWJJ() const { return fChargeSum * (fExpectationII - fExpectationI * fExpectationI); }
-Double_t KBHelixTrack::CovWII() const { return fChargeSum * (fExpectationJJ - fExpectationJ * fExpectationJ); }
-Double_t KBHelixTrack::CovWKK() const { return fChargeSum * (fExpectationKK - fExpectationK * fExpectationK); }
-
-Double_t KBHelixTrack::CovWIJ() const { return fChargeSum * (fExpectationIJ - fExpectationI * fExpectationJ); }
-Double_t KBHelixTrack::CovWJK() const { return fChargeSum * (fExpectationJK - fExpectationJ * fExpectationK); }
-Double_t KBHelixTrack::CovWKI() const { return fChargeSum * (fExpectationKI - fExpectationK * fExpectationI); }
-
-Double_t KBHelixTrack::GetExpectationI()  const { return fExpectationI; }
-Double_t KBHelixTrack::GetExpectationJ()  const { return fExpectationJ; }
-Double_t KBHelixTrack::GetExpectationK()  const { return fExpectationK; }
-
-Double_t KBHelixTrack::GetExpectationII() const { return fExpectationII; }
-Double_t KBHelixTrack::GetExpectationJJ() const { return fExpectationJJ; }
-Double_t KBHelixTrack::GetExpectationKK() const { return fExpectationKK; }
-
-Double_t KBHelixTrack::GetExpectationIJ() const { return fExpectationIJ; }
-Double_t KBHelixTrack::GetExpectationJK() const { return fExpectationJK; }
-Double_t KBHelixTrack::GetExpectationKI() const { return fExpectationKI; }
+Double_t KBHelixTrack::GetChargeSum()  const { return fHitList.GetW(); }
 
 Double_t KBHelixTrack::GetRMSW()       const { return fRMSW; }
 Double_t KBHelixTrack::GetRMSH()       const { return fRMSH; }
@@ -418,17 +318,13 @@ Bool_t KBHelixTrack::IsPositiveChargeParticle()  const { return fIsPositiveCharg
 
 
 
-Int_t KBHelixTrack::GetNumHits() const { return fMainHits.size(); }
-KBHit *KBHelixTrack::GetHit(Int_t idx) const { return fMainHits.at(idx); }
-std::vector<KBHit *> *KBHelixTrack::GetHitArray() { return &fMainHits; }
+Int_t KBHelixTrack::GetNumHits() const { return fHitList.GetNumHits(); }
+KBHit *KBHelixTrack::GetHit(Int_t idx) const { return fHitList.GetHit(idx); }
+std::vector<KBHit *> *KBHelixTrack::GetHitArray() { return fHitList.GetHitArray(); }
 
-Int_t KBHelixTrack::GetNumCandHits() const { return fCandHits.size(); }
-std::vector<KBHit *> *KBHelixTrack::GetCandHitArray() { return &fCandHits; }
-
-
-Int_t KBHelixTrack::GetNumHitIDs() const { return fMainHitIDs.size(); }
-Int_t KBHelixTrack::GetHitID(Int_t idx) const { return fMainHitIDs.at(idx); }
-std::vector<Int_t> *KBHelixTrack::GetHitIDArray() { return &fMainHitIDs; }
+Int_t KBHelixTrack::GetNumHitIDs() const { return fHitList.GetNumHits(); }
+Int_t KBHelixTrack::GetHitID(Int_t idx) const { return fHitList.GetHitID(idx); }
+std::vector<Int_t> *KBHelixTrack::GetHitIDArray() { return fHitList.GetHitIDArray(); }
 
 
 std::vector<Double_t> *KBHelixTrack::GetdEdxArray() { return &fdEdxArray; }
@@ -946,7 +842,8 @@ KBHelixTrack::ExtrapolateByMap(TVector3 p, TVector3 &q, TVector3 &m) const
 Double_t 
 KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 {
-  Int_t numHits = fMainHits.size();
+  auto hits = fHitList.GetHitArray();
+  Int_t numHits = hits->size();
   if (numHits < 2) 
     return -1;
 
@@ -954,11 +851,11 @@ KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 
   Double_t total = 0;
   Double_t continuous = 0;
-  TVector3 before = Map(fMainHits[0]->GetPosition());
+  TVector3 before = Map(hits->at(0)->GetPosition());
 
   for (auto iHit = 1; iHit < numHits; iHit++) 
   {
-    TVector3 current = Map(fMainHits[iHit]->GetPosition());
+    TVector3 current = Map(hits->at(iHit)->GetPosition());
     auto length = std::abs(current.Z()-before.Z());
 
     total += length;

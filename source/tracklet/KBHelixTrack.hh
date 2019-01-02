@@ -33,18 +33,6 @@ class KBHelixTrack : public KBTracklet
     Double_t fKInitial;      ///< k-position at angle alpha = 0
     Double_t fAlphaSlope;    ///< k = fAlphaSlope * alpha + fKInitial
 
-    Double_t fChargeSum;     ///< Sum of charge
-
-    Double_t fExpectationI;  //! < Expectation value of i
-    Double_t fExpectationK;  //! < Expectation value of j
-    Double_t fExpectationJ;  //! < Expectation value of k
-    Double_t fExpectationII; //! < Expectation value of i^2
-    Double_t fExpectationJJ; //! < Expectation value of j^2
-    Double_t fExpectationKK; //! < Expectation value of k^2
-    Double_t fExpectationIJ; //! < Expectation value of ij
-    Double_t fExpectationJK; //! < Expectation value of jk
-    Double_t fExpectationKI; //! < Expectation value of ki
-
     Double_t fRMSW;          ///< width RMS of the fit
     Double_t fRMSH;          ///< height RMS of the fit
 
@@ -53,10 +41,6 @@ class KBHelixTrack : public KBTracklet
 
     Bool_t fIsPositiveChargeParticle;
 
-    std::vector<KBHit *> fMainHits; //!
-    std::vector<KBHit *> fCandHits; //!
-
-    std::vector<Int_t> fMainHitIDs;    ///<
     std::vector<Double_t> fdEdxArray;  ///< dE/dx array;
 
     Int_t    fGenfitID;        ///< GENFIT Track ID
@@ -76,6 +60,8 @@ class KBHelixTrack : public KBTracklet
     void DeleteHits();
     void SortHits(bool increasing = true);
     void SortHitsByTimeOrder();
+
+    TVector3 GetMean(); // mean value of hit positions
 
     void FinalizeHits();
 
@@ -131,33 +117,6 @@ class KBHelixTrack : public KBTracklet
 
     Double_t GetChargeSum() const;
 
-    KBVector3 GetMean() const;
-    Double_t GetIMean() const;
-    Double_t GetJMean() const;
-    Double_t GetKMean() const;
-    Double_t GetICov() const;
-    Double_t GetJCov() const;
-
-    Double_t CovWII() const; ///< SUM_i {(z_centroid-z_i)*(z_centroid-z_i) }
-    Double_t CovWJJ() const; ///< SUM_i {(x_centroid-x_i)*(x_centroid-x_i) }
-    Double_t CovWKK() const; ///< SUM_i {(y_centroid-y_i)*(y_centroid-y_i) }
-
-    Double_t CovWIJ() const; ///< SUM_i {(z_centroid-z_i)*(x_centroid-x_i) }
-    Double_t CovWJK() const; ///< SUM_i {(x_centroid-x_i)*(y_centroid-y_i) }
-    Double_t CovWKI() const; ///< SUM_i {(y_centroid-y_i)*(z_centroid-z_i) }
-
-    Double_t GetExpectationI()  const;
-    Double_t GetExpectationJ()  const;
-    Double_t GetExpectationK()  const;
-
-    Double_t GetExpectationII() const;
-    Double_t GetExpectationJJ() const;
-    Double_t GetExpectationKK() const;
-
-    Double_t GetExpectationIJ() const;
-    Double_t GetExpectationJK() const;
-    Double_t GetExpectationKI() const;
-
     Double_t GetRMSW() const;
     Double_t GetRMSH() const;
     Double_t GetAlphaHead() const;
@@ -170,11 +129,6 @@ class KBHelixTrack : public KBTracklet
     Int_t GetNumHits() const;
     KBHit *GetHit(Int_t idx) const;
     std::vector<KBHit *> *GetHitArray();
-
-    Int_t GetNumCandHits() const;
-    std::vector<KBHit *> *GetCandHitArray();
-
-
 
     Int_t GetNumHitIDs() const;
     Int_t GetHitID(Int_t idx) const;
