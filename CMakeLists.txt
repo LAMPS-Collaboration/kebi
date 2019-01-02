@@ -25,6 +25,7 @@ message(STATUS "Build Doxygen document : " ${BUILD_DOXYGEN_DOC})
 set(KEBI_SOURCE_DIRECTORY_LIST
   ${CMAKE_SOURCE_DIR}/source/fit
   ${CMAKE_SOURCE_DIR}/source/tool
+  ${CMAKE_SOURCE_DIR}/source/geometry
   ${CMAKE_SOURCE_DIR}/source/base
   ${CMAKE_SOURCE_DIR}/source/format
   ${CMAKE_SOURCE_DIR}/source/tracklet

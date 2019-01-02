@@ -3,8 +3,9 @@
 
 #include "TVector3.h"
 #include "TArrow.h"
+#include "KBGeometry.hh"
 
-class KBGeoLine
+class KBGeoLine : public KBGeometry
 {
   public:
     KBGeoLine();
@@ -18,6 +19,7 @@ class KBGeoLine
     Double_t GetX1() const;
     Double_t GetY1() const;
     Double_t GetZ1() const;
+
     Double_t GetX2() const;
     Double_t GetY2() const;
     Double_t GetZ2() const;
@@ -25,7 +27,7 @@ class KBGeoLine
     TVector3 GetPoint1() const;
     TVector3 GetPoint2() const;
 
-    TVector3 Direction() const;
+    TVector3 Direction() const; ///< 1 to 2
 
     Double_t Length(Double_t x, Double_t y, Double_t z) const;
     Double_t Length(TVector3 position) const;
@@ -37,11 +39,11 @@ class KBGeoLine
     Double_t DistanceToLine(Double_t x, Double_t y, Double_t z) const;
     Double_t DistanceToLine(TVector3 pos) const;
 
-    TArrow *CreateTArrowXY();
-    TArrow *CreateTArrowYZ();
-    TArrow *CreateTArrowZY();
-    TArrow *CreateTArrowZX();
-    TArrow *CreateTArrowXZ();
+    TArrow *DrawArrowXY();
+    TArrow *DrawArrowYZ();
+    TArrow *DrawArrowZY();
+    TArrow *DrawArrowZX();
+    TArrow *DrawArrowXZ();
 
   protected:
     Double_t fX1 = 0;

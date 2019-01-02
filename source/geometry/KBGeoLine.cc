@@ -14,7 +14,7 @@ KBGeoLine::KBGeoLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_
 
 KBGeoLine::KBGeoLine(TVector3 pos1, TVector3 pos2)
 {
-  SetLine(pos1.X(), pos1.Y(), pos1.Z(), pos2.X(), pos2.Y(), pos2.Z());
+  SetLine(pos1, pos2);
 }
 
 void KBGeoLine::SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2)
@@ -117,8 +117,8 @@ Double_t KBGeoLine::DistanceToLine(TVector3 pos) const
   return std::sqrt((pos.X()-x0)*(pos.X()-x0) + (pos.Y()-y0)*(pos.Y()-y0) + (pos.Z()-z0)*(pos.Z()-z0));
 }
 
-TArrow *KBGeoLine::CreateTArrowXY() { return new TArrow(fX1, fY1, fX2, fY2); }
-TArrow *KBGeoLine::CreateTArrowYZ() { return new TArrow(fY1, fZ1, fY2, fZ2); }
-TArrow *KBGeoLine::CreateTArrowZY() { return new TArrow(fZ1, fY1, fZ2, fY2); }
-TArrow *KBGeoLine::CreateTArrowZX() { return new TArrow(fZ1, fX1, fZ2, fX2); }
-TArrow *KBGeoLine::CreateTArrowXZ() { return new TArrow(fX1, fZ1, fX2, fZ2); }
+TArrow *KBGeoLine::DrawArrowXY() { return new TArrow(fX1, fY1, fX2, fY2); }
+TArrow *KBGeoLine::DrawArrowYZ() { return new TArrow(fY1, fZ1, fY2, fZ2); }
+TArrow *KBGeoLine::DrawArrowZY() { return new TArrow(fZ1, fY1, fZ2, fY2); }
+TArrow *KBGeoLine::DrawArrowZX() { return new TArrow(fZ1, fX1, fZ2, fX2); }
+TArrow *KBGeoLine::DrawArrowXZ() { return new TArrow(fX1, fZ1, fX2, fZ2); }
