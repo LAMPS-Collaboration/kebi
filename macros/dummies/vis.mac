@@ -1,9 +1,6 @@
 /vis/open OGL 600x600-0+0
 /vis/drawVolume
 
-/run/SetOutputFile     $KEBIPATH/data/test.mc.root
-/run/SetGeneratorFile  $KEBIPATH/input/IQMD_short.gen
-
 /run/setCutForAGivenParticle e- 100. mm
 
 #/vis/scene/add/axes 0 0 0 500 mm

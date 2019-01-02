@@ -26,6 +26,10 @@ int main(int argc, char** argv)
   physicsList -> RegisterPhysics(new G4StepLimiterPhysics());
 
   runManager -> SetUserInitialization(physicsList);
+  if (argc >= 2)
+    runManager -> SetParameterContainer(argv[2]);
+  else
+    runManager -> SetParameterContainer("dummy.par");
   runManager -> SetUserInitialization(new DUMMYDetectorConstruction());
   runManager -> SetUserAction(new KBPrimaryGeneratorAction());
   runManager -> SetUserAction(new KBEventAction());

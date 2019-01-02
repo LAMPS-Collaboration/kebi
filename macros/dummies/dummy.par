@@ -1,4 +1,7 @@
 # parameter file
+G4InputFile   s  $KEBIPATH/input/IQMD_short.gen
+G4OutputFile  s  $KEBIPATH/data/dummy.mc.root
+MCStepPersistency b true
 
 bool_parameter    b  true
 int_parameter     i  512

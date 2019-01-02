@@ -1,0 +1,23 @@
+#include "style.h"
+using namespace style;
+
+void draw()
+{
+  vector<KBHit *> hits;
+  auto helix = new KBHelixTrack();
+
+  auto graph = new TGraph();
+  for (auto hit : hits) {
+    helix -> AddHit(hit);
+    graph -> SetPoint(graph->GetN(),hit->X(),hit->Y());
+  }
+
+  make(graph);
+  cv1();
+  helix -> Fit();
+  helix -> Print();
+
+  //graph -> SetMarkerStyle(24);
+  //graph -> Draw("ap");
+  //helix -> TrajectoryOnPlane(KBVector3::kX,KBVector3::kY) -> Draw("samel");
+}
