@@ -21,9 +21,6 @@ bool KBSingleHelixTask::Init()
   fTrackArray = new TClonesArray("KBHelixTrack");
   run -> RegisterBranch("Tracklet", fTrackArray, fPersistency);
 
-  fFitter = new KBHelixTrackFitter();
-  fFitter -> SetReferenceAxis(fReferenceAxis);
-
   return true;
 }
 
@@ -40,7 +37,7 @@ void KBSingleHelixTask::Exec(Option_t*)
     track -> AddHit(hit);
   }
 
-  fFitter -> Fit(track);
+  track -> Fit();
   track -> FinalizeHits();
 
   kb_info << "All hits are used to make helix track!" << endl;

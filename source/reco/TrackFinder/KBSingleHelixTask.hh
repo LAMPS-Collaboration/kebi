@@ -3,7 +3,6 @@
 
 #include "KBTask.hh"
 #include "KBHelixTrack.hh"
-#include "KBHelixTrackFitter.hh"
 #include "KBVector3.hh"
 #include "KBHit.hh"
 #include "TClonesArray.h"
@@ -22,8 +21,6 @@ class KBSingleHelixTask : public KBTask
   private:
     TClonesArray* fHitArray;
     TClonesArray* fTrackArray;
-
-    KBHelixTrackFitter *fFitter = nullptr;
 
     bool fPersistency = true;
 

@@ -72,15 +72,14 @@ void KBPSATask::Exec(Option_t*)
       else
         k = kPlane + (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
 
-      Double_t x,y,z;
-      fTpc -> IJKToXYZ(pad->GetI(),pad->GetJ(),k,x,y,z);
+      KBVector3 pos(fTpc->GetEFieldAxis(),pad->GetI(),pad->GetJ(),k);
 
       auto hit = (KBTpcHit *) fHitArray -> ConstructedAt(idx);
       hit -> SetHitID(idx);
       hit -> SetPadID(pad -> GetPadID());
-      hit -> SetX(x);
-      hit -> SetY(y);
-      hit -> SetZ(z);
+      hit -> SetX(pos.X());
+      hit -> SetY(pos.Y());
+      hit -> SetZ(pos.K());
       hit -> SetTb(channelHit.GetTDC());
       hit -> SetCharge(channelHit.GetADC());
       hit -> SetSection(pad -> GetSection());
