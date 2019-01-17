@@ -21,7 +21,6 @@ class KBMCTrack : public KBTracklet
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
 
-    void SetPDG(Int_t val);
     void SetPX(Double_t val);
     void SetPY(Double_t val);
     void SetPZ(Double_t val);
@@ -34,7 +33,6 @@ class KBMCTrack : public KBTracklet
 
     Int_t GetNumVertices() const;
 
-    Int_t GetPDG() const;
     Double_t GetPX(Int_t idx = 0) const;
     Double_t GetPY(Int_t idx = 0) const;
     Double_t GetPZ(Int_t idx = 0) const;
@@ -49,8 +47,6 @@ class KBMCTrack : public KBTracklet
 
     void AddStep(KBMCStep *hit);
     vector<KBMCStep *> *GetStepArray();
-
-    virtual KBTrackFitter *CreateTrackFitter() const { return nullptr; }
 
     virtual TVector3 Momentum(Double_t B = 0.5) const;
     virtual TVector3 PositionAtHead() const;
@@ -74,7 +70,6 @@ class KBMCTrack : public KBTracklet
 #endif
 
   protected:
-    Int_t fPDG;
     vector<Double_t> fPX;
     vector<Double_t> fPY;
     vector<Double_t> fPZ;
@@ -84,7 +79,7 @@ class KBMCTrack : public KBTracklet
 
     vector<KBMCStep *> fStepArray; //!
   
-  ClassDef(KBMCTrack, 3)
+  ClassDef(KBMCTrack, 4)
 };
 
 #endif

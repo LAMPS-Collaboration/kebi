@@ -9,8 +9,4 @@
 #pragma link C++ class KBHelixTrack+;
 #pragma link C++ class KBMCTrack+;
 
-#pragma link C++ class KBTrackFitter+;
-#pragma link C++ class KBLinearTrackFitter+;
-#pragma link C++ class KBHelixTrackFitter+;
-
 #endif

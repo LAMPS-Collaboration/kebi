@@ -1,5 +1,4 @@
 #include "KBLinearTrack.hh"
-#include "KBLinearTrackFitter.hh"
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -35,18 +34,24 @@ void KBLinearTrack::Clear(Option_t *option)
   fZ2 = 1;
 }
 
-void KBLinearTrack::Print(Option_t *) const
+void KBLinearTrack::Print(Option_t *option) const
 {
-  kc_info << " from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
-  kc_info << "   to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
+  TString opts = TString(option);
+
+  kr_info(0) << " from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
+  kr_info(0) << "   to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
 }
 
 bool KBLinearTrack::Fit()
 {
-  return KBLinearTrackFitter::GetFitter() -> Fit(this);
-}
+  auto line = fHitList.FitLine();
+  if (line.GetRMS() < 0)
+    return false;
 
-KBTrackFitter *KBLinearTrack::CreateTrackFitter() const { return KBLinearTrackFitter::GetFitter(); }
+  SetLine(line.GetX1(), line.GetY1(), line.GetZ1(), line.GetX2(), line.GetY2(), line.GetZ2());
+  fRMS = line.GetRMS();
+  return true;
+}
 
 TVector3 KBLinearTrack::Momentum(Double_t) const { return KBGeoLine::Direction(); } 
 TVector3 KBLinearTrack::PositionAtHead()   const { return KBGeoLine::GetPoint2(); } 

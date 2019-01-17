@@ -22,8 +22,6 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
 
     void SetTrack(TVector3 pos1, TVector3 pos2);
 
-    virtual KBTrackFitter *CreateTrackFitter() const;
-
     virtual TVector3 Momentum(Double_t B = 0.5) const;
     virtual TVector3 PositionAtHead() const;
     virtual TVector3 PositionAtTail() const;

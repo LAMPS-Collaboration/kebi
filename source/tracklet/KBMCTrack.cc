@@ -20,10 +20,6 @@ void KBMCTrack::Clear(Option_t *option)
 {
   KBTracklet::Clear(option);
 
-  fTrackID = -1;
-  fParentID = -1;
-
-  fPDG = -1;
   fPX.clear(); fPX.push_back(-999);
   fPY.clear(); fPY.push_back(-999);
   fPZ.clear(); fPZ.push_back(-999);
@@ -32,13 +28,26 @@ void KBMCTrack::Clear(Option_t *option)
   fVZ.clear(); fVZ.push_back(-999);
 }
 
-void KBMCTrack::Print(Option_t *) const
+void KBMCTrack::Print(Option_t *option) const
 {
-  kc_info << "        Momentum: (" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << ")" << endl;
-  kc_info << "Primary position: (" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
+  TString opts = TString(option);
+
+  if (TString(option).Index("all")>=0) {
+    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ")" << setw(11) << fPDG << endl;
+    Int_t n = fPX.size();
+    for (auto i=0; i<n; ++i) {
+      kr_info(0) << "  " << i
+        <<  "> mom=(" << setw(12) << fPX[i] << "," << setw(12) << fPY[i] << "," << setw(12) << fPZ[i]
+        << "), pos=(" << setw(12) << fVX[i] << "," << setw(12) << fVY[i] << "," << setw(12) << fVZ[i] << ")" << endl;
+    }
+  }
+  else {
+    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ")" << setw(11) << fPDG
+      <<   " mom=(" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0]
+      << "), pos=(" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
+  }
 }
 
-void KBMCTrack::SetPDG(Int_t val)      { fPDG = val; }
 void KBMCTrack::SetPX(Double_t val)    { fPX[0] = val; }
 void KBMCTrack::SetPY(Double_t val)    { fPY[0] = val; }
 void KBMCTrack::SetPZ(Double_t val)    { fPZ[0] = val; }
@@ -71,7 +80,6 @@ void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Do
 
 Int_t KBMCTrack::GetNumVertices() const { return (Int_t) fPX.size(); }
 
-Int_t KBMCTrack::GetPDG() const { return fPDG; }
 Double_t KBMCTrack::GetPX(Int_t idx) const { return fPX[idx]; }
 Double_t KBMCTrack::GetPY(Int_t idx) const { return fPY[idx]; }
 Double_t KBMCTrack::GetPZ(Int_t idx) const { return fPZ[idx]; }
@@ -116,23 +124,23 @@ void KBMCTrack::SetEveElement(TEveElement *element)
   line -> Reset();
 
   if (fPDG == 211 || fPDG == -211) {
-    line -> SetElementName(Form("MCTrack%d_Pion",fTrackID));
+    line -> SetElementName(Form("MCTrack%d(%d)_Pion",fTrackID,fParentID));
     line -> SetLineColor(kBlue-4);
   }
   if (fPDG == 2212) {
-    line -> SetElementName(Form("MCTrack%d_Proton",fTrackID));
+    line -> SetElementName(Form("MCTrack%d(%d)_Proton",fTrackID,fParentID));
     line -> SetLineColor(kRed-7);
   }
   else if (fPDG == 2112) {
-    line -> SetElementName(Form("MCTrack%d_Neutron",fTrackID));
+    line -> SetElementName(Form("MCTrack%d(%d)_Neutron",fTrackID,fParentID));
     line -> SetLineColor(kGray);
   }
   else if (fPDG == 11 || fPDG == -11) {
-    line -> SetElementName(Form("MCTrack%d_Electron",fTrackID));
+    line -> SetElementName(Form("MCTrack%d(%d)_Electron",fTrackID,fParentID));
     line -> SetLineColor(kGreen);
   }
   else {
-    line -> SetElementName(Form("MCTrack%d",fTrackID));
+    line -> SetElementName(Form("MCTrack%d(%d)",fTrackID,fParentID));
     line -> SetLineColor(kMagenta+2);
   }
 

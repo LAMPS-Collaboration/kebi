@@ -82,6 +82,17 @@ void KBTracklet::PropagateMC()
   }
 }
 
+void KBTracklet::Clear(Option_t *option)
+{
+  TObject::Clear(option);
+
+  fTrackID = -1;
+  fParentID = -1;
+  fPDG = -1;
+
+  fHitList.Clear(option);  //!
+}
+
 void KBTracklet::AddHit(KBHit *hit)
 {
   fHitList.AddHit(hit);
@@ -146,7 +157,7 @@ TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axi
   fTrajectoryOnPlane -> Set(0);
 
   for (Double_t r = 0.; r < 1.001; r += 0.02) {
-    auto pos = KBVector3(ExtrapolateByRatio(r),fReferenceAxis);
+    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
     fTrajectoryOnPlane -> SetPoint(fTrajectoryOnPlane->GetN(), pos.At(axis1), pos.At(axis2));
   }
 

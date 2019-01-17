@@ -8,25 +8,23 @@
 #include "KBHitList.hh"
 #include "KBHit.hh"
 #include "KBVector3.hh"
-#include "KBTrackFitter.hh"
-
-class KBTrackFitter;
 
 class KBTracklet : public KBContainerMCTagged
 {
   protected:
     Int_t fTrackID = -1;
     Int_t fParentID = -1;  ///< Vertex ID
+    Int_t fPDG = -1;
 
-    KBHitList fHitList;  //!
-
-    KBVector3::Axis fReferenceAxis = KBVector3::kZ; // B field axis
+    KBHitList fHitList;
 
     TGraph *fTrajectoryOnPlane = nullptr; //!
 
   public:
     KBTracklet() {}
     virtual ~KBTracklet() {}
+
+    virtual void Clear(Option_t *option = "");
 
     virtual void PropagateMC();
 
@@ -36,17 +34,15 @@ class KBTracklet : public KBContainerMCTagged
     void SetParentID(Int_t val) { fParentID = val; }
     Int_t GetParentID() const { return fParentID; }
 
-    KBHitList *GetHitList() { return &fHitList; }
+    void SetPDG(Int_t val) { fPDG = val; }
+    Int_t GetPDG() const { return fPDG; }
 
-    void SetReferenceAxis(KBVector3::Axis axis) { fReferenceAxis = axis; }
-    KBVector3::Axis GetReferenceAxis() const { return fReferenceAxis; }
+    KBHitList *GetHitList() { return &fHitList; }
 
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);
 
     virtual bool Fit() { return true; }
-
-    virtual KBTrackFitter *CreateTrackFitter() const = 0;
 
     virtual TVector3 Momentum(Double_t B = 0.5) const = 0; ///< Momentum of track at head.
     virtual TVector3 PositionAtHead() const = 0; ///< Position at head of helix
@@ -73,7 +69,7 @@ class KBTracklet : public KBContainerMCTagged
     virtual bool DoDrawOnDetectorPlane();
     virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
 
-  ClassDef(KBTracklet, 2)
+  ClassDef(KBTracklet, 3)
 };
 
 #endif

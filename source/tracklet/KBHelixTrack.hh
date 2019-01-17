@@ -5,8 +5,8 @@
 
 #include "KBHit.hh"
 #include "KBTracklet.hh"
+#include "KBGeoHelix.hh"
 #include "KBVector3.hh"
-#include "KBHelixTrackFitter.hh"
 #include <vector>
 
 /**
@@ -15,7 +15,7 @@
  * All units in [mm], [ADC], [radian], [MeV].
  */
 
-class KBHelixTrack : public KBTracklet
+class KBHelixTrack : public KBTracklet, public KBGeoHelix
 {
   public:
     KBHelixTrack();
@@ -25,35 +25,40 @@ class KBHelixTrack : public KBTracklet
     enum KBFitStatus { kBad, kLine, kPlane, kHelix, kGenfitTrack };
 
   private:
+    Int_t    fGenfitID;        ///< GENFIT Track ID
+    Double_t fGenfitMomentum;  ///< Momentum reconstructed by GENFIT
+
     KBFitStatus fFitStatus;  ///< One of kBad, kHelix and kLine.
 
-    Double_t fIHelixCenter;  ///< i-component of the helix center
-    Double_t fJHelixCenter;  ///< j-component of the helix center
-    Double_t fHelixRadius;   ///< Radius of the helix
-    Double_t fKInitial;      ///< k-position at angle alpha = 0
-    Double_t fAlphaSlope;    ///< k = fAlphaSlope * alpha + fKInitial
-
-    Double_t fRMSW;          ///< width RMS of the fit
-    Double_t fRMSH;          ///< height RMS of the fit
-
-    Double_t fAlphaHead;     ///< Head position alpha
-    Double_t fAlphaTail;     ///< Last position alpha
+    //Double_t fIHelixCenter;  ///< i-component of the helix center
+    //Double_t fJHelixCenter;  ///< j-component of the helix center
+    //Double_t fHelixRadius;   ///< Radius of the helix
+    //Double_t fKInitial;      ///< k-position at angle alpha = 0
+    //Double_t fAlphaSlope;    ///< k = fAlphaSlope * alpha + fKInitial
+    //Double_t fRMSW;          ///< width RMS of the fit
+    //Double_t fRMSH;          ///< height RMS of the fit
+    //Double_t fAlphaHead;     ///< Head position alpha
+    //Double_t fAlphaTail;     ///< Last position alpha
 
     Bool_t fIsPositiveChargeParticle;
 
     std::vector<Double_t> fdEdxArray;  ///< dE/dx array;
-
-    Int_t    fGenfitID;        ///< GENFIT Track ID
-    Double_t fGenfitMomentum;  ///< Momentum reconstructed by GENFIT
 
   public:
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
     virtual void Copy (TObject &object) const;
 
-    virtual bool Fit();
+#ifdef ACTIVATE_EVE
+    virtual bool DrawByDefault();
+    virtual bool IsEveSet();
+    virtual TEveElement *CreateEveElement();
+    virtual void SetEveElement(TEveElement *);
+    virtual void AddToEveSet(TEveElement *eveSet);
+#endif
 
-    KBTrackFitter *CreateTrackFitter() const;
+    virtual bool Fit();
+    virtual bool FitPlane();
 
     void AddHit(KBHit *hit);
     void RemoveHit(KBHit *hit);
@@ -61,11 +66,7 @@ class KBHelixTrack : public KBTracklet
     void SortHits(bool increasing = true);
     void SortHitsByTimeOrder();
 
-    TVector3 GetMean(); // mean value of hit positions
-
     void FinalizeHits();
-
-    void SetGenfitID(Int_t idx);
 
     void SetFitStatus(KBFitStatus value);
     void SetIsBad();
@@ -73,26 +74,6 @@ class KBHelixTrack : public KBTracklet
     void SetIsPlane();
     void SetIsHelix();
     void SetIsGenfitTrack();
-
-    void SetLineDirection(TVector3 dir);  ///< ONLY USED IN TRACK FINDING
-    void SetPlaneNormal(TVector3 norm);   ///< ONLY USED IN TRACK FINDING
-
-    void SetHelixCenter(Double_t i, Double_t j);
-    void SetHelixRadius(Double_t r);
-    void SetKInitial(Double_t k);
-    void SetAlphaSlope(Double_t s);
-
-    void SetRMSW(Double_t rms);
-    void SetRMSH(Double_t rms);
-    void SetAlphaHead(Double_t alpha);
-    void SetAlphaTail(Double_t alpha);
-
-    void DetermineParticleCharge(TVector3 vertex);
-    void SetIsPositiveChargeParticle(Bool_t val);
-
-    void SetGenfitMomentum(Double_t p);
-
-    Int_t GetGenfitID() const;
 
     KBFitStatus GetFitStatus() const;
     TString GetFitStatusString() const;
@@ -102,30 +83,58 @@ class KBHelixTrack : public KBTracklet
     bool IsHelix() const;
     bool IsGenfitTrack() const;
 
+    /*
+     * LINE
+     */
+    void SetLineDirection(TVector3 dir);  ///< If track is straight. (ONLY USED IN TRACK FINDING)
+    KBVector3 GetLineDirection() const;   ///< If track is straight. (ONLY USED IN TRACK FINDING)
+    KBVector3 PerpLine(TVector3 p) const; ///< If track is straight. (ONLY USED IN TRACK FINDING)
+
+    /*
+     * PLANE
+     */
+    void SetPlaneNormal(TVector3 norm);    ///< If track is straight. (ONLY USED IN TRACK FINDING)
+    KBVector3 GetPlaneNormal() const;      ///< If track is straight. (ONLY USED IN TRACK FINDING)
+    KBVector3 PerpPlane(TVector3 p) const; ///< If track is straight. (ONLY USED IN TRACK FINDING)
+
+    /*
+     * HELIX
+     */
+    void SetHelixCenter(Double_t i, Double_t j);
+    void SetHelixRadius(Double_t r);
+    void SetKInitial(Double_t k);
+    void SetAlphaSlope(Double_t s);
+    void SetAlphaHead(Double_t alpha);
+    void SetAlphaTail(Double_t alpha);
+    void SetReferenceAxis(KBVector3::Axis ref);
+
+    TVector3 GetMean() const; // mean value of hit positions
     Double_t GetHelixCenterJ() const;
     Double_t GetHelixCenterI() const;
     Double_t GetHelixRadius() const;
     Double_t GetKInitial() const;
     Double_t GetAlphaSlope() const;
-
-    void GetHelixParameters(Double_t &iCenter, 
-                            Double_t &jCenter, 
-                            Double_t &radius, 
-                            Double_t &dipAngle,
-                            Double_t &kInitial,
-                            Double_t &alphaSlope) const;
-
     Double_t GetChargeSum() const;
+    KBVector3::Axis GetReferenceAxis() const;
 
-    Double_t GetRMSW() const;
-    Double_t GetRMSH() const;
-    Double_t GetAlphaHead() const;
-    Double_t GetAlphaTail() const;
+    /*
+     * GENFIT
+     */
+    void SetGenfitID(Int_t idx);
+    Int_t GetGenfitID() const;
 
+    void SetGenfitMomentum(Double_t p);
+    Double_t GetGenfitMomentum() const;    /// Momentum reconstructed by genfit (if is set)
+
+    /*
+     */
+    void SetIsPositiveChargeParticle(Bool_t val);
     Bool_t IsPositiveChargeParticle() const;
 
+    void DetermineParticleCharge(TVector3 vertex); //@todo TODO
 
-
+    /*
+     */
     Int_t GetNumHits() const;
     KBHit *GetHit(Int_t idx) const;
     std::vector<KBHit *> *GetHitArray();
@@ -134,35 +143,10 @@ class KBHelixTrack : public KBTracklet
     Int_t GetHitID(Int_t idx) const;
     std::vector<Int_t> *GetHitIDArray();
 
+    /*
+     */
     std::vector<Double_t> *GetdEdxArray();
     Double_t GetdEdxWithCut(Double_t lowR, Double_t highR) const;
-
-
-
-    KBVector3 GetLineDirection() const;     ///< ONLY USED IN TRACK FINDING
-    KBVector3 GetPlaneNormal() const;       ///< ONLY USED IN TRACK FINDING
-
-    KBVector3 PerpLine(TVector3 p) const;   ///< ONLY USED IN TRACK FINDING
-    KBVector3 PerpPlane(TVector3 p) const;  ///< ONLY USED IN TRACK FINDING
-
-    Double_t GetGenfitMomentum() const;    /// Momentum reconstructed by genfit (if is set)
-    /**
-     * Angle between p and pt. Value becomes 0 on xz plane.
-     * = tan(-fAlphaSlope/fHelixRadius) + pi/2
-    */
-    Double_t DipAngle() const;
-
-    /** [Distance from point to center of helix in xz-plane] - [Helix radius] */
-    Double_t DistCircle(TVector3 pointGiven) const;
-
-       Int_t Charge() const;                        ///< Assumed charge of the track
-       Int_t Helicity() const;                      ///< Helicity of track +/-
-    Double_t LengthInPeriod() const;                ///< Length of track in one period
-    Double_t KLengthInPeriod() const;               ///< y-length of track in one period
-    Double_t LengthByAlpha(Double_t alpha) const;   ///< Length of track in change of alpha
-    Double_t AlphaByLength(Double_t length) const;  ///< Angle alpha in change of length
-    TVector3 PositionByAlpha(Double_t alpha) const; ///< Position at angle alpha [mm]
-    TVector3 Direction(Double_t alpha) const;       ///< Direction at angle alpha
 
     /**
      * Extrapolate track due to alpha angle of the given point.
