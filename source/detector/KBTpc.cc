@@ -17,12 +17,7 @@ KBTpc::KBTpc(const char *name, const char *title)
 
 bool KBTpc::Init()
 {
-  TString axis = fPar -> GetParString("tpcEFieldAxis");
-  axis.ToLower();
-
-  if (axis == "x") fEFieldAxis = 0;
-  if (axis == "y") fEFieldAxis = 1;
-  if (axis == "z") fEFieldAxis = 2;
+  fEFieldAxis = fPar -> GetParAxis("tpcEFieldAxis");
 
   fNPlanes = fPar -> GetParInt("tpcNPadPlanes");
   fCathodeK = fPar -> GetParDouble("tpcCathodePlaneK");
@@ -39,7 +34,7 @@ bool KBTpc::Init()
 }
 
 KBPadPlane *KBTpc::GetPadPlane(Int_t idx) { return (KBPadPlane *) GetDetectorPlane(idx); }
-Int_t KBTpc::GetEFieldAxis() { return fEFieldAxis; }
+KBVector3::Axis KBTpc::GetEFieldAxis() { return fEFieldAxis; }
 
 void KBTpc::GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane)
 {
@@ -70,40 +65,4 @@ void KBTpc::GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane)
       }
     }
   }
-}
-
-TVector3 KBTpc::XYZToIJK(TVector3 xyz)
-{
-  TVector3 ijk;
-
-       if (fEFieldAxis == 0) ijk.SetXYZ(xyz.Y(), xyz.Z(), xyz.X());
-  else if (fEFieldAxis == 1) ijk.SetXYZ(xyz.Z(), xyz.X(), xyz.Y());
-  else if (fEFieldAxis == 2) ijk.SetXYZ(xyz.X(), xyz.Y(), xyz.Z());
-
-  return ijk;
-}
-
-TVector3 KBTpc::IJKToXYZ(TVector3 ijk)
-{
-  TVector3 xyz;
-
-       if (fEFieldAxis == 0) xyz.SetXYZ(ijk.Z(), ijk.X(), ijk.Y());
-  else if (fEFieldAxis == 1) xyz.SetXYZ(ijk.Y(), ijk.Z(), ijk.X());
-  else if (fEFieldAxis == 2) xyz.SetXYZ(ijk.X(), ijk.Y(), ijk.Z());
-
-  return xyz;
-}
-
-void KBTpc::XYZToIJK(Double_t x, Double_t y, Double_t z, Double_t &i, Double_t &j, Double_t &k)
-{
-       if (fEFieldAxis == 0) { i = y; j = z; k = x; }
-  else if (fEFieldAxis == 1) { i = z; j = x; k = y; }
-  else if (fEFieldAxis == 2) { i = x; j = y; k = z; }
-}
-
-void KBTpc::IJKToXYZ(Double_t i, Double_t j, Double_t k, Double_t &x, Double_t &y, Double_t &z)
-{
-       if (fEFieldAxis == 0) { x = k; y = i; z = j; }
-  else if (fEFieldAxis == 1) { x = j; y = k; z = i; }
-  else if (fEFieldAxis == 2) { x = i; y = j; z = k; }
 }

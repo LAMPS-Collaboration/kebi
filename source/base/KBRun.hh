@@ -68,8 +68,10 @@ class KBRun : public KBTask
 
     void SetInputFile(TString fileName, TString treeName = "data"); ///< Set input file and tree name
     void AddInput(TString fileName); ///< Add file to input file
+    void AddFriend(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
-    TChain *GetInputChain();
+    TChain *GetInputChain() const;
+    TChain *GetFriendChain(Int_t iFriend) const;
 
     void SetOutputFile(TString name); ///< Set output file name
     TTree *GetOutputTree();
@@ -122,18 +124,23 @@ class KBRun : public KBTask
 
 #ifdef ACTIVATE_EVE
     void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
-    void SetEve(TString option);
+    void SetEveOption(TString option);
 #endif
 
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
 
+    void SetLogFile(TString name = "");
+    TString GetLogFile();
+    //std::ofstream &GetLogFileStream();
+
     void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
-  private:
     TString ConfigureDataPath(TString namname);
     bool CheckFileExistence(TString fileName);
+
+  private:
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
@@ -153,7 +160,11 @@ class KBRun : public KBTask
     TFile *fInputFile = nullptr;
     TChain *fInputTree = nullptr;
 
+    Int_t fNumFriends = 0;
+    TObjArray *fFriendTrees = nullptr;
+
     vector<TString> fInputFileNameArray;
+    vector<TString> fFriendFileNameArray;
 
     TString fOutputFileName = "";
     TString fTag = "";
@@ -193,7 +204,10 @@ class KBRun : public KBTask
     TGraph *fGraphChannelBoundary = nullptr;
     TGraph *fGraphChannelBoundaryNb[20];
 
-    TString fLogFileName;
+    TString fRunLogFileName;
+    std::ofstream fRunLogFileStream;
+
+    TString fKBLogFileName;
     TString fHash;
 
     Bool_t fAutoTerminate = true;

@@ -82,7 +82,8 @@ void KBPadPlane::SetHitArray(TClonesArray *hitArray)
 void KBPadPlane::AddHit(KBTpcHit *hit)
 {
   auto pad = GetPadFast(hit -> GetPadID());
-  pad -> AddHit(hit);
+  if (hit -> GetHitID() >= 0)
+    pad -> AddHit(hit);
 }
 
 void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val, Int_t trackID)
@@ -290,15 +291,15 @@ bool KBPadPlane::PadPositionChecker(bool checkCorners)
     }
   }
 
-  kb_info << " =================== Number of id = -1 pads: " << countM1 << endl;
+  kb_info << "=================== Number of 'id = -1' pads: " << countM1 << endl;
 
   if (countBad > 0) {
-    kb_warning << " =================== Bad pad position exist!!!" << endl;
-    kb_warning << " =================== Number of bad pads: " << countBad << endl;
+    kb_warning << "=================== Bad pad position exist!!!" << endl;
+    kb_warning << "=================== Number of bad pads: " << countBad << endl;
     return false;
   }
 
-  kb_info << " =================== All pads are good!" << endl;
+  kb_info << "=================== All pads are good!" << endl;
   return true;
 }
 
@@ -340,7 +341,7 @@ bool KBPadPlane::PadNeighborChecker()
     }
   }
 
-  kb_info << " =================== Maximum distance between neighbor pads: " << distMax << endl;
+  kb_info << "=================== Maximum distance between neighbor pads: " << distMax << endl;
   kb_info << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetPosition().X() << "," << pad0->GetPosition().Y() 
           << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
   kb_info << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y()

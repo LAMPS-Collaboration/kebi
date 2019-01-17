@@ -10,9 +10,5 @@ void KBGlobal::AddParameterFile(TString file) {
 }
 KBParameterContainer *KBGlobal::GetParameterContainer() { return fPar; }
 
-void KBGlobal::SetRank(Int_t rank)
-{
-  fRank = rank;
-}
-
+void KBGlobal::SetRank(Int_t rank) { fRank = rank; }
 Int_t KBGlobal::GetRank() { return fRank; }

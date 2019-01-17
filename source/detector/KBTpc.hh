@@ -5,6 +5,7 @@
 #include "KBPadPlane.hh"
 
 #include "TVector3.h"
+#include "KBVector3.hh"
 
 class KBTpc : public KBDetector
 {
@@ -16,18 +17,12 @@ class KBTpc : public KBDetector
     virtual bool Init();
 
     virtual KBPadPlane *GetPadPlane(Int_t idx = 0);
-    Int_t GetEFieldAxis();
+    KBVector3::Axis GetEFieldAxis();
 
     void GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane);
 
-    TVector3 XYZToIJK(TVector3 xyz);
-    TVector3 IJKToXYZ(TVector3 ijk);
-
-    void XYZToIJK(Double_t x, Double_t y, Double_t z, Double_t &i, Double_t &j, Double_t &k);
-    void IJKToXYZ(Double_t i, Double_t j, Double_t k, Double_t &x, Double_t &y, Double_t &z);
-
   protected:
-    Int_t fEFieldAxis = -1;
+    KBVector3::Axis fEFieldAxis = KBVector3::kNon;
 
     Double_t fCathodeK = -999;
     Double_t fPlaneK[2];
