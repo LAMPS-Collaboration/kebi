@@ -11,26 +11,24 @@ KBWPointCluster::~KBWPointCluster() {}
 
 void KBWPointCluster::Print(Option_t *option) const
 {
+  TString opts = TString(option);
+
   KBWPoint::Print(option);
 
-  TString opts(option);
-
   TString title1;
-  if (opts.Index(">")>=0) title1 += "> ";
   if (opts.Index("t")>=0) title1 += "Cov-XX,YY,ZZ: ";
 
   TString title2;
-  if (opts.Index(">")>=0) title2 += "> ";
   if (opts.Index("t")>=0) title2 += "Cov-XY,YZ,ZX: ";
 
   if (opts.Index("s")>=0) {
-    kc_info << title1 << fCov[0][0] << ", " << fCov[1][1] << ", " << fCov[2][2] << endl;
-    kc_info << title2 << fCov[0][1] << ", " << fCov[1][2] << ", " << fCov[2][0] << endl;
+    kr_info(1) << title1 << fCov[0][0] << ", " << fCov[1][1] << ", " << fCov[2][2] << endl;
+    kr_info(1) << title2 << fCov[0][1] << ", " << fCov[1][2] << ", " << fCov[2][0] << endl;
   }
   else //if (opts.Index("a")>=0)
   {
-    kc_info << title1 << setw(12) << fCov[0][0] << setw(12) << fCov[1][1] << setw(12) << fCov[2][2] << endl;
-    kc_info << title2 << setw(12) << fCov[0][1] << setw(12) << fCov[1][2] << setw(12) << fCov[2][0] << endl;
+    kr_info(1) << title1 << setw(12) << fCov[0][0] << setw(12) << fCov[1][1] << setw(12) << fCov[2][2] << endl;
+    kr_info(1) << title2 << setw(12) << fCov[0][1] << setw(12) << fCov[1][2] << setw(12) << fCov[2][0] << endl;
   }
 }
 

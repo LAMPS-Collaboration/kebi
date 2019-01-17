@@ -11,7 +11,7 @@ ClassImp(KBHit)
 
 void KBHit::Clear(Option_t *option)
 {
-  KBWPointCluster::Clear(option);
+  KBWPoint::Clear(option);
 
   fHitID = -1;
   fTrackID = -1;
@@ -25,17 +25,20 @@ void KBHit::Print(Option_t *option) const
 {
   TString opts = TString(option);
 
+  Int_t rank = 0;
+  if (TString(opts[0]).IsDec())
+    rank = TString(opts[0]).Atoi();
+
   TString title;
-  if (opts.Index(">")>=0) title += "> ";
   if (opts.Index("t")>=0) title += "HTM-ID|XYZ|Q: ";
 
   if (opts.Index("s")>=0)
-    kc_info << title
+    kr_info(rank) << title
       << fHitID << ", " << fTrackID << ", " << fMCID << " | "
       << fX << ", " << fY << ", " << fZ << " | "
       << fW << endl;
   else //if (opts.Index("a")>=0)
-    kc_info << title
+    kr_info(rank) << title
       << setw(4)  << fHitID
       << setw(4)  << fTrackID
       << setw(4)  << fMCID << " |"
@@ -44,20 +47,13 @@ void KBHit::Print(Option_t *option) const
       << setw(12) << fZ << " |"
       << setw(12) << fW << endl;
 
-  if (opts.Index("d")>=0) {
-    TString opts2 = opts;
-    opts2.ReplaceAll("d","");
-    if (opts.Index("t")>=0)
-      opts2.ReplaceAll("t",">");
-    else
-      opts2 = opts + ">";
-    fHitList.Print(opts2);
-  }
+  if (opts.Index(">")>=0)
+    fHitList.PrintHits(1);
 }
 
 void KBHit::Copy(TObject &obj) const
 {
-  KBWPointCluster::Copy(obj);
+  KBWPoint::Copy(obj);
   auto hit = (KBHit &) obj;
 
   hit.SetHitID(fHitID);
@@ -152,35 +148,53 @@ Bool_t KBHit::IsCluster() { return fHitList.GetNumHits() == 0 ? false : true; }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
+void KBHit::SetAlpha(Double_t a) { fAlpha = a; }
 void KBHit::SetX(Double_t x) { fX = x; }
 void KBHit::SetY(Double_t y) { fY = y; }
 void KBHit::SetZ(Double_t z) { fZ = z; }
-void KBHit::SetDX(Double_t dx) { fCov[0][0] = dx * dx; }
-void KBHit::SetDY(Double_t dy) { fCov[1][1] = dy * dy; }
-void KBHit::SetDZ(Double_t dz) { fCov[2][2] = dz * dz; }
 void KBHit::SetCharge(Double_t charge) { fW = charge; }
 
 void KBHit::AddHit(KBHit *hit)
 {
-  KBWPointCluster::Add((KBWPoint &) *hit);
   fHitList.AddHit(hit);
+  fX = fHitList.GetMeanX();
+  fY = fHitList.GetMeanY();
+  fZ = fHitList.GetMeanZ();
+  fW = fHitList.GetW();
 }
 
 void KBHit::RemoveHit(KBHit *hit)
 {
-  KBWPointCluster::Remove((KBWPoint &) *hit);
   fHitList.RemoveHit(hit);
+  fX = fHitList.GetMeanX();
+  fY = fHitList.GetMeanY();
+  fZ = fHitList.GetMeanZ();
+  fW = fHitList.GetW();
 }
 
-Int_t KBHit::GetHitID()   const { return fHitID; }
-Int_t KBHit::GetTrackID() const { return fTrackID; }
-Double_t KBHit::GetX()  const { return fX; }
-Double_t KBHit::GetY()  const { return fY; }
-Double_t KBHit::GetZ()  const { return fZ; }
-Double_t KBHit::GetDX() const { return sqrt(fCov[0][0]); }
-Double_t KBHit::GetDY() const { return sqrt(fCov[1][1]); }
-Double_t KBHit::GetDZ() const { return sqrt(fCov[2][2]); }
-Double_t KBHit::GetCharge() const { return fW; }
+   Int_t KBHit::GetHitID()   const { return fHitID; }
+   Int_t KBHit::GetTrackID() const { return fTrackID; }
+Double_t KBHit::GetAlpha()   const { return fAlpha; }
+Double_t KBHit::GetX()       const { return fX; }
+Double_t KBHit::GetY()       const { return fY; }
+Double_t KBHit::GetZ()       const { return fZ; }
+Double_t KBHit::GetCharge()  const { return fW; }
+
+
+TVector3 KBHit::GetMean()          const { return fHitList.GetMean();          }
+TVector3 KBHit::GetVariance()      const { return fHitList.GetVariance();      }
+TVector3 KBHit::GetCovariance()    const { return fHitList.GetCovariance();    }
+TVector3 KBHit::GetStdDev()        const { return fHitList.GetStdDev();        }
+TVector3 KBHit::GetSquaredMean()   const { return fHitList.GetSquaredMean();   }
+TVector3 KBHit::GetCoSquaredMean() const { return fHitList.GetCoSquaredMean(); }
+
+KBVector3 KBHit::GetMean(kbaxis ref)          const { return fHitList.GetMean(ref);          }
+KBVector3 KBHit::GetVariance(kbaxis ref)      const { return fHitList.GetVariance(ref);      }
+KBVector3 KBHit::GetCovariance(kbaxis ref)    const { return fHitList.GetCovariance(ref);    }
+KBVector3 KBHit::GetStdDev(kbaxis ref)        const { return fHitList.GetStdDev(ref);        }
+KBVector3 KBHit::GetSquaredMean(kbaxis ref)   const { return fHitList.GetSquaredMean(ref);   }
+KBVector3 KBHit::GetCoSquaredMean(kbaxis ref) const { return fHitList.GetCoSquaredMean(ref); }
+
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }
 Int_t KBHit::GetNumTrackCands() { return fTrackCandArray.size(); }

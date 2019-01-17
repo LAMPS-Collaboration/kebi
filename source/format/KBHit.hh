@@ -1,13 +1,14 @@
 #ifndef KBHIT_HH
 #define KBHIT_HH
 
-#include "KBWPointCluster.hh"
+#include "KBWPoint.hh"
 #include "KBContainer.hh"
 #include "KBHitList.hh"
 
 #ifdef ACTIVATE_EVE
 #include "TEveElement.h"
 #endif
+
 #include "TVector3.h"
 #include "TMath.h"
 #include "TF1.h"
@@ -15,11 +16,13 @@
 #include <vector>
 using namespace std;
 
-class KBHit : public KBWPointCluster
+class KBHit : public KBWPoint
 {
   protected:
     Int_t fHitID = -1;
     Int_t fTrackID = -1;
+
+    Double_t fAlpha;
 
     KBHitList fHitList;
 
@@ -40,12 +43,10 @@ class KBHit : public KBWPointCluster
 
     void SetHitID(Int_t id);
     void SetTrackID(Int_t id);
+    void SetAlpha(Double_t a);
     void SetX(Double_t x);
     void SetY(Double_t y);
     void SetZ(Double_t z);
-    void SetDX(Double_t dx);
-    void SetDY(Double_t dy);
-    void SetDZ(Double_t dz);
     void SetCharge(Double_t charge);
 
     virtual void AddHit(KBHit *hit);
@@ -53,15 +54,27 @@ class KBHit : public KBWPointCluster
 
     KBHitList *GetHitList() { return &fHitList; }
 
-    Int_t GetHitID() const;
-    Int_t GetTrackID() const;
-    Double_t GetX() const;
-    Double_t GetY() const;
-    Double_t GetZ() const;
-    Double_t GetDX() const;
-    Double_t GetDY() const;
-    Double_t GetDZ() const;
-    Double_t GetCharge() const;
+       Int_t GetHitID()   const;
+       Int_t GetTrackID() const;
+    Double_t GetAlpha()   const;
+    Double_t GetX()       const;
+    Double_t GetY()       const;
+    Double_t GetZ()       const;
+    Double_t GetCharge()  const;
+
+    TVector3 GetMean()          const;
+    TVector3 GetVariance()      const;
+    TVector3 GetCovariance()    const;
+    TVector3 GetStdDev()        const;
+    TVector3 GetSquaredMean()   const;
+    TVector3 GetCoSquaredMean() const;
+
+    KBVector3 GetMean(kbaxis)          const;
+    KBVector3 GetVariance(kbaxis)      const;
+    KBVector3 GetCovariance(kbaxis)    const;
+    KBVector3 GetStdDev(kbaxis)        const;
+    KBVector3 GetSquaredMean(kbaxis)   const;
+    KBVector3 GetCoSquaredMean(kbaxis) const;
 
     vector<Int_t> *GetTrackCandArray();
     Int_t GetNumTrackCands();
@@ -76,7 +89,7 @@ class KBHit : public KBWPointCluster
     virtual void AddToEveSet(TEveElement *eveSet);
 #endif
 
-  ClassDef(KBHit, 2)
+  ClassDef(KBHit, 3)
 };
 
 class KBHitSortDirection {

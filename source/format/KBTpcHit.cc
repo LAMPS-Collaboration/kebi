@@ -26,16 +26,15 @@ void KBTpcHit::Print(Option_t *option) const
   TString opts = TString(option);
 
   TString title;
-  if (opts.Index(">")>=0) title += "> ";
   if (opts.Index("t")>=0) title += "HTMP-ID|XYZ|Q|SRL|Tb: ";
 
   if (opts.Index("s")>=0)
-    kc_info << title
+    kr_info(0) << title
       << fHitID << ", " << fTrackID << ", " << fMCID << ", " << fPadID << " |"
       << fX << ", " << fY << ", " << fZ << " |" << fW << " |"
       << fSection << ", "<< fRow << ", "<< fLayer << " |" << fTb << endl;
   else //if (opts.Index("a")>=0)
-    kc_info << title
+    kr_info(0) << title
       << setw(4)  << fHitID
       << setw(4)  << fTrackID
       << setw(4)  << fMCID
@@ -49,15 +48,8 @@ void KBTpcHit::Print(Option_t *option) const
       << setw(4) << fLayer << " |"
       << setw(4) << fTb << endl;
 
-  if (opts.Index("d")>=0) {
-    TString opts2 = opts;
-    opts2.ReplaceAll("d","");
-    if (opts.Index("t")>=0)
-      opts2.ReplaceAll("t",">");
-    else
-      opts2 = opts + ">";
-    fHitList.Print(opts2);
-  }
+  if (opts.Index(">")>=0)
+    fHitList.PrintHits(1);
 }
 
 void KBTpcHit::Copy(TObject &obj) const

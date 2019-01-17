@@ -21,17 +21,16 @@ KBMCStep::~KBMCStep()
 
 void KBMCStep::Print(Option_t *option) const
 {
-  TString opts(option);
+  TString opts = TString(option);
 
   TString title;
-  if (opts.Index(">")>=0) title += "> ";
   if (opts.Index("t")>=0) title += "ID|XYZ|TE: ";
 
   if (opts.Index("s")>=0)
-    kc_info << title << fTrackID << " | " << fX << ", " << fY << ", " << fZ
+    kr_info(0) << title << fTrackID << " | " << fX << ", " << fY << ", " << fZ
       << " | " << fTime << ", " << fEdep << endl;
   else //if (opts.Index("a")>=0)
-    kc_info << title
+    kr_info(0) << title
       << setw(4)  << fTrackID
       << setw(12) << fX
       << setw(12) << fY

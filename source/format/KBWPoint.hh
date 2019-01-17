@@ -4,6 +4,7 @@
 #include "KBContainerMCTagged.hh"
 #include "TError.h"
 #include "TVector3.h"
+#include "KBVector3.hh"
 #ifdef ACTIVATE_EVE
 #include "TEveElement.h"
 #include "TEvePointSet.h"
@@ -26,7 +27,8 @@ class KBWPoint : public KBContainerMCTagged
     void SetPosition(Double_t x, Double_t y, Double_t z);
     void SetPosition(TVector3 pos);
 
-    TVector3 GetPosition() { return TVector3(fX, fY, fZ); }
+     TVector3 GetPosition()                    const { return  TVector3(fX,fY,fZ); }
+    KBVector3 GetPosition(KBVector3::Axis ref) const { return KBVector3(fX,fY,fZ,ref); }
 
     Double_t x() const { return fX; }
     Double_t y() const { return fY; }

@@ -11,8 +11,6 @@ KBMCRecoMatching::KBMCRecoMatching()
 
 void KBMCRecoMatching::Clear(Option_t *)
 {
-  TObject::Clear();
-
   fStatus = KBMCRecoMatching::kNotFound;
 
   fMCID = -1;
@@ -25,27 +23,29 @@ void KBMCRecoMatching::Clear(Option_t *)
   fRecoMomentumCand.clear();
 }
 
-void KBMCRecoMatching::Print(Option_t *) const
+void KBMCRecoMatching::Print(Option_t *option) const
 {
+  TString opts = TString(option);
+
   if (fStatus == KBMCRecoMatching::kNotFound)
-    cout << "[Not-Found] MC_ID:" << fMCID << " MC_p("
-         << fMCMomentum.X() << " "
-         << fMCMomentum.Y() << " "
-         << fMCMomentum.Z() << ")" << endl;
+    kr_info(0) << "[Not-Found] MC_ID:" << fMCID << " MC_p("
+                  << fMCMomentum.X() << " "
+                  << fMCMomentum.Y() << " "
+                  << fMCMomentum.Z() << ")" << endl;
   else if (fStatus == KBMCRecoMatching::kFake)
-    cout << "[Fake] Reco_ID:" << fRecoID << " Reco_p("
-         << fRecoMomentum.X() << " "
-         << fRecoMomentum.Y() << " "
-         << fRecoMomentum.Z() << ")" << endl;
+    kr_info(0) << "[Fake] Reco_ID:" << fRecoID << " Reco_p("
+                  << fRecoMomentum.X() << " "
+                  << fRecoMomentum.Y() << " "
+                  << fRecoMomentum.Z() << ")" << endl;
   else if (fStatus == KBMCRecoMatching::kMatched) {
-    cout << "[MATCH] MC_ID:" << fMCID << " MC_p("
-         << fMCMomentum.X() << " "
-         << fMCMomentum.Y() << " "
-         << fMCMomentum.Z() << ")" << endl;
-    cout << "      Reco_ID:" << fRecoID << " Reco_p("
-         << fRecoMomentum.X() << " "
-         << fRecoMomentum.Y() << " "
-         << fRecoMomentum.Z() << ")" << endl;
+    kr_info(0) << "[MATCH] MC_ID:" << fMCID << " MC_p("
+                  << fMCMomentum.X() << " "
+                  << fMCMomentum.Y() << " "
+                  << fMCMomentum.Z() << ")" << endl;
+    kr_info(0) << "      Reco_ID:" << fRecoID << " Reco_p("
+                  << fRecoMomentum.X() << " "
+                  << fRecoMomentum.Y() << " "
+                  << fRecoMomentum.Z() << ")" << endl;
   }
 }
 

@@ -23,10 +23,10 @@ void KBVertex::Print(Option_t *option) const
   TString opts = TString(option);
 
   if (opts.Index("s")>=0)
-    kc_info << "Vertex at (" << fX << "," << fY << "," << fZ
+    kr_info(0) << "Vertex at (" << fX << "," << fY << "," << fZ
       << ") [mm] containing " << GetNumTracks() << "tracks" << endl;
   else //if (opts.Index("a")>=0)
-    kc_info << "Vertex at (" << setw(12) << fX <<"," << setw(12) << fY <<"," << setw(12) << fZ
+    kr_info(0) << "Vertex at (" << setw(12) << fX <<"," << setw(12) << fY <<"," << setw(12) << fZ
       << ") [mm] containing " << GetNumTracks() << "tracks" << endl;
 }
 

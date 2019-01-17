@@ -12,7 +12,11 @@ ClassImp(KBPad)
 
 void KBPad::Clear(Option_t *option)
 {
-  KBChannel::Clear(option);
+  if (TString(option).Index("all")>=0) {
+    fID = -1;
+    fPos1 = TVector3(-999,-999,-999);
+    fPos2 = TVector3(-999,-999,-999);
+  }
 
   fActive = false;
 
@@ -31,33 +35,35 @@ void KBPad::Clear(Option_t *option)
 
 void KBPad::Print(Option_t *option) const
 {
-  TString opts(option);
+  TString opts = TString(option);
 
   if (opts.Index("s")) {
-    kc_info << "id:" << fID << " s:" << fSection << " r:" << fRow << " l:" << fLayer << endl;
+    kr_info(0) << "id:" << fID << " s:" << fSection << " r:" << fRow << " l:" << fLayer << endl;
     return;
   }
   //else if (opts.Index("a"))
 
-  kc_info << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
-  if (fActive) kc_raw << " is Active!" << endl;
-  else kc_raw << " is NOT Active." << endl;
+  kr_info(0) << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
+  if (fActive) kb_raw << " is Active!" << endl;
+  else kb_raw << " is NOT Active." << endl;
 
-  kc_info << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
-  kc_info << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
-  kc_info << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
-  kc_info << "Position              : (" << fI << ", " << fJ << ") " << endl;
+  kr_info(0) << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
+  kr_info(0) << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
+  kr_info(0) << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
+  kr_info(0) << "Position              : (" << fI << ", " << fJ << ") " << endl;
 
-  Int_t numMCID = fMCIDArray.size();
-  kc_info << " > List of MC-IDs (co. Tb [mm]),  : ";
-  for (auto iMC = 0; iMC < numMCID; ++iMC)
-    kc_raw << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
-  kc_raw << endl;
+  if (opts.Index(">")) {
+    Int_t numMCID = fMCIDArray.size();
+    kr_info(1) << "List of MC-IDs (co. Tb [mm]),  : ";
+    for (auto iMC = 0; iMC < numMCID; ++iMC)
+      kb_raw << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
+    kb_raw << endl;
+  }
 }
 
 void KBPad::Draw(Option_t *option)
 {
-  kc_info << "GetHist(o)->Draw(); DrawMCID(o); DrawHit(o);" << endl;
+  kr_info(0) << "GetHist(o)->Draw(); DrawMCID(o); DrawHit(o);" << endl;
 
   GetHist(option) -> Draw();
   DrawMCID(option);
@@ -100,7 +106,7 @@ void KBPad::DrawHit(Option_t *option)
   Int_t numHits = fHitArray.size();
   if (opts.Index("h") >= 0) {
     if (numHits == 0)
-      kc_warning << "No hit exist in pad." << endl;
+      kr_warning(0) << "No hit exist in pad." << endl;
     else {
       for (auto hit : fHitArray) {
         auto pulse = hit -> GetPulseFunction();
@@ -324,7 +330,7 @@ TH1D *KBPad::GetHist(Option_t *option)
 
 void KBPad::SetHist(TH1D *hist, Option_t *option)
 {
-  kc_info << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw) || i(input)] && h(hit)" << endl;
+  kr_info(0) << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw) || i(input)] && h(hit)" << endl;
   hist -> Reset();
 
   TString opts(option);

@@ -7,8 +7,8 @@ class KBContainerMCTagged : public KBContainer
 {
   protected:
     Int_t fMCID = -1;
-    Double_t fMCError = -1;
-    Double_t fMCPurity = -1;
+    Double_t fMCError = -1; //!
+    Double_t fMCPurity = -1; //!
 
   public:
     KBContainerMCTagged();

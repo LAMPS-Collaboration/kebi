@@ -1,12 +1,12 @@
 #ifndef KBMCRECOMATCHING_HH
 #define KBMCRECOMATCHING_HH
 
-#include "TObject.h"
+#include "KBContainer.hh"
 #include "TVector3.h"
 #include <vector>
 using namespace std;
 
-class KBMCRecoMatching : public TObject
+class KBMCRecoMatching : public KBContainer
 {
   public:
     KBMCRecoMatching();

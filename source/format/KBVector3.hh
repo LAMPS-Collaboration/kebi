@@ -2,6 +2,7 @@
 #define KBVECTOR3_HH
 
 #include "TVector3.h"
+#include "TArrow.h"
 #include <map>
 
 class KBVector3 : public TVector3
@@ -114,6 +115,10 @@ class KBVector3 : public TVector3
 
     TVector3 GetXYZ();
     TVector3 GetIJK();
+
+    TArrow *ArrowXY();
+    TArrow *ArrowYZ();
+    TArrow *ArrowZX();
 
   private:
     Axis fReferenceAxis = kNon;
