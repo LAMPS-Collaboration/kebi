@@ -33,6 +33,7 @@ class KBODRFitter
     virtual ~KBODRFitter();
 
     void Reset(); ///< Reset fitter
+    void Print(); ///< Reset fitter
 
     void SetCentroid(Double_t x, Double_t y, Double_t z); ///< Set centroid 
     void SetCentroid(TVector3 position); ///< Set centroid with TVector3

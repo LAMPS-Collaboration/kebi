@@ -2,6 +2,7 @@
 /// @author JungWoo Lee
 
 #include "KBODRFitter.hh"
+#include "KBGlobal.hh"
 
 #include <iostream>
 using namespace std;
@@ -47,6 +48,32 @@ void KBODRFitter::Reset()
 
   fRMSLine = -1;
   fRMSPlane = -1;
+}
+
+void KBODRFitter::Print()
+{
+  kb_debug << "Number of points:       " << fNumPoints << endl;
+  kb_debug << "Sum of weight:          " << fWeightSum << endl;
+  kb_debug << "Sum of sqrt[(x-<x>)^2]: " << fSumOfPC2 << endl;
+  kb_debug << "<x> = " << fXCentroid << endl;
+  kb_debug << "<y> = " << fYCentroid << endl;
+  kb_debug << "<z> = " << fZCentroid << endl;
+
+  if (fRMSLine!=-1 && fRMSPlane!=-1) {
+    kb_debug << "Mat. A=|" << setw(15) << (*fMatrixA)[0][0] << setw(15) << (*fMatrixA)[0][1] << setw(15) << (*fMatrixA)[0][2] << "|" << endl;
+    kb_debug << "       |" << setw(15) << (*fMatrixA)[1][0] << setw(15) << (*fMatrixA)[1][1] << setw(15) << (*fMatrixA)[1][2] << "|" << endl;
+    kb_debug << "       |" << setw(15) << (*fMatrixA)[2][0] << setw(15) << (*fMatrixA)[2][1] << setw(15) << (*fMatrixA)[2][2] << "|" << endl;
+
+    auto vec0 = TMatrixDColumn((*fEigenVectors), 0);
+    auto vec1 = TMatrixDColumn((*fEigenVectors), 1);
+    auto vec2 = TMatrixDColumn((*fEigenVectors), 2);
+    kb_debug << "Eigen val./vec. 0: " << (*fEigenValues)[0] << " / (" << vec0[0] << "," << vec0[1] << "," << vec0[2] << ")" << endl;
+    kb_debug << "Eigen val./vec. 1: " << (*fEigenValues)[1] << " / (" << vec1[0] << "," << vec1[1] << "," << vec1[2] << ")" << endl;
+    kb_debug << "Eigen val./vec. 2: " << (*fEigenValues)[2] << " / (" << vec2[0] << "," << vec2[1] << "," << vec2[2] << ")" << endl;
+
+    kb_debug << "RMS(line)  = " << fRMSLine << endl;
+    kb_debug << "RMS(plane) = " << fRMSPlane << endl;
+  }
 }
 
 void KBODRFitter::SetCentroid(Double_t x, Double_t y, Double_t z)
