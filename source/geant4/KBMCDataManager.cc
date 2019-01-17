@@ -69,12 +69,12 @@ void KBMCDataManager::NextEvent()
   G4cout << "End of Event-" << fTree -> GetEntries() << G4endl;
   fTree -> Fill();
 
-  fTrackArray -> Clear();
+  fTrackArray -> Clear("C");
   TIter it(fStepArrayList);
 
   if (!fStepPersistency) return;
   while (auto stepArray = (TClonesArray *) it.Next())
-    stepArray -> Clear();
+    stepArray -> Clear("C");
 }
 
 void KBMCDataManager::EndOfRun() 
