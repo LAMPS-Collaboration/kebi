@@ -16,7 +16,7 @@ class KBHit;
 
 typedef KBVector3::Axis kbaxis;
 
-class KBHitList : public TObject
+class KBHitList : public KBContainer
 {
   private:
     vector<KBHit*> fHitArray; //!
@@ -24,17 +24,18 @@ class KBHitList : public TObject
 
        Int_t fN = 0;  ///< Number of hits
     Double_t fW = 0;  ///< Sum of charge
-    Double_t fEX  = 0;  //! < <x>   Expectation value of x
-    Double_t fEY  = 0;  //! < <y>   Expectation value of y
-    Double_t fEZ  = 0;  //! < <z>   Expectation value of z
-    Double_t fEXX = 0;  //! < <x*x> Expectation value of x*x
-    Double_t fEYY = 0;  //! < <y*y> Expectation value of y*y
-    Double_t fEZZ = 0;  //! < <z*z> Expectation value of z*z
-    Double_t fEXY = 0;  //! < <x*y> Expectation value of x*y
-    Double_t fEYZ = 0;  //! < <y*z> Expectation value of y*z
-    Double_t fEZX = 0;  //! < <z*x> Expectation value of z*y
 
-    KBODRFitter *fODRFitter = nullptr;
+    Double_t fEX  = 0;  ///< <x>   Mean value of x
+    Double_t fEY  = 0;  ///< <y>   Mean value of y
+    Double_t fEZ  = 0;  ///< <z>   Mean value of z
+    Double_t fEXX = 0;  ///< <x*x> Mean value of x*x
+    Double_t fEYY = 0;  ///< <y*y> Mean value of y*y
+    Double_t fEZZ = 0;  ///< <z*z> Mean value of z*z
+    Double_t fEXY = 0;  ///< <x*y> Mean value of x*y
+    Double_t fEYZ = 0;  ///< <y*z> Mean value of y*z
+    Double_t fEZX = 0;  ///< <z*x> Mean value of z*y
+
+    KBODRFitter *fODRFitter = nullptr; //!
 
   public:
     KBHitList();
@@ -42,14 +43,29 @@ class KBHitList : public TObject
 
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "at") const;
+    virtual void Copy (TObject &object) const;
+
+    void PrintHitIDs(Int_t rank) const;
+    void PrintHits(Int_t rank) const;
 
     KBGeoLine FitLine();
     KBGeoPlane FitPlane();
     KBGeoCircle FitCircle(kbaxis ref = KBVector3::kZ);
+    KBGeoHelix FitHelix(kbaxis ref = KBVector3::kZ);
+
+    TCanvas *DrawFitCircle(kbaxis ref = KBVector3::kZ);
 
     void AddHit(KBHit *hit);
-    void AddHit(Double_t x, Double_t y, Double_t z, Double_t q);
+    /// Fit is not possible if point is added through this method
+    void Add(TVector3 pos, Double_t w=0);
+    /// Fit is not possible if point is added through this method
+    void Add(Double_t x, Double_t y, Double_t z, Double_t w=0);
+
     bool RemoveHit(KBHit *hit);
+    /// Fit is not possible if point is removed through this method
+    bool Subtract(TVector3 pos, Double_t w=0);
+    /// Fit is not possible if point is removed through this method
+    bool Subtract(Double_t x, Double_t y, Double_t z, Double_t w=0);
 
     vector<KBHit*> *GetHitArray();
     vector<Int_t> *GetHitIDArray();
@@ -61,49 +77,43 @@ class KBHitList : public TObject
     Double_t GetW() const;
     Double_t GetChargeSum() const;
 
-    Double_t GetXMean() const;
-    Double_t GetYMean() const;
-    Double_t GetZMean() const;
-    Double_t GetExpectationX()  const;
-    Double_t GetExpectationY()  const;
-    Double_t GetExpectationZ()  const;
+    Double_t GetMeanX() const;
+    Double_t GetMeanY() const;
+    Double_t GetMeanZ() const;
 
-    Double_t GetCovWXX() const; ///< SUM_i {(z_centroid-z_i)*(z_centroid-z_i) }
-    Double_t GetCovWYY() const; ///< SUM_i {(x_centroid-x_i)*(x_centroid-x_i) }
-    Double_t GetCovWZZ() const; ///< SUM_i {(y_centroid-y_i)*(y_centroid-y_i) }
-    Double_t GetCovWXY() const; ///< SUM_i {(z_centroid-z_i)*(x_centroid-x_i) }
-    Double_t GetCovWYZ() const; ///< SUM_i {(x_centroid-x_i)*(y_centroid-y_i) }
-    Double_t GetCovWZX() const; ///< SUM_i {(y_centroid-y_i)*(z_centroid-z_i) }
+    Double_t GetMeanXX() const;
+    Double_t GetMeanYY() const;
+    Double_t GetMeanZZ() const;
+    Double_t GetMeanXY() const;
+    Double_t GetMeanYZ() const;
+    Double_t GetMeanZX() const;
 
-    Double_t GetVarX() const;
-    Double_t GetVarY() const;
-    Double_t GetVarZ() const;
+    Double_t GetVarianceX() const; ///< SUM_i (<x>-x_i)^2
+    Double_t GetVarianceY() const; ///< SUM_i (<y>-y_i)^2
+    Double_t GetVarianceZ() const; ///< SUM_i (<z>-z_i)^2
 
-    Double_t GetExpectationXX() const;
-    Double_t GetExpectationYY() const;
-    Double_t GetExpectationZZ() const;
-    Double_t GetExpectationXY() const;
-    Double_t GetExpectationYZ() const;
-    Double_t GetExpectationZX() const;
+    Double_t GetAXX() const; ///< W * SUM_i (<x>-x_i)^2 : diagonal compoent of matrix A
+    Double_t GetAYY() const; ///< W * SUM_i (<y>-y_i)^2 : diagonal compoent of matrix A
+    Double_t GetAZZ() const; ///< W * SUM_i (<z>-z_i)^2 : diagonal compoent of matrix A
+    Double_t GetAXY() const; ///< W * SUM_i (<x>-x_i)*(<y>-y_i) : off-diagonal compoent of matrix A
+    Double_t GetAYZ() const; ///< W * SUM_i (<y>-y_i)*(<z>-z_i) : off-diagonal compoent of matrix A
+    Double_t GetAZX() const; ///< W * SUM_i (<z>-z_i)*(<x>-x_i) : off-diagonal compoent of matrix A
 
     TVector3 GetMean()          const;
-    TVector3 GetExpectation()   const;
-    TVector3 GetCovWD()         const;
-    TVector3 GetCovWO()         const;
-    TVector3 GetVar()           const;
-    TVector3 GetExpectation2D() const;
-    TVector3 GetExpectation2O() const;
+    TVector3 GetVariance()      const;
+    TVector3 GetCovariance()    const;
+    TVector3 GetStdDev()        const;
+    TVector3 GetSquaredMean()   const;
+    TVector3 GetCoSquaredMean() const;
 
-    KBVector3 GetMean(kbaxis ref)          const;
-    KBVector3 GetExpectation(kbaxis ref)   const;
-    KBVector3 GetCovWD(kbaxis ref)         const;
-    KBVector3 GetCovWO(kbaxis ref)         const;
-    KBVector3 GetVar(kbaxis ref)           const;
-    KBVector3 GetExpectation2D(kbaxis ref) const;
-    KBVector3 GetExpectation2O(kbaxis ref) const;
+    KBVector3 GetMean(kbaxis)          const;
+    KBVector3 GetVariance(kbaxis)      const;
+    KBVector3 GetCovariance(kbaxis)    const;
+    KBVector3 GetStdDev(kbaxis)        const;
+    KBVector3 GetSquaredMean(kbaxis)   const;
+    KBVector3 GetCoSquaredMean(kbaxis) const;
 
-
-    ClassDef(KBHitList, 1)
+    ClassDef(KBHitList, 2)
 };
 
 #endif
