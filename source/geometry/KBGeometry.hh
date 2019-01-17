@@ -13,9 +13,7 @@ class KBGeometry
     virtual ~KBGeometry() {}
 
         void SetRMS(Double_t val) { fRMS = val; }
-    Double_t GetRMS()             { return fRMS; }
-
-    virtual TVector3 GetRandomPoint() { return TVector3(); } //@todo
+    Double_t GetRMS() const       { return fRMS; }
 
   ClassDef(KBGeometry, 1)
 };

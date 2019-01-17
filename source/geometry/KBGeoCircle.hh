@@ -12,7 +12,11 @@ class KBGeoCircle : public KBGeometry
     KBGeoCircle(Double_t x, Double_t y, Double_t r);
     virtual ~KBGeoCircle() {}
 
+    virtual void Summary(Option_t *option = "") const;
+
     void SetCircle(Double_t x, Double_t y, Double_t r);
+
+    TVector3 GetRandomPoint();
 
     Double_t GetX() const;
     Double_t GetY() const;

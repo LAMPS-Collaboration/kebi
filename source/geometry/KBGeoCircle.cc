@@ -1,5 +1,8 @@
 #include "KBGeoCircle.hh"
+#include "KBGlobal.hh"
+
 #include "TMath.h"
+#include "TRandom.h"
 #include <iostream>
 
 ClassImp(KBGeoCircle)
@@ -20,6 +23,17 @@ void KBGeoCircle::SetCircle(Double_t x, Double_t y, Double_t r)
   fR = r;
 }
 
+TVector3 KBGeoCircle::GetRandomPoint()
+{
+  auto val = gRandom -> Uniform(2*TMath::Pi());
+  return TVector3(fX+fR*TMath::Cos(val), fY+fR*TMath::Sin(val), fZ);
+}
+
+void KBGeoCircle::Summary(Option_t *) const
+{
+  KBLog("KBGeoCircle","Summary",1,2) << "Center=(" << fX << "," << fY << "), R=" << fR << std::endl;
+}
+
 Double_t KBGeoCircle::GetX() const { return fX; }
 Double_t KBGeoCircle::GetY() const { return fY; }
 Double_t KBGeoCircle::GetZ() const { return fZ; }
@@ -35,7 +49,7 @@ TGraph *KBGeoCircle::DrawCircle(Int_t n, Double_t theta1, Double_t theta2)
   TVector3 center(fX,fY,0);
   for (auto i=0; i<=n; ++i)
   {
-    TVector3 pointer(0,0,fR);
+    TVector3 pointer(fR,0,0);
     pointer.RotateZ(i*(theta2-theta1)/n);
     auto point = center + pointer;
     graph -> SetPoint(graph->GetN(), point.X(), point.Y());

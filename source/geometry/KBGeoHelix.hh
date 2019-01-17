@@ -6,12 +6,15 @@
 #include "TGraph.h"
 #include "KBGeometry.hh"
 
-typedef KBVector3::Axis kbaxis;
+typedef KBVector3::Axis kbaxis_t;
 
 /// 
 class KBGeoHelix : public KBGeometry
 {
   protected:
+    Double_t fRMSR = -1; // radial RMS
+    Double_t fRMST = -1; // axial RMS
+
     Double_t fI = 0; ///< axis i-position
     Double_t fJ = 0; ///< axis j-position
     Double_t fR = 0; ///< Helix radius
@@ -20,49 +23,61 @@ class KBGeoHelix : public KBGeometry
     Double_t fT = 0; ///< Alpha angle at tail
     Double_t fH = 0; ///< Alpha angle at head
 
-    kbaxis fAxis = KBVector3::kZ; ///< helix axis
+    kbaxis_t fA = KBVector3::kZ; ///< helix axis
 
   public:
     KBGeoHelix();
     KBGeoHelix(Double_t i, Double_t j, Double_t r, Double_t s, Double_t k,
-               Double_t t, Double_t h, kbaxis axis = KBVector3::kZ);
+               Double_t t, Double_t h, kbaxis_t a);
 
     virtual ~KBGeoHelix() {}
 
     void SetHelix(Double_t i, Double_t j, Double_t r, Double_t s, Double_t k,
-                  Double_t t, Double_t h, kbaxis axis = KBVector3::kZ);
+                  Double_t t, Double_t h, kbaxis_t a);
+
+    TVector3 GetRandomPoint(Double_t sigma = 0);
+
+    void SetRMSR(Double_t);
+    void SetRMST(Double_t);
+
+    Double_t GetRMSR() const;
+    Double_t GetRMST() const;
 
     void SetI(Double_t val);
     void SetJ(Double_t val);
     void SetR(Double_t val);
     void SetS(Double_t val);
     void SetK(Double_t val);
-    void SetAlphaTail(Double_t val);
-    void SetAlphaHead(Double_t val);
-    void SetAxis(kbaxis val);
+    void SetT(Double_t val);
+    void SetH(Double_t val);
+    void SetA(kbaxis_t val);
 
-    Double_t GetI()         const;
-    Double_t GetJ()         const;
-    Double_t GetR()         const;
-    Double_t GetS()         const;
-    Double_t GetK()         const;
-    Double_t GetAlphaTail() const;
-    Double_t GetAlphaHead() const;
-    kbaxis   GetAxis()      const;
+    Double_t GetI() const;
+    Double_t GetJ() const;
+    Double_t GetR() const;
+    Double_t GetS() const;
+    Double_t GetK() const;
+    Double_t GetT() const;
+    Double_t GetH() const;
+    kbaxis_t GetA() const;
 
-    Double_t DipAngle() const;
-    Double_t AngleFromAxis() const;
-       Int_t Helicity() const;                          ///< Helicity of track +/-
-    Double_t LengthInPeriod() const;                    ///< Length of track in one period
-    Double_t KLengthInPeriod() const;                   ///< y-length of track in one period
-    Double_t LengthThroughAlpha(Double_t alpha) const;  ///< Length of track in change of alpha
-    Double_t AlphaThroughLength(Double_t length) const; ///< Angle alpha in change of length
-    TVector3 PositionByAlpha(Double_t alpha) const;     ///< Position at angle alpha [mm]
-    TVector3 Direction(Double_t alpha) const;           ///< Direction at angle alpha
+       Int_t Helicity() const; ///< Helicity of track +/- @todo TODO
+    Double_t DipAngle() const; ///< =artan(-fS/fR) (=0 on xz plane) : Angle between p and pt
+    Double_t CosDip()   const; ///< cos(dip)
+    Double_t AngleFromCenterAxis() const;
+
+    Double_t LengthInPeriod() const;                ///< Length of track in one period
+    Double_t KLengthInPeriod() const;               ///< y-length of track in one period
+
+    Double_t TravelLengthAtAlpha(Double_t alpha) const;  ///< Length of track in change of alpha
+    Double_t AlphaAtTravelLength(Double_t tlen)  const;  ///< Angle alpha in change of length
+
+    TVector3 PositionAtAlpha(Double_t alpha) const; ///< Position at angle alpha [mm]
+    TVector3 Direction(Double_t alpha) const;       ///< Direction at angle alpha
+
+    TVector3 HelicoidMap(TVector3 pos, Double_t alpha) const; ///< Map pos to helicoid map coordinate
 
     /*
-    TVector3 HelicoidMapping(TVector3 pos); ///< Map pos to helicoid map coordinate
-
     //TVector3 ClosestPointToHelix(TVector3);
     //Double_t DistanceToHelix(TVector3);
 

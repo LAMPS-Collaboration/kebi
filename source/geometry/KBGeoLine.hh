@@ -39,11 +39,11 @@ class KBGeoLine : public KBGeometry
     Double_t DistanceToLine(Double_t x, Double_t y, Double_t z) const;
     Double_t DistanceToLine(TVector3 pos) const;
 
-    TArrow *DrawArrowXY();
-    TArrow *DrawArrowYZ();
-    TArrow *DrawArrowZY();
-    TArrow *DrawArrowZX();
-    TArrow *DrawArrowXZ();
+    TArrow *DrawArrowXY(Double_t asize = 0.02);
+    TArrow *DrawArrowYZ(Double_t asize = 0.02);
+    TArrow *DrawArrowZY(Double_t asize = 0.02);
+    TArrow *DrawArrowZX(Double_t asize = 0.02);
+    TArrow *DrawArrowXZ(Double_t asize = 0.02);
 
   protected:
     Double_t fX1 = 0;
