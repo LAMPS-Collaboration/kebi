@@ -3,9 +3,8 @@
 
 #include "KBTask.hh"
 #include "KBHelixTrack.hh"
-#include "KBVector3.hh"
-#include "KBHit.hh"
 #include "TClonesArray.h"
+#include "KBVector3.hh"
 
 class KBSingleHelixTask : public KBTask
 { 
@@ -24,7 +23,7 @@ class KBSingleHelixTask : public KBTask
 
     bool fPersistency = true;
 
-    KBVector3::Axis fReferenceAxis = KBVector3::kZ;
+    KBVector3::Axis fReferenceAxis;
 
   ClassDef(KBSingleHelixTask, 1)
 };
