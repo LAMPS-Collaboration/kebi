@@ -221,6 +221,8 @@ TEveElement *KBHit::CreateEveElement()
   auto pointSet = new TEvePointSet("Hit");
   pointSet -> SetMarkerColor(kAzure-8);
   pointSet -> SetMarkerSize(0.4);
+  //pointSet -> SetMarkerColor(kBlack);
+  //pointSet -> SetMarkerSize(1.0);
   pointSet -> SetMarkerStyle(38);
 
   return pointSet;

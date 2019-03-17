@@ -120,8 +120,17 @@ class KBVector3 : public TVector3
     TArrow *ArrowYZ();
     TArrow *ArrowZX();
 
+    virtual Bool_t IsSortable() const { return true; }
+    Int_t Compare(const TObject *obj) const;
+
+    void SetSortBy(Double_t sortby) { fSortBy = sortby; }
+    Double_t SortBy() { return fSortBy; }
+
+    Double_t Angle2(const KBVector3 &q, TVector3 ref) const;
+
   private:
     Axis fReferenceAxis = kNon;
+    Double_t fSortBy = 0;
 
   ClassDef(KBVector3, 1)
 };
@@ -133,5 +142,7 @@ KBVector3 operator * (Double_t a, const KBVector3 &p);
 KBVector3 operator * (const KBVector3 &p, Double_t a);
 KBVector3 operator * (Int_t a, const KBVector3 &p);
 KBVector3 operator * (const KBVector3 &p, Int_t a);
+
+KBVector3::Axis operator * (const KBVector3::Axis &a1, const KBVector3::Axis &a2);
 
 #endif

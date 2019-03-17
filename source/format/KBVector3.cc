@@ -11,19 +11,29 @@ void KBVector3::Print(Option_t *option) const
 {
   TString opts = TString(option);
 
+  Int_t rank = 0;
+  if (opts.Index("r1")>=0) {
+    rank = 1;
+    opts.ReplaceAll("r1","");
+  }
+  if (opts.Index("r2")>=0) {
+    rank = 2;
+    opts.ReplaceAll("r2","");
+  }
+
   if (opts.Index("s")>=0) {
     if (fReferenceAxis != KBVector3::kNon)
-      kr_info(0) << "ref:" << fReferenceAxis
+      kr_info(rank) << "ref:" << fReferenceAxis
         << ", (x,y,z)=("<<X()<<","<<Y()<<","<<Z()<<")"
         << ", (i,j,k)=("<<I()<<","<<J()<<","<<K()<<")" << endl;
     else
-      kr_info(0) << "ref:" << fReferenceAxis << ", (x,y,z)=("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
+      kr_info(rank) << "ref:" << fReferenceAxis << ", (x,y,z)=("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
   }
   else {
-    kr_info(0) << "Reference axis : " << fReferenceAxis << endl;
-    kr_info(0) << "(x,y,z) = ("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
+    kr_info(rank) << "Reference axis : " << fReferenceAxis << endl;
+    kr_info(rank) << "(x,y,z) = ("<<X()<<","<<Y()<<","<<Z()<<")" << endl;
     if (fReferenceAxis != KBVector3::kNon)
-      kr_info(0) << "(i,j,k) = ("<<I()<<","<<J()<<","<<K()<<")" << endl;
+      kr_info(rank) << "(i,j,k) = ("<<I()<<","<<J()<<","<<K()<<")" << endl;
   }
 }
 
@@ -247,4 +257,86 @@ KBVector3 operator * (Int_t a, const KBVector3 &p) {
 
 KBVector3 operator * (const KBVector3 &p, Int_t a) {
   return KBVector3(a*p.X(), a*p.Y(), a*p.Z(), p.GetReferenceAxis());
+}
+
+KBVector3::Axis operator * (const KBVector3::Axis &a1, const KBVector3::Axis &a2)
+{
+  if (a1==KBVector3::kX)
+  {
+         if (a2==KBVector3::kX)  return KBVector3::kNon;
+    else if (a2==KBVector3::kY)  return KBVector3::kZ;
+    else if (a2==KBVector3::kZ)  return KBVector3::kMY;
+    else if (a2==KBVector3::kMX) return KBVector3::kNon;
+    else if (a2==KBVector3::kMY) return KBVector3::kMZ;
+    else if (a2==KBVector3::kMZ) return KBVector3::kY;
+    else                         return KBVector3::kNon;
+  }
+  else if (a1==KBVector3::kY)
+  {
+         if (a2==KBVector3::kX)  return KBVector3::kMZ;
+    else if (a2==KBVector3::kY)  return KBVector3::kNon;
+    else if (a2==KBVector3::kZ)  return KBVector3::kX;
+    else if (a2==KBVector3::kMX) return KBVector3::kZ;
+    else if (a2==KBVector3::kMY) return KBVector3::kNon;
+    else if (a2==KBVector3::kMZ) return KBVector3::kMX;
+    else                         return KBVector3::kNon;
+  }
+  else if (a1==KBVector3::kZ)
+  {
+         if (a2==KBVector3::kX)  return KBVector3::kY;
+    else if (a2==KBVector3::kY)  return KBVector3::kMX;
+    else if (a2==KBVector3::kZ)  return KBVector3::kNon;
+    else if (a2==KBVector3::kMX) return KBVector3::kMY;
+    else if (a2==KBVector3::kMY) return KBVector3::kX;
+    else if (a2==KBVector3::kMZ) return KBVector3::kNon;
+    else                         return KBVector3::kNon;
+  }
+  else if (a1==KBVector3::kI)
+  {
+         if (a2==KBVector3::kI)  return KBVector3::kNon;
+    else if (a2==KBVector3::kJ)  return KBVector3::kK;
+    else if (a2==KBVector3::kK)  return KBVector3::kJ;
+    else                         return KBVector3::kNon;
+  }
+  else if (a1==KBVector3::kJ)
+  {
+         if (a2==KBVector3::kI)  return KBVector3::kK;
+    else if (a2==KBVector3::kJ)  return KBVector3::kNon;
+    else if (a2==KBVector3::kK)  return KBVector3::kI;
+    else                         return KBVector3::kNon;
+  }
+  else if (a1==KBVector3::kK)
+  {
+         if (a2==KBVector3::kI)  return KBVector3::kJ;
+    else if (a2==KBVector3::kJ)  return KBVector3::kI;
+    else if (a2==KBVector3::kK)  return KBVector3::kNon;
+    else                         return KBVector3::kNon;
+  }
+
+  return KBVector3::kNon;
+}
+
+Int_t KBVector3::Compare(const TObject *obj) const
+{
+  auto compare = ((KBVector3 *) obj) -> SortBy();
+
+       if (fSortBy > compare) return 1;
+  else if (fSortBy < compare) return -1;
+  else                        return 0;
+}
+
+Double_t KBVector3::Angle2(const KBVector3 &q, TVector3 ref) const
+{
+  Double_t ptot2 = Mag2()*q.Mag2();
+  if (ptot2 <= 0) {
+    return 0.0;
+  } else {
+    Double_t arg = Dot(q)/TMath::Sqrt(ptot2);
+    if (arg >  1.0) arg =  1.0;
+    if (arg < -1.0) arg = -1.0;
+    if (Cross(q).Dot(ref) > 0)
+      return TMath::ACos(arg);
+    else
+      return -TMath::ACos(arg);
+  }
 }
