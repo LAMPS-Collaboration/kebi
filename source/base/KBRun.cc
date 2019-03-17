@@ -858,10 +858,13 @@ void KBRun::RunEve(Long64_t eventID)
         if (!isGood)
           continue;
 
-        TEveElement *eveElement = eveTrk -> CreateEveElement();
+        //TEveElement *eveElement = eveTrk -> CreateEveElement();
+        TEveLine *eveElement = (TEveLine *) eveTrk -> CreateEveElement();
         eveTrk -> SetEveElement(eveElement);
         TString name = TString(eveElement -> GetElementName()) + Form("_%d",iObject);
         eveElement -> SetElementName(name);
+        eveElement -> SetLineColor(GetColor());
+        eveElement -> SetLineWidth(4);
         gEve -> AddElement(eveElement);
         fEveElementList.push_back(eveElement);
       }
@@ -981,6 +984,18 @@ void KBRun::RunEve(Long64_t eventID)
 }
 
 void KBRun::SetEveOption(TString option) { fEveOption = option; }
+
+Color_t KBRun::GetColor()
+{
+  //Color_t colors[] = {kOrange, kTeal, kViolet, kSpring, kPink, kAzure};
+  //Color_t colors[] = {kPink, kAure, kSpring, kViolet, kTeal, kGreen, kRed, kBlue, kMagenta};
+  //Color_t color = colors[index%6] + ((index/6)%20);
+  //Color_t colors[] = {kRed, kPink, kMagenta, kViolet, kBlue, kAzure, kCyan, kTeal, kGreen, kSpring, kYellow, kOrange};
+  //Color_t color = colors[((Int_t)gRandom -> Uniform(12))] + ((Int_t) gRandom -> Uniform(10)) - 9;
+  Color_t colors[] = {kRed, kPink, kBlue, kAzure, kTeal, kSpring};
+  Color_t color = colors[((Int_t)gRandom -> Uniform(6))] + ((Int_t) gRandom -> Uniform(10)) - 9;
+  return color;
+}
 #endif
 
 void KBRun::SetAutoTermination(Bool_t val) { fAutoTerminate = val; }

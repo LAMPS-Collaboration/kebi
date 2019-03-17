@@ -125,6 +125,7 @@ class KBRun : public KBTask
 #ifdef ACTIVATE_EVE
     void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
     void SetEveOption(TString option);
+    Color_t GetColor();
 #endif
 
     static void ClickSelectedPadPlane();
