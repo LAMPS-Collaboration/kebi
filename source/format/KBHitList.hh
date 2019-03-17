@@ -2,6 +2,8 @@
 #define KBHITLIST_HH
 
 #include "TObject.h"
+#include "TCanvas.h"
+
 #include <vector>
 #include <iomanip>
 using namespace std;

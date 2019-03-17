@@ -29,6 +29,7 @@
 #include <map>
 #include <vector>
 #include <fstream>
+#include <stdlib.h>
 using namespace std;
 
 class KBRun : public KBTask
@@ -138,8 +139,8 @@ class KBRun : public KBTask
     void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
-    TString ConfigureDataPath(TString namname);
-    bool CheckFileExistence(TString fileName);
+    TString ConfigureDataPath(TString name, bool search = false);
+    bool CheckFileExistence(TString fileName, bool print = false);
 
   private:
 #ifdef ACTIVATE_EVE

@@ -3,7 +3,6 @@
 #include "KBGeoSphere.hh"
 #include "KBGeoLine.hh"
 #include "TH2D.h"
-#include "TCanvas.h"
 #include "TMarker.h"
 
 ClassImp(KBHitList)
@@ -60,7 +59,7 @@ void KBHitList::Print(Option_t *option) const
     else
       for (auto hitID : fHitIDArray)
         kr_info(1)<< setw(4) << hitID;
-    kb_raw << endl;
+    kb_out << endl;
   }
 }
 
@@ -69,8 +68,8 @@ void KBHitList::PrintHitIDs(Int_t rank) const
   if (fHitIDArray.size() != 0) {
     kr_info(rank) << "Hit-IDs(" << fN << "): ";
     for (auto hitID : fHitIDArray)
-      kb_raw << hitID << " ";
-    kb_raw << endl;
+      kb_out << hitID << " ";
+    kb_out << endl;
   }
 }
 

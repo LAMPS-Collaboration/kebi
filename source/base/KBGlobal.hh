@@ -3,37 +3,9 @@
 
 #include <iostream>
 #include <fstream>
-#include "KBParameterContainer.hh"
+#include "TString.h"
 
-/**
- * Virtual class for stear classes of KEBI
-*/
-
-class KBGlobal
-{
-  public:
-    KBGlobal() {};
-    virtual ~KBGlobal() {};
-
-    void CreateParameterContainer();
-    void SetParameterContainer(KBParameterContainer *par);
-    void SetParameterContainer(TString file);
-    void AddParameterFile(TString file);
-    KBParameterContainer *GetParameterContainer();
-
-    virtual void SetRank(Int_t rank);
-    Int_t GetRank();
-
-  protected:
-    KBParameterContainer *fPar = nullptr;
-
-    Int_t fRank = 0;
-
-  ClassDef(KBGlobal, 1)
-};
-
-#define kb_raw     KBLog(0,-1)
-#define kb_out     KBLog(fRank,0)
+#define kb_out     KBLog(0,0)
 #define kb_debug   KBLog(__FILE__,__LINE__)
 
 #define kb_print   KBLog(fName,__FUNCTION__,fRank,1)
@@ -51,7 +23,7 @@ class KBLog
   public:
     KBLog(TString name, const std::string &title ,int rank, int option)
     {
-      if (option == -1)
+      if (option == 0)
         return;
 
       for (auto i=0; i<rank; ++i)
@@ -61,7 +33,6 @@ class KBLog
 
       switch (option)
       {
-        case 0:  break;
         case 1:  std::cout<<header; break;
         case 2:  std::cout<<header<<"\033[0;32m"<<"info "    <<"\033[0m"; break;
         case 3:  std::cout<<header<<"\033[0;33m"<<"warnning "<<"\033[0m"; break;
@@ -72,7 +43,7 @@ class KBLog
 
     KBLog(int rank = 0, int option = 1)
     {
-      if (option == -1)
+      if (option == 0)
         return;
 
       for (auto i=0; i<rank; ++i)
@@ -80,7 +51,6 @@ class KBLog
 
       switch (option)
       {
-        case 0:  break;
         case 1:  break;
         case 2:  std::cout<<"\033[0;32m"<<"info "    <<"\033[0m"; break;
         case 3:  std::cout<<"\033[0;33m"<<"warnning "<<"\033[0m"; break;
@@ -91,7 +61,7 @@ class KBLog
 
     KBLog(const std::string &title ,int line)
     {
-      TString header = Form("+%d %s ", line, title.c_str());
+      TString header = Form("[+%d %s] ", line, title.c_str());
       std::cout<<"\033[0;36m"<<"debug "<<"\033[0m "<<header;
     }
 

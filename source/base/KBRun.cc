@@ -133,37 +133,76 @@ void KBRun::Print(Option_t *option) const
   kb_out << "===========================================================================================" << endl;
 }
 
-TString KBRun::ConfigureDataPath(TString name)
+TString KBRun::ConfigureDataPath(TString name, bool search)
 {
-  TString newName = name;
+  TString fullName;
+  TString pathPWD = getenv("PWD"); pathPWD = pathPWD + "/";
+  TString pathKEBI = TString(KEBI_PATH) + "/data/";
 
-  if (name == "last")
-    newName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
-  else {
-    if (newName[0] != '.' && newName[0] != '/' && newName[0] != '$' && newName != '~') {
-      if (fDataPath.IsNull())
-        newName = TString(KEBI_PATH) + "/data/" + newName;
-      else
-        newName = fDataPath + "/" + newName;
-    }
+  vector<TString> pathList;
+  pathList.push_back(pathPWD);
+  pathList.push_back(pathPWD+"data/");
+  pathList.push_back(pathKEBI);
 
-    if (newName.Index(".root") != newName.Sizeof()-6)
-      newName = newName + ".root";
+  if (name == "last") {
+    fullName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
+    return fullName;
   }
 
-  return newName;
+  kb_debug << name << endl;
+
+  if (name.Index(".root") != name.Sizeof()-6)
+    name = name + ".root";
+
+  kb_debug << name << endl;
+
+  if (search)
+  {
+    if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
+      bool found = false;
+      for (auto path : pathList) {
+        fullName = path + name;
+        kb_debug << fullName << endl;
+        if (CheckFileExistence(fullName,1)) {
+          found = true;
+          break;
+        }
+      }
+      if (found)
+        return fullName;
+      else
+        return TString();
+    }
+    else {
+      fullName = name;
+      kb_debug << fullName << endl;
+      if (CheckFileExistence(fullName,1))
+        return fullName;
+      else
+        return TString();
+    }
+  }
+
+  if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
+    if (fDataPath.IsNull())
+      fullName = pathKEBI + name;
+    else
+      fullName = fDataPath + "/" + name;
+  }
+
+  return fullName;
 }
 
 void KBRun::SetDataPath(TString path) { fDataPath = path; }
 TString KBRun::GetDataPath() { return fDataPath; }
 
 void KBRun::SetInputFile(TString fileName, TString treeName) {
-  fInputFileName = ConfigureDataPath(fileName);
+  fInputFileName = ConfigureDataPath(fileName,true);
   fInputTreeName = treeName;
 }
 
-void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(ConfigureDataPath(fileName)); }
-void KBRun::AddFriend(TString fileName) { fFriendFileNameArray.push_back(ConfigureDataPath(fileName)); }
+void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(ConfigureDataPath(fileName,true)); }
+void KBRun::AddFriend(TString fileName) { fFriendFileNameArray.push_back(ConfigureDataPath(fileName,true)); }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 
 TChain *KBRun::GetInputChain()  const { return fInputTree; }
@@ -1120,13 +1159,16 @@ void KBRun::SetLogFile(TString name) {
 TString KBRun::GetLogFile() { return fRunLogFileName; }
 //std::ofstream &KBRun::GetLogFileStream() { return &fRunLogFileStream; }
 
-bool KBRun::CheckFileExistence(TString fileName)
+bool KBRun::CheckFileExistence(TString fileName, bool print)
 {
   TString name = gSystem -> Which(".", fileName.Data());
-  if (name.IsNull())
-    kb_info << fileName << " IS NEW." << endl;
-  else
-    kb_info << fileName << " EXIST!" << endl;
+  kb_debug << fileName << " " << name << endl;
+  if (print) {
+    if (name.IsNull())
+      kb_info << fileName << " IS NEW." << endl;
+    else
+      kb_info << fileName << " EXIST!" << endl;
+  }
 
   if (name.IsNull())
     return false;

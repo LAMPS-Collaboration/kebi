@@ -1,7 +1,7 @@
 #ifndef KBWPOINT_HH
 #define KBWPOINT_HH
 
-#include "KBContainerMCTagged.hh"
+#include "KBMCTagged.hh"
 #include "TError.h"
 #include "TVector3.h"
 #include "KBVector3.hh"
@@ -12,7 +12,7 @@
 
 /// position data with weight
 
-class KBWPoint : public KBContainerMCTagged
+class KBWPoint : public KBMCTagged
 {
   public:
     KBWPoint();

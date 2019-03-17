@@ -1,6 +1,8 @@
 #include "KBGeoClosedPlane.hh"
+#include "TObjArray.h"
 #include <cmath>
 #include <iostream>
+
 
 ClassImp(KBGeoClosedPlane)
 

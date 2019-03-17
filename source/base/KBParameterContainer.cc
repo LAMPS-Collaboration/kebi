@@ -31,7 +31,7 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
 {
   if (filename && strstr(filename,".par"))
   {
-    cout << "Writting " << filename << " as parameter file." << endl;
+    kr_info(0) << "Writting " << filename << " as parameter file." << endl;
     ofstream out(filename);
     out << "# " << filename << endl;
     out << "# created from method KBParameterContainer::SaveAs" << endl;
@@ -139,10 +139,10 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
     fileNameFull = TString(gSystem -> Getenv("PWD")) + "/" + fileName;
 
   if (TString(gSystem -> Which(".", fileNameFull.Data())).IsNull()) {
-    cout << "[KBParameterContainer] Parameter file " << fileNameFull << " does not exist!" << endl;
+    kr_info(0) << "Parameter file " << fileNameFull << " does not exist!" << endl;
     return 0;
   }
-  cout << "[KBParameterContainer] Adding parameter file " << fileNameFull << endl;
+  kr_info(0) << "Adding parameter file " << fileNameFull << endl;
 
   if (parNameForFile.IsNull())
     parNameForFile = Form("INPUT_PARAMETER_FILE%d", fNumInputFiles);
@@ -224,7 +224,7 @@ void KBParameterContainer::Print(Option_t *option) const
 
   TObject *obj;
 
-  cout << "[" << fName << "]" << " List of parameters :" << endl;
+  kr_info(0) << "[" << fName << "]" << " List of parameters :" << endl;
   while ((obj = dynamic_cast<TObject*>(iterator()))) 
   {
     TString className = obj -> ClassName();
@@ -235,28 +235,28 @@ void KBParameterContainer::Print(Option_t *option) const
       TString value = par -> GetTitle();
       if (value.Index("AXIS_PARAMETER_")==0) {
         value.ReplaceAll("AXIS_PARAMETER_","");
-        cout << left << "  " << setw(25) << key << "  a  " << value << endl;
+        kr_info(0) << left << "  " << setw(25) << key << "  a  " << value << endl;
       }
       else
-        cout << left << "  " << setw(25) << key << "  s  " << value << endl;
+        kr_info(0) << left << "  " << setw(25) << key << "  s  " << value << endl;
     }
     else if (className == "TParameter<int>") {
       TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
       TString key = par -> GetName();
       Int_t value = par -> GetVal();
-      cout << left << "  " << setw(25) << key << "  i  " << value << endl;
+      kr_info(0) << left << "  " << setw(25) << key << "  i  " << value << endl;
     }
     else if (className == "TParameter<double>") {
       TParameter<Double_t> *par = (TParameter<Double_t> *) obj;
       TString key = par -> GetName();
       Double_t value = par -> GetVal();
-      cout << left << "  " << setw(25) << key << "  d  " << value << endl;
+      kr_info(0) << left << "  " << setw(25) << key << "  d  " << value << endl;
     }
     else if (className == "TParameter<bool>") {
       TParameter<bool> *par = (TParameter<bool> *) obj;
       TString key = par -> GetName();
       TString value = par -> GetVal() == true ? "true" : "false";
-      cout << left << "  " << setw(25) << key << "  b  " << value << endl;
+      kr_info(0) << left << "  " << setw(25) << key << "  b  " << value << endl;
     }
   }
 }
@@ -265,7 +265,7 @@ void KBParameterContainer::Print(Option_t *option) const
 bool KBParameterContainer::SetPar(TString name, Bool_t val)
 {
   if (FindObject(name) != nullptr) {
-    cout << "[KBParameterContainer] Parameter with name " << name << " already exist!" << endl;
+    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
     return false;
   }
 
@@ -276,7 +276,7 @@ bool KBParameterContainer::SetPar(TString name, Bool_t val)
 bool KBParameterContainer::SetPar(TString name, Int_t val)
 {
   if (FindObject(name) != nullptr) {
-    cout << "[KBParameterContainer] Parameter with name " << name << " already exist!" << endl;
+    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
     return false;
   }
 
@@ -287,7 +287,7 @@ bool KBParameterContainer::SetPar(TString name, Int_t val)
 bool KBParameterContainer::SetPar(TString name, Double_t val)
 {
   if (FindObject(name) != nullptr) {
-    cout << "[KBParameterContainer] Parameter with name " << name << " already exist!" << endl;
+    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
     return false;
   }
 
@@ -298,7 +298,7 @@ bool KBParameterContainer::SetPar(TString name, Double_t val)
 bool KBParameterContainer::SetPar(TString name, TString val)
 {
   if (FindObject(name) != nullptr) {
-    cout << "[KBParameterContainer] Parameter with name " << name << " already exist!" << endl;
+    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
     return false;
   }
 
@@ -315,7 +315,7 @@ bool KBParameterContainer::GetParBool(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, false);
     else
@@ -330,7 +330,7 @@ Int_t KBParameterContainer::GetParInt(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, -999);
     else
@@ -345,7 +345,7 @@ Double_t KBParameterContainer::GetParDouble(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, -999.999);
     else
@@ -360,7 +360,7 @@ TString KBParameterContainer::GetParString(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, TString("DOES_NOT_EXIST"));
     else
@@ -383,7 +383,7 @@ KBVector3::Axis KBParameterContainer::GetParAxis(TString name)
     }
   }
 
-  cout << "[KBParameterContainer] parameter with name " << name << " does not exist!" << endl;
+  kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
   if (fDebugMode)
     SetPar(TString("NEWPAR")+name, TString("AXIS_PARAMETER_DOES_NOT_EXIST"));
   else

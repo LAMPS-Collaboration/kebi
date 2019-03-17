@@ -44,8 +44,8 @@ void KBPad::Print(Option_t *option) const
   //else if (opts.Index("a"))
 
   kr_info(0) << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
-  if (fActive) kb_raw << " is Active!" << endl;
-  else kb_raw << " is NOT Active." << endl;
+  if (fActive) kb_out << " is Active!" << endl;
+  else kb_out << " is NOT Active." << endl;
 
   kr_info(0) << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
   kr_info(0) << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
@@ -56,8 +56,8 @@ void KBPad::Print(Option_t *option) const
     Int_t numMCID = fMCIDArray.size();
     kr_info(1) << "List of MC-IDs (co. Tb [mm]),  : ";
     for (auto iMC = 0; iMC < numMCID; ++iMC)
-      kb_raw << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
-    kb_raw << endl;
+      kb_out << fMCIDArray.at(iMC) << "(" << fMCTbArray.at(iMC) << "), ";
+    kb_out << endl;
   }
 }
 

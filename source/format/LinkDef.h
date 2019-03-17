@@ -4,15 +4,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class KBContainer+;
-
 #pragma link C++ class KBChannel+;
 #pragma link C++ class KBChannelBufferX+;
 #pragma link C++ class KBChannelBufferS+;
 #pragma link C++ class KBChannelBufferD+;
 #pragma link C++ class KBPad+;
-
-#pragma link C++ class KBContainerMCTagged+;
 
 #pragma link C++ class KBWPoint+;
 #pragma link C++ class KBWPointCluster+;

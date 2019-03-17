@@ -97,8 +97,7 @@ void KBPSATask::Exec(Option_t*)
         }
       }
       if (dist < 10) //XXX
-        hit -> SetMCID(idArray -> at(atMC), dist*fTbTime*fDriftVelocity);
-        //hit -> SetMCID(idArray -> at(atMC), dist);
+        hit -> SetMCTag(idArray -> at(atMC), dist*fTbTime*fDriftVelocity, 1);
 
       idx++;
     }

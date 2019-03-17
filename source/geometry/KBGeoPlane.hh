@@ -2,6 +2,8 @@
 #define KBGEOPLANE_HH
 
 #include "TVector3.h"
+
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
 
 class KBGeoPlane : public KBGeometry

@@ -66,7 +66,7 @@ void KBHelixTrack::Print(Option_t *option) const
   else if (fA == KBVector3::kY) center = TString("(z,x): ")+center;
   else if (fA == KBVector3::kZ) center = TString("(x,y): ")+center;
 
-  kb_raw << left;
+  kb_out << left;
   kr_info(0) << setw(13) << "Track ID"     << " : " << fTrackID << endl;
   kr_info(0) << setw(13) << "Parent ID"    << " : " << fParentID << endl;
   kr_info(0) << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;

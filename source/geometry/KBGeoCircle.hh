@@ -3,6 +3,8 @@
 
 #include "TVector3.h"
 #include "TGraph.h"
+
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
 
 class KBGeoCircle : public KBGeometry

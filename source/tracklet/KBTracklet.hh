@@ -3,13 +3,13 @@
 
 #include "TGraph.h"
 
-#include "KBContainerMCTagged.hh"
+#include "KBMCTagged.hh"
 
 #include "KBHitList.hh"
 #include "KBHit.hh"
 #include "KBVector3.hh"
 
-class KBTracklet : public KBContainerMCTagged
+class KBTracklet : public KBMCTagged
 {
   protected:
     Int_t fTrackID = -1;

@@ -3,6 +3,8 @@
 
 #include "TVector3.h"
 #include "TArrow.h"
+
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
 
 class KBGeoLine : public KBGeometry

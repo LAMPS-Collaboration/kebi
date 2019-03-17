@@ -1,6 +1,7 @@
 #ifndef KBPARAMETERCONTAINER
 #define KBPARAMETERCONTAINER
 
+#include "KBGlobal.hh"
 #include "TObjArray.h"
 #include "TNamed.h"
 #include "TParameter.h"

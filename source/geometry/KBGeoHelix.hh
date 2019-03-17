@@ -4,6 +4,8 @@
 #include "TVector3.h"
 #include "TGraph2D.h"
 #include "TGraph.h"
+
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
 
 typedef KBVector3::Axis kbaxis_t;

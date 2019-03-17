@@ -55,7 +55,7 @@ void KBTracklet::PropagateMC()
 
     errorFinal = errorFinal/counts[iID];
     Double_t purity = Double_t(counts[iID])/hitArray->size();
-    SetMCID(mcIDFinal, errorFinal, purity);
+    SetMCTag(mcIDFinal, errorFinal, purity);
   }
   else
   {
@@ -78,7 +78,7 @@ void KBTracklet::PropagateMC()
         purity = Double_t(counts[iID])/hitArray->size();
       }
     }
-    SetMCID(mcIDFinal, errorFinal, purity);
+    SetMCTag(mcIDFinal, errorFinal, purity);
   }
 }
 

@@ -1,7 +1,7 @@
 #ifndef KBDETECTOR_HH
 #define KBDETECTOR_HH
 
-#include "KBGlobal.hh"
+#include "KBGear.hh"
 #include "KBDetectorPlane.hh"
 
 #include "TNamed.h"
@@ -9,7 +9,7 @@
 
 #include "TObjArray.h"
 
-class KBDetector : public TNamed, public KBGlobal
+class KBDetector : public TNamed, public KBGear
 {
   public:
     KBDetector();

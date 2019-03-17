@@ -1,13 +1,13 @@
 #ifndef KBTASK_HH
 #define KBTASK_HH
 
-#include "KBGlobal.hh"
+#include "KBGear.hh"
 #include "TTask.h"
 #include <string>
 #include <iostream>
 using namespace std;
 
-class KBTask : public TTask, public KBGlobal
+class KBTask : public TTask, public KBGear
 {
   public:
     KBTask();

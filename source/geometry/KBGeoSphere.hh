@@ -3,8 +3,10 @@
 
 #include "TVector3.h"
 #include "TGraph.h"
-#include "KBGeoCircle.hh"
+
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
+#include "KBGeoCircle.hh"
 
 class KBGeoSphere : public KBGeometry
 {

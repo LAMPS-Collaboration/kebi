@@ -4,6 +4,7 @@
 #include "TVector3.h"
 #include "TGraph.h"
 
+#include "KBVector3.hh"
 #include "KBGeometry.hh"
 #include "KBGeoLine.hh"
 #include "KBGeoClosedPlane.hh"

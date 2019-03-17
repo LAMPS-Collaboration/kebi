@@ -2,7 +2,7 @@
 #define KBDETECTORPLANE_HH
 
 #include "KBChannel.hh"
-#include "KBGlobal.hh"
+#include "KBGear.hh"
 #include "KBVector3.hh"
 
 #include "TH2.h"
@@ -12,7 +12,7 @@
 #include "TObjArray.h"
 #include "TClonesArray.h"
 
-class KBDetectorPlane : public TNamed, public KBGlobal
+class KBDetectorPlane : public TNamed, public KBGear
 {
   public:
     KBDetectorPlane();
