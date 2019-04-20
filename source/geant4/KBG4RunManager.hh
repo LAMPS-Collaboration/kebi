@@ -6,6 +6,7 @@
 #include "KBMCDataManager.hh"
 #include "KBG4RunMessenger.hh"
 #include "KBGear.hh"
+#include "TString.h"
 #include "globals.hh"
 
 class KBG4RunMessenger;
@@ -18,10 +19,10 @@ class KBG4RunManager : public G4RunManager, public KBGear
     virtual ~KBG4RunManager();
 
     virtual void Initialize();
+    void Run(G4int argc=0, char **argv=nullptr, const G4String &type="");
 
-    void SetGeneratorFile(G4String value);
-    void SetOutputFile(G4String value);
-    void AddParFile(G4String value);
+    void SetGeneratorFile(TString value);
+    void SetOutputFile(TString value);
 
     void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume);
 

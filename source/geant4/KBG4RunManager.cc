@@ -1,14 +1,15 @@
 #include "KBG4RunManager.hh"
 #include "KBMCDataManager.hh"
 #include "KBPrimaryGeneratorAction.hh"
-#include "TString.h"
+#include "G4VisExecutive.hh"
+#include "G4UImanager.hh"
+#include "G4UIExecutive.hh"
 #include "globals.hh"
 
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
 {
   fMessenger = new KBG4RunMessenger(this);
-  CreateParameterContainer();
 }
 
 KBG4RunManager::KBG4RunManager(const char *name)
@@ -32,19 +33,40 @@ void KBG4RunManager::Initialize()
   SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
 }
 
-void KBG4RunManager::SetGeneratorFile(G4String value)
+void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
 {
-  auto pga = (KBPrimaryGeneratorAction *) userPrimaryGeneratorAction;
-  TString s = value;
-  fPar -> ReplaceEnvironmentVariable(s);
-  pga -> SetEventGenerator(s.Data());
+  G4UImanager* uiManager = G4UImanager::GetUIpointer();
+  TString command("/control/execute ");
+
+  if (fPar->CheckPar("G4VisFile")) {
+    G4VisManager* visManager = new G4VisExecutive;
+    visManager -> Initialize();
+
+    G4UIExecutive* uiExecutive = new G4UIExecutive(argc,argv,type);
+    auto fileName = fPar -> GetParString("G4VisFile");
+    uiManager -> ApplyCommand(command+fileName);
+    uiExecutive -> SessionStart();
+
+    delete uiExecutive;
+    delete visManager;
+  }
+  else if (fPar->CheckPar("G4MacroFile")) {
+    auto fileName = fPar -> GetParString("G4MacroFile");
+    uiManager -> ApplyCommand(command+fileName);
+  }
 }
 
-void KBG4RunManager::SetOutputFile(G4String value)
+void KBG4RunManager::SetGeneratorFile(TString value)
 {
-  TString s = value;
-  fPar -> ReplaceEnvironmentVariable(s);
-  auto data = new KBMCDataManager(s.Data());
+  auto pga = (KBPrimaryGeneratorAction *) userPrimaryGeneratorAction;
+  fPar -> ReplaceEnvironmentVariable(value);
+  pga -> SetEventGenerator(value.Data());
+}
+
+void KBG4RunManager::SetOutputFile(TString value)
+{
+  fPar -> ReplaceEnvironmentVariable(value);
+  auto data = new KBMCDataManager(value.Data());
   data -> SetParameterContainer(fPar);
   data -> SetStepPersistency(fPar->GetParBool("MCStepPersistency"));
 
@@ -52,13 +74,6 @@ void KBG4RunManager::SetOutputFile(G4String value)
     G4cout << "Set detector " << copyNo << G4endl;
     data -> SetDetector(copyNo);
   }
-}
-
-void KBG4RunManager::AddParFile(G4String value)
-{
-  TString s = value;
-  fPar -> ReplaceEnvironmentVariable(s);
-  fPar -> AddFile(s.Data());
 }
 
 void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume)

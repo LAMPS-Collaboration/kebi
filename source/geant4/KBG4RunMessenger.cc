@@ -21,5 +21,5 @@ void KBG4RunMessenger::SetNewValue(G4UIcommand *command, G4String value)
   else if (command == fSetOutputFile)
     fRunManager -> SetOutputFile(value);
   else if (command == fAddParFile)
-    fRunManager -> AddParFile(value);
+    fRunManager -> AddPar(value);
 }

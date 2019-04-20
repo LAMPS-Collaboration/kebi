@@ -41,16 +41,16 @@ void KBMCDataManager::SetDetector(Int_t detectorID)
   fStepArrayList -> Add(stepArray);
 }
 
-void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
 {
   fTrackID = trackID;
   fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
-  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, vx, vy, vz);
+  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz);
 }
 
-void KBMCDataManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+void KBMCDataManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
 {
-  fCurrentTrack -> AddVertex(px, py, pz, vx, vy, vz);
+  fCurrentTrack -> AddVertex(px, py, pz, detectorID, vx, vy, vz);
 }
 
 void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
