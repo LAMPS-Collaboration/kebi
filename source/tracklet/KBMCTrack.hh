@@ -27,9 +27,10 @@ class KBMCTrack : public KBTracklet
     void SetVX(Double_t val);
     void SetVY(Double_t val);
     void SetVZ(Double_t val);
+    void SetDetectorID(Int_t id);
 
-    void SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx = 0, Double_t vy = 0, Double_t vz = 0);
-    void AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz);
+    void SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID = 0, Double_t vx = 0, Double_t vy = 0, Double_t vz = 0);
+    void AddVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz);
 
     Int_t GetNumVertices() const;
 
@@ -43,7 +44,10 @@ class KBMCTrack : public KBTracklet
     Double_t GetVZ(Int_t idx = 0) const;
     TVector3 GetVertex(Int_t idx = 0) const;
 
+    Int_t GetDetectorID(Int_t idx = 0) const;
+
     TVector3 GetPrimaryPosition() const;
+       Int_t GetPrimaryDetectorID() const;
 
     void AddStep(KBMCStep *hit);
     vector<KBMCStep *> *GetStepArray();
@@ -76,6 +80,7 @@ class KBMCTrack : public KBTracklet
     vector<Double_t> fVX;
     vector<Double_t> fVY;
     vector<Double_t> fVZ;
+    vector<Int_t> fDetectorID; ///< detector ID (= copyNo)
 
     vector<KBMCStep *> fStepArray; //!
   

@@ -1,5 +1,6 @@
 #include "KBMCTrack.hh"
 #include "TVector3.h"
+#include "TDatabasePDG.h"
 
 #ifdef ACTIVATE_EVE
 #include "TEveLine.h"
@@ -26,6 +27,7 @@ void KBMCTrack::Clear(Option_t *option)
   fVX.clear(); fVX.push_back(-999);
   fVY.clear(); fVY.push_back(-999);
   fVZ.clear(); fVZ.push_back(-999);
+  fDetectorID.clear(); fDetectorID.push_back(-999);
 }
 
 void KBMCTrack::Print(Option_t *option) const
@@ -37,25 +39,28 @@ void KBMCTrack::Print(Option_t *option) const
     Int_t n = fPX.size();
     for (auto i=0; i<n; ++i) {
       kr_info(0) << "  " << i
-        <<  "> mom=(" << setw(12) << fPX[i] << "," << setw(12) << fPY[i] << "," << setw(12) << fPZ[i]
-        << "), pos=(" << setw(12) << fVX[i] << "," << setw(12) << fVY[i] << "," << setw(12) << fVZ[i] << ")" << endl;
+        <<  "> mom=(" << setw(12) << fPX[i] << "," << setw(12) << fPY[i] << "," << setw(12) << fPZ[i] << "),"
+        <<   " det="  << setw(12) << fDetectorID[i] << ","
+        <<   " pos=(" << setw(12) << fVX[i] << "," << setw(12) << fVY[i] << "," << setw(12) << fVZ[i] << ")" << endl;
     }
   }
   else {
     kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ")" << setw(11) << fPDG
-      <<   " mom=(" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0]
-      << "), pos=(" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
+      << " mom=(" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << "),"
+      << " det="  << setw(12) << fDetectorID[0] << ","
+      << " pos=(" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
   }
 }
 
-void KBMCTrack::SetPX(Double_t val)    { fPX[0] = val; }
-void KBMCTrack::SetPY(Double_t val)    { fPY[0] = val; }
-void KBMCTrack::SetPZ(Double_t val)    { fPZ[0] = val; }
-void KBMCTrack::SetVX(Double_t val)    { fVX[0] = val; }
-void KBMCTrack::SetVY(Double_t val)    { fVY[0] = val; }
-void KBMCTrack::SetVZ(Double_t val)    { fVZ[0] = val; }
+void KBMCTrack::SetPX(Double_t val)     { fPX[0] = val; }
+void KBMCTrack::SetPY(Double_t val)     { fPY[0] = val; }
+void KBMCTrack::SetPZ(Double_t val)     { fPZ[0] = val; }
+void KBMCTrack::SetVX(Double_t val)     { fVX[0] = val; }
+void KBMCTrack::SetVY(Double_t val)     { fVY[0] = val; }
+void KBMCTrack::SetVZ(Double_t val)     { fVZ[0] = val; }
+void KBMCTrack::SetDetectorID(Int_t id) { fDetectorID[0] = id; }
 
-void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
 {
   fTrackID = trackID;
   fParentID = parentID;
@@ -66,9 +71,10 @@ void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px
   fVX[0] = vx;
   fVY[0] = vy;
   fVZ[0] = vz;
+  fDetectorID[0] = detectorID;
 }
 
-void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Double_t vy, Double_t vz)
+void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
 {
   fPX.push_back(px);
   fPY.push_back(py);
@@ -76,6 +82,7 @@ void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Double_t vx, Do
   fVX.push_back(vx);
   fVY.push_back(vy);
   fVZ.push_back(vz);
+  fDetectorID.push_back(detectorID);
 }
 
 Int_t KBMCTrack::GetNumVertices() const { return (Int_t) fPX.size(); }
@@ -90,7 +97,10 @@ Double_t KBMCTrack::GetVY(Int_t idx) const { return fVY[idx]; }
 Double_t KBMCTrack::GetVZ(Int_t idx) const { return fVZ[idx]; }
 TVector3 KBMCTrack::GetVertex(Int_t idx) const { return TVector3(fVX[idx], fVY[idx], fVZ[idx]); }
 
+Int_t KBMCTrack::GetDetectorID(Int_t idx) const { return fDetectorID[idx]; }
+
 TVector3 KBMCTrack::GetPrimaryPosition() const { return TVector3(fVX[0], fVY[0], fVZ[0]); }
+   Int_t KBMCTrack::GetPrimaryDetectorID() const { return fDetectorID[0]; }
 
 void KBMCTrack::AddStep(KBMCStep *hit) { fStepArray.push_back(hit); }
 vector<KBMCStep *> *KBMCTrack::GetStepArray() { return &fStepArray; }
@@ -98,7 +108,22 @@ vector<KBMCStep *> *KBMCTrack::GetStepArray() { return &fStepArray; }
 TVector3 KBMCTrack::Momentum(Double_t B) const { return GetMomentum(); }
 TVector3 KBMCTrack::PositionAtHead() const { return GetPrimaryPosition() + GetMomentum(); }
 TVector3 KBMCTrack::PositionAtTail() const { return GetPrimaryPosition(); }
-Double_t KBMCTrack::TrackLength() const { return GetMomentum().Mag(); }
+Double_t KBMCTrack::TrackLength() const
+{
+  Int_t nPairs = fVX.size() - 1;
+  if (nPairs < 2)
+    return 0.;
+
+  Double_t length = 0.;
+
+  for (auto iPair = 0; iPair < nPairs; ++iPair) {
+    TVector3 a(fVX[iPair], fVY[iPair], fVZ[iPair]);
+    TVector3 b(fVX[iPair+1], fVY[iPair+1], fVZ[iPair+1]);
+    length += (b-a).Mag();
+  }
+
+  return length;
+}
 
 TVector3 KBMCTrack::ExtrapolateTo(TVector3)       const { return TVector3(); } //@todo
 TVector3 KBMCTrack::ExtrapolateHead(Double_t)     const { return TVector3(); } //@todo
@@ -123,31 +148,63 @@ void KBMCTrack::SetEveElement(TEveElement *element)
   auto line = (TEveLine *) element;
   line -> Reset();
 
-  if (fPDG == 211 || fPDG == -211) {
-    line -> SetElementName(Form("MCTrack%d(%d)_Pion",fTrackID,fParentID));
-    line -> SetLineColor(kBlue-4);
-  }
-  if (fPDG == 2212) {
-    line -> SetElementName(Form("MCTrack%d(%d)_Proton",fTrackID,fParentID));
-    line -> SetLineColor(kRed-7);
-  }
-  else if (fPDG == 2112) {
-    line -> SetElementName(Form("MCTrack%d(%d)_Neutron",fTrackID,fParentID));
-    line -> SetLineColor(kGray);
-  }
-  else if (fPDG == 11 || fPDG == -11) {
-    line -> SetElementName(Form("MCTrack%d(%d)_Electron",fTrackID,fParentID));
-    line -> SetLineColor(kGreen);
-  }
+  auto particle = TDatabasePDG::Instance() -> GetParticle(fPDG);
+
+  TString pName;
+  TString pClass;
+  Int_t pCharge = 0;
+
+  if (particle == nullptr)
+    pName = Form("%d",fPDG);
   else {
-    line -> SetElementName(Form("MCTrack%d(%d)",fTrackID,fParentID));
-    line -> SetLineColor(kMagenta+2);
+    pName = particle -> GetName();
+    pClass = particle -> ParticleClass();
+    pCharge = particle -> Charge();
   }
+
+  Color_t color = kGray+2;
+  Color_t width = 1;
+
+  if (pClass == "Lepton") {
+         if (pCharge < 0) color = kOrange-3;
+    else if (pCharge > 0) color = kAzure+7;
+    else                  color = kGray+1;
+  }
+  else if (pClass == "Meson") {
+         if (pCharge < 0) color = kPink-1;
+    else if (pCharge > 0) color = kCyan+1;
+    else                  color = kGray+1;
+  }
+  else if (pClass == "Baryon") {
+         if (pCharge < 0) color = kRed-4;
+    else if (pCharge > 0) color = kBlue-4;
+    else                  color = kOrange;
+  }
+  else if (pClass == "Ion") {
+    width = 2;
+         if (pCharge < 0) color = kRed;
+    else if (pCharge > 0) color = kBlue;
+    else                  color = kGray+1;
+  }
+  else if (pClass == "GaugeBoson")
+    color = kGreen;
+
+  line -> SetLineColor(color);
+  line -> SetLineWidth(width);
+
+  TString eveName = Form("mc_%s:%d(%d)[%.1f]{%d;%d}",pName.Data(),fTrackID,fParentID,Momentum().Mag(),fDetectorID.at(0),GetNumVertices());
+  line -> SetElementName(eveName);
+
+  if (fParentID != 0)
+    line -> SetLineStyle(2);
 
   Int_t numVertices = fPX.size();
   if (numVertices==1) {
-    line -> SetNextPoint(fVX[0], fVY[0], fVZ[0]);
-    line -> SetNextPoint(fPX[0], fPY[0], fPZ[0]);
+    TVector3 pos0 = GetPrimaryPosition();
+    TVector3 pos1 = pos0 + 10. * GetMomentum().Unit();
+
+    line -> SetNextPoint(pos0.X(), pos0.Y(), pos0.Z());
+    line -> SetNextPoint(pos1.X(), pos1.Y(), pos1.Z());
   }
   else {
     for (auto idx = 0; idx < numVertices; ++idx)
