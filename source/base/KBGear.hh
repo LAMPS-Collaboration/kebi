@@ -16,14 +16,22 @@ class KBGear
     KBGear() {};
     virtual ~KBGear() {};
 
-    void CreateParameterContainer();
-    void SetParameterContainer(KBParameterContainer *par);
-    void SetParameterContainer(TString file);
-    void AddParameterFile(TString file);
-    KBParameterContainer *GetParameterContainer();
+    virtual void SetParameterContainer(KBParameterContainer *par);
+    virtual void SetParameterContainer(TString fname);
+
+    virtual void AddParameterContainer(KBParameterContainer *par);
+    virtual void AddParameterContainer(TString fname);
+
+    void SetPar(KBParameterContainer *par) { SetParameterContainer(par); }
+    void AddPar(KBParameterContainer *par) { AddParameterContainer(par); }
+    void SetPar(TString fname) { SetParameterContainer(fname); }
+    void AddPar(TString fname) { AddParameterContainer(fname); }
+
+    KBParameterContainer *GetParameterContainer() const;
+    KBParameterContainer *GetPar() const;
 
     virtual void SetRank(Int_t rank);
-    Int_t GetRank();
+    Int_t GetRank() const;
 
   protected:
     KBParameterContainer *fPar = nullptr;

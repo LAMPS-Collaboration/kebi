@@ -165,47 +165,92 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
 
     istringstream ss(line);
     ss >> parName >> parType;
+    parType.ToLower();
 
-    if (parType == "f" || parType == "file" || parType == "FILE") {
+    Bool_t overwrite = false;
+    if (parType == "o" || parType == "overwrite") {
+      overwrite = true;
+      ss >> parType;
+      parType.ToLower();
+    }
+
+    if (parType == "f" || parType == "file") {
       TString val;
       ss >> val;
       ReplaceEnvironmentVariable(val);
       AddFile(val, parName);
     }
-    else if (parType == "b" || parType == "bool" || parType == "Bool_t") {
+    else if (parType == "b" || parType == "bool" || parType == "bool_t") {
       TString sval;
       ss >> sval;
       sval.ToLower();
       Bool_t val = false;
       if (sval == "true" || sval == "1" || sval == "ktrue")
         val = true;
-      SetPar(parName, val);
+      SetPar(parName, val, overwrite);
     }
-    else if (parType == "i" || parType == "int" || parType == "Int_t") {
+    else if (parType == "i" || parType == "int" || parType == "int_t") {
       Int_t val;
       ss >> val;
-      SetPar(parName, val);
+      SetPar(parName, val, overwrite);
     }
-    else if (parType == "d" || parType == "double" || parType == "Double_t") {
+    else if (parType == "d" || parType == "double" || parType == "double_t") {
       Double_t val;
       ss >> val;
-      SetPar(parName, val);
+      SetPar(parName, val, overwrite);
     }
-    else if (parType == "s" || parType == "TString") {
+    else if (parType == "s" || parType == "tstring") {
       TString val;
       ss >> val;
       ReplaceEnvironmentVariable(val);
-      SetPar(parName, val);
+      SetPar(parName, val, overwrite);
     }
-    else if (parType == "a" || parType == "Axis" || parType == "KBVector3::Axis") {
+    else if (parType == "a" || parType == "axis" || parType == "kbvector3::axis") {
       TString val;
       ss >> val;
       if (val.Index("AXIS_PARAMETER_")<0)
         val = TString("AXIS_PARAMETER_") + val;
-      SetPar(parName, val);
+      SetPar(parName, val, overwrite);
     }
     else
       countParameters--;
+  }
+
+  if (countParameters == 0) {
+    this -> Remove(FindObject(parNameForFile));
+    fNumInputFiles--;
+  }
+
+  return countParameters;
+}
+
+Int_t KBParameterContainer::AddPar(KBParameterContainer *parc, TString parNameForFile)
+{
+  kr_info(0) << "Adding parameter container " << parc -> GetName() << endl;
+
+  if (parNameForFile.IsNull())
+    parNameForFile = Form("INPUT_PAR_CONTAINER%d", fNumInputFiles);
+  fNumInputFiles++;
+  SetPar(parNameForFile, ""); //@todo
+
+  Int_t countParameters = 0;
+  Int_t countSameParameters = 0;
+
+  TIter iterator(parc);
+  TObject *obj;
+  while ((obj = dynamic_cast<TObject*>(iterator())))
+  {
+    TString name = obj -> GetName();
+
+    TObject *found = FindObject(name);
+    if (found != nullptr) {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      ++countSameParameters ;
+    }
+    else {
+      Add(obj);
+      ++countParameters;
+    }
   }
 
   if (countParameters == 0) {
@@ -262,60 +307,76 @@ void KBParameterContainer::Print(Option_t *option) const
 }
 
 
-bool KBParameterContainer::SetPar(TString name, Bool_t val)
+bool KBParameterContainer::SetPar(TString name, Bool_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
-    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
-    return false;
+    if (overwrite)
+      this -> Remove(FindObject(name));
+    else {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      return false;
+    }
   }
 
   Add(new TParameter<Bool_t>(name, val));
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, Int_t val)
+bool KBParameterContainer::SetPar(TString name, Int_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
-    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
-    return false;
+    if (overwrite)
+      this -> Remove(FindObject(name));
+    else {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      return false;
+    }
   }
 
   Add(new TParameter<Int_t>(name, val));
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, Double_t val)
+bool KBParameterContainer::SetPar(TString name, Double_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
-    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
-    return false;
+    if (overwrite)
+      this -> Remove(FindObject(name));
+    else {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      return false;
+    }
   }
 
   Add(new TParameter<Double_t>(name, val));
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, TString val)
+bool KBParameterContainer::SetPar(TString name, TString val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
-    kr_info(0) << "Parameter with name " << name << " already exist!" << endl;
-    return false;
+    if (overwrite)
+      this -> Remove(FindObject(name));
+    else {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      return false;
+    }
   }
 
   Add(new TNamed(name, val));
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, const char* val)
+bool KBParameterContainer::SetPar(TString name, const char* val, Bool_t overwrite)
 {
-  return SetPar(name, TString(val));
+  return SetPar(name, TString(val), overwrite);
 }
 
 bool KBParameterContainer::GetParBool(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
+    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, false);
     else
@@ -330,7 +391,7 @@ Int_t KBParameterContainer::GetParInt(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
+    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, -999);
     else
@@ -345,7 +406,7 @@ Double_t KBParameterContainer::GetParDouble(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
+    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, -999.999);
     else
@@ -360,7 +421,7 @@ TString KBParameterContainer::GetParString(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
-    kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
+    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
     if (fDebugMode)
       SetPar(TString("NEWPAR")+name, TString("DOES_NOT_EXIST"));
     else
@@ -383,7 +444,7 @@ KBVector3::Axis KBParameterContainer::GetParAxis(TString name)
     }
   }
 
-  kr_info(0) << "parameter with name " << name << " does not exist!" << endl;
+  kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
   if (fDebugMode)
     SetPar(TString("NEWPAR")+name, TString("AXIS_PARAMETER_DOES_NOT_EXIST"));
   else

@@ -5,6 +5,7 @@
 
 #include "KBTask.hh"
 #include "KBParameterContainer.hh"
+#include "KBDetectorSystem.hh"
 #include "KBDetector.hh"
 
 #include "KBTpc.hh"
@@ -95,13 +96,15 @@ class KBRun : public KBTask
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
     void AddDetector(KBDetector *detector); ///< Set detector
-    KBDetector *GetDetector();
+    KBDetector *GetDetector(Int_t idx) const;
+    KBDetectorSystem *GetDetectorSystem() const;
 
-    TGeoManager *GetGeoManager();
+    void SetGeoManager(TGeoManager *gm);
+    TGeoManager *GetGeoManager() const;
     void SetGeoTransparency(Int_t transparency); ///< Set transparency of geometry. Will show in eve.
     void SetEntries(Long64_t num); ///< Set total number of entries. Use only input do not exist.
-    Long64_t GetEntries(); ///< Get total number of entries
-    Long64_t GetNumEvents();
+    Long64_t GetEntries() const; ///< Get total number of entries
+    Long64_t GetNumEvents() const;
     Int_t GetEntry(Long64_t entry = 0, Int_t getall = 0); ///< GetEntry from input tree
     Int_t GetEvent(Long64_t entry);
     bool GetNextEvent();
@@ -123,11 +126,12 @@ class KBRun : public KBTask
     void RunInRange(Long64_t startID, Long64_t endID); ///< Run in range from startID to endID
     void RunInEventRange(Long64_t startID, Long64_t endID); ///< @todo Write this method
 
-#ifdef ACTIVATE_EVE
-    void RunEve(Long64_t eventID); ///< Run eventdisplay of given eventID
-    void SetEveOption(TString option);
+    /// Run eventdisplay of given eventID.
+    /// option is used to activate following displays:
+    /// - e : display 3D eventdisplay
+    /// - p : display detector planes
+    void RunEve(Long64_t eventID, TString option="ep"); void SelectEveBranches(TString option);
     Color_t GetColor();
-#endif
 
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
@@ -140,9 +144,12 @@ class KBRun : public KBTask
     void Terminate(TObject *obj, TString message = "");
 
     TString ConfigureDataPath(TString name, bool search = false);
+    TString ConfigureEnv(TString name);
+
     bool CheckFileExistence(TString fileName, bool print = false);
 
   private:
+    void AddPDGs();
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
@@ -192,13 +199,14 @@ class KBRun : public KBTask
 
     KBParameterContainer *fRunHeader = nullptr;
 
-    KBDetector *fDetector = nullptr;
+    KBDetectorSystem *fDetectorSystem = nullptr;
 
 #ifdef ACTIVATE_EVE
     TEveEventManager *fEveEventManager = nullptr;
     std::vector<TEveElement *> fEveElementList;
-    TString fEveOption;
 #endif
+    TString fEveBranches;
+    TString fEveOption;
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
     TCanvas *fCvsChannelBuffer = nullptr;

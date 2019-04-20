@@ -59,13 +59,14 @@ class KBParameterContainer : public TObjArray
      * INPUT_PARAMETER_FILE[fNumInputFiles]
     */
     virtual Int_t AddFile(TString fileName, TString parNameForFile = "");
+    virtual Int_t AddPar(KBParameterContainer *parc, TString parNameForFile = "");
     Int_t GetNumInputFiles(); ///< Get number of input parameter files
 
-    bool SetPar(TString name, Bool_t val);   ///< Set Bool_t   type parameter with given name
-    bool SetPar(TString name, Int_t val);    ///< Set Int_t    type parameter with given name
-    bool SetPar(TString name, Double_t val); ///< Set Double_t type parameter with given name
-    bool SetPar(TString name, TString val);  ///< Set TString  type parameter with given name
-    bool SetPar(TString name, const char* val);  ///< Set TString  type parameter with given name
+    bool SetPar(TString name, Bool_t val, bool overwrite = false);       ///< Set Bool_t   type parameter with given name
+    bool SetPar(TString name, Int_t val, bool overwrite = false);        ///< Set Int_t    type parameter with given name
+    bool SetPar(TString name, Double_t val, bool overwrite = false);     ///< Set Double_t type parameter with given name
+    bool SetPar(TString name, TString val, bool overwrite = false);      ///< Set TString  type parameter with given name
+    bool SetPar(TString name, const char* val, bool overwrite = false);  ///< Set TString  type parameter with given name
 
     bool     GetParBool(TString name);   ///< Get Bool_t   type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     Int_t    GetParInt(TString name);    ///< Get Int_t    type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
