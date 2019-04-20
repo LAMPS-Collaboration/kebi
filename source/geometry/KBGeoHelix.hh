@@ -10,7 +10,6 @@
 
 typedef KBVector3::Axis kbaxis_t;
 
-/// 
 class KBGeoHelix : public KBGeometry
 {
   protected:
@@ -33,6 +32,9 @@ class KBGeoHelix : public KBGeometry
                Double_t t, Double_t h, kbaxis_t a);
 
     virtual ~KBGeoHelix() {}
+
+    virtual void Print(Option_t *option = "") const;
+    virtual TVector3 GetCenter() const;
 
     void SetHelix(Double_t i, Double_t j, Double_t r, Double_t s, Double_t k,
                   Double_t t, Double_t h, kbaxis_t a);

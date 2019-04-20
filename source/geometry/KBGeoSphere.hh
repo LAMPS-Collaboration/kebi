@@ -24,7 +24,7 @@ class KBGeoSphere : public KBGeometry
     Double_t GetZ() const;
     Double_t GetR() const;
 
-    TVector3 GetCenter() const;
+    virtual TVector3 GetCenter() const;
     Double_t GetRadius() const;
 
     TGraph *DrawCircleXY(Int_t n = 100, Double_t theta1 = 0, Double_t theta2 = 0);

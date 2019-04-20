@@ -29,10 +29,12 @@ TVector3 KBGeoCircle::GetRandomPoint()
   return TVector3(fX+fR*TMath::Cos(val), fY+fR*TMath::Sin(val), fZ);
 }
 
-void KBGeoCircle::Summary(Option_t *) const
+void KBGeoCircle::Print(Option_t *) const
 {
-  KBLog("KBGeoCircle","Summary",1,2) << "Center=(" << fX << "," << fY << "), R=" << fR << std::endl;
+  KBLog("KBGeoCircle","Print",1,2) << "Center=(" << fX << "," << fY << "), R=" << fR << std::endl;
 }
+
+TVector3 KBGeoCircle::GetCenter() const { return TVector3(fX, fY, 0); }
 
 Double_t KBGeoCircle::GetX() const { return fX; }
 Double_t KBGeoCircle::GetY() const { return fY; }

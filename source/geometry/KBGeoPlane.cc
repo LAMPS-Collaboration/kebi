@@ -22,6 +22,8 @@ KBGeoPlane::KBGeoPlane(Double_t a, Double_t b, Double_t c, Double_t d)
   SetPlane(a,b,c,d);
 }
 
+TVector3 KBGeoPlane::GetCenter() const { return TVector3(0,0,GetZ(0,0)); }
+
 void KBGeoPlane::SetPlane(TVector3 pos, TVector3 nnn)
 {
   nnn = nnn.Unit();
@@ -50,6 +52,10 @@ Double_t KBGeoPlane::GetB() const { return fB; }
 Double_t KBGeoPlane::GetC() const { return fC; }
 Double_t KBGeoPlane::GetD() const { return fD; }
 TVector3 KBGeoPlane::GetNormal() const { return TVector3(fA,fB,fC); }
+
+Double_t KBGeoPlane::GetX(Double_t y, Double_t z) const { return -(fD+fB*y+fC*z)/fA; }
+Double_t KBGeoPlane::GetY(Double_t z, Double_t x) const { return -(fD+fC*z+fA*x)/fB; }
+Double_t KBGeoPlane::GetZ(Double_t x, Double_t y) const { return -(fD+fA*x+fB*y)/fC; }
 
 TVector3 KBGeoPlane::ClosestPointOnPlane(TVector3 pos) const
 {

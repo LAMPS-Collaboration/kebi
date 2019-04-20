@@ -14,6 +14,12 @@ KBGeoHelix::KBGeoHelix(Double_t i, Double_t j, Double_t r, Double_t s, Double_t 
   SetHelix(i,j,r,s,k,t,h,a);
 }
 
+void KBGeoHelix::Print(Option_t *option) const
+{
+}
+
+TVector3 KBGeoHelix::GetCenter() const { return KBVector3(fA,fI,fJ,.5*(fH*fS+fK + fT*fS+fK)).GetXYZ(); }
+
 void KBGeoHelix::SetHelix(Double_t i, Double_t j, Double_t r, Double_t s, Double_t k,
                           Double_t t, Double_t h, kbaxis_t a)
 {

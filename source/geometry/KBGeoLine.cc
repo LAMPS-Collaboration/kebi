@@ -17,6 +17,8 @@ KBGeoLine::KBGeoLine(TVector3 pos1, TVector3 pos2)
   SetLine(pos1, pos2);
 }
 
+TVector3 KBGeoLine::GetCenter() const { return .5*TVector3(fX1+fX2, fY1+fY2, fZ1+fZ2); }
+
 void KBGeoLine::SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2)
 {
   fX1 = x1;
