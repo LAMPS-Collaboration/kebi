@@ -14,19 +14,15 @@ class KBTpc : public KBDetector
     KBTpc(const char *name, const char *title);
     virtual ~KBTpc() {};
 
-    virtual bool Init();
-
     virtual KBPadPlane *GetPadPlane(Int_t idx = 0);
-    KBVector3::Axis GetEFieldAxis();
 
-    void GetDriftPlane(Double_t k, Int_t &planeID, Double_t &kPlane);
+    virtual KBVector3::Axis GetEFieldAxis() = 0;
 
-  protected:
-    KBVector3::Axis fEFieldAxis = KBVector3::kNon;
+            TVector3 GetEField(Double_t x, Double_t y, Double_t z);
+    virtual TVector3 GetEField(TVector3 pos) = 0;
 
-    Double_t fCathodeK = -999;
-    Double_t fPlaneK[2];
-
+            KBPadPlane *GetDriftPlane(Double_t x, Double_t y, Double_t z);
+    virtual KBPadPlane *GetDriftPlane(TVector3 pos) = 0;
 
   ClassDef(KBTpc, 1)
 };
