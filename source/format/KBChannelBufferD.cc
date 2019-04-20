@@ -5,9 +5,7 @@ ClassImp(KBChannelBufferD)
 void KBChannelBufferD::Clear(Option_t *option)
 {
   KBChannelBufferX::Clear(option);
-
-  for (auto iTb = 0; iTb < fN; ++iTb)
-    fArray[iTb] = 0;
+  TArrayD::Reset();
 }
 
 void KBChannelBufferD::Copy(TObject &obj) const
@@ -16,8 +14,6 @@ void KBChannelBufferD::Copy(TObject &obj) const
   auto channel = (KBChannelBufferD &) obj;
 
   channel.SetID(fID);
-  channel.SetPos1(fPos1);
-  channel.SetPos2(fPos2);
 
   channel.Set(fN);
   for (auto iTb = 0; iTb < fN; ++iTb)

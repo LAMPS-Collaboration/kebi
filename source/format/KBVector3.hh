@@ -8,7 +8,15 @@
 class KBVector3 : public TVector3
 {
   public:
-    enum Axis { kNon=0, kX=1, kY=2, kZ=3, kMX=4, kMY=5, kMZ=6, kI=7, kJ=8, kK=9 }; 
+    enum Axis : int {
+      kNon = 0,
+      kX   = 1,  kMX  = 2,
+      kY   = 3,  kMY  = 4,
+      kZ   = 5,  kMZ  = 6,
+      kI   = 7,  kMI  = 8,
+      kJ   = 9,  kMJ  = 10,
+      kK   = 11, kMK  = 12
+    };
 
     friend std::ostream& operator<<(std::ostream& out, const Axis value) {
       static std::map<Axis, std::string> axisNames;
@@ -17,12 +25,15 @@ class KBVector3 : public TVector3
         axisNames[kX]   = "x";
         axisNames[kY]   = "y";
         axisNames[kZ]   = "z";
-        axisNames[kI]   = "i";
-        axisNames[kJ]   = "j";
-        axisNames[kK]   = "z";
         axisNames[kMX]  = "-x";
         axisNames[kMY]  = "-y";
         axisNames[kMZ]  = "-z";
+        axisNames[kI]   = "i";
+        axisNames[kJ]   = "j";
+        axisNames[kK]   = "z";
+        axisNames[kMI]  = "-i";
+        axisNames[kMJ]  = "-j";
+        axisNames[kMK]  = "-z";
       }
       return out << axisNames[value];
     }
@@ -32,12 +43,15 @@ class KBVector3 : public TVector3
            if (name == "x")  return kX;
       else if (name == "y")  return kY;
       else if (name == "z")  return kZ;
-      else if (name == "i")  return kI;
-      else if (name == "j")  return kJ;
-      else if (name == "z")  return kK;
       else if (name == "-x") return kMX;
       else if (name == "-y") return kMY;
       else if (name == "-z") return kMZ;
+      else if (name == "i")  return kI;
+      else if (name == "j")  return kJ;
+      else if (name == "z")  return kK;
+      else if (name == "-i") return kMI;
+      else if (name == "-j") return kMJ;
+      else if (name == "-z") return kMK;
       else                   return kNon;
     }
 
@@ -48,14 +62,29 @@ class KBVector3 : public TVector3
         axisNames[kX]   = "x";
         axisNames[kY]   = "y";
         axisNames[kZ]   = "z";
-        axisNames[kI]   = "i";
-        axisNames[kJ]   = "j";
-        axisNames[kK]   = "z";
         axisNames[kMX]  = "-x";
         axisNames[kMY]  = "-y";
         axisNames[kMZ]  = "-z";
+        axisNames[kI]   = "i";
+        axisNames[kJ]   = "j";
+        axisNames[kK]   = "z";
+        axisNames[kMI]  = "-i";
+        axisNames[kMJ]  = "-j";
+        axisNames[kMK]  = "-z";
       }
       return TString(axisNames[value].c_str());
+    }
+
+    static bool IsPositive(Axis value) {
+      if (value%2==1)
+        return true;
+      return false;
+    }
+
+    static bool IsNegative(Axis value) {
+      if (value%2==0)
+        return true;
+      return false;
     }
 
 
@@ -143,6 +172,8 @@ KBVector3 operator * (const KBVector3 &p, Double_t a);
 KBVector3 operator * (Int_t a, const KBVector3 &p);
 KBVector3 operator * (const KBVector3 &p, Int_t a);
 
-KBVector3::Axis operator * (const KBVector3::Axis &a1, const KBVector3::Axis &a2);
+KBVector3::Axis operator % (const KBVector3::Axis &a1, const KBVector3::Axis &a2);
+KBVector3::Axis operator -- (const KBVector3::Axis &a);
+KBVector3::Axis operator ++ (const KBVector3::Axis &a);
 
 #endif

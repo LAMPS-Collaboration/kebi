@@ -12,11 +12,7 @@ ClassImp(KBPad)
 
 void KBPad::Clear(Option_t *option)
 {
-  if (TString(option).Index("all")>=0) {
-    fID = -1;
-    fPos1 = TVector3(-999,-999,-999);
-    fPos2 = TVector3(-999,-999,-999);
-  }
+  KBChannel::Clear(option);
 
   fActive = false;
 

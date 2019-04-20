@@ -10,6 +10,8 @@ class KBChannelBufferX : public KBChannel
     KBChannelBufferX() {}
     virtual ~KBChannelBufferX() {}
 
+    virtual void Clear(Option_t *option = "");
+
     virtual void Draw(Option_t *option = "");
 
     virtual TH1 *GetHist(TString name = "") = 0;
