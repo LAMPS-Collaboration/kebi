@@ -19,8 +19,8 @@ bool KBPlotChannelTask::Init()
   KBRun *run = KBRun::GetRun();
 
   auto par = run -> GetParameterContainer();
-  fDetector = run -> GetDetector();
-  fNPlanes = fDetector -> GetNPlanes();
+  fDetector = run -> GetDetectorSystem() -> GetTpc();
+  fNPlanes = fDetector -> GetNumPlanes();
   fTbStart = par -> GetParInt("tbStart");
   fNTbs = par -> GetParInt("nTbs");
 

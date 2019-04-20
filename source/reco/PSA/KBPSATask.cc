@@ -20,9 +20,9 @@ bool KBPSATask::Init()
   KBRun *run = KBRun::GetRun();
 
   auto par = run -> GetParameterContainer();
-  fTpc = (KBTpc *) run -> GetDetector();
+  fTpc = run -> GetDetectorSystem() -> GetTpc();
 
-  fNPlanes = fTpc -> GetNPlanes();
+  fNPlanes = fTpc -> GetNumPlanes();
   fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
   fTbTime = par -> GetParDouble("tbTime");
 
