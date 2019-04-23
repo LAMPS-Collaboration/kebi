@@ -2,20 +2,17 @@
 #define KBRUN_HH
 
 #include "KBCompiled.h"
-
 #include "KBTask.hh"
 #include "KBParameterContainer.hh"
 #include "KBDetectorSystem.hh"
 #include "KBDetector.hh"
-
 #include "KBTpc.hh"
 #include "KBPadPlane.hh"
 
+#include "TDatabasePDG.h"
 #include "TError.h"
-
 #include "TH1D.h"
 #include "TGraph.h"
-
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
@@ -148,8 +145,11 @@ class KBRun : public KBTask
 
     bool CheckFileExistence(TString fileName, bool print = false);
 
+    TDatabasePDG *GetDatabasePDG();
+    TParticlePDG *GetParticle(Int_t pdgCode);
+    TParticlePDG *GetParticle(const char *name);
+
   private:
-    void AddPDGs();
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
