@@ -5,24 +5,20 @@
 #include "G4UImanager.hh"
 #include "G4UIExecutive.hh"
 #include "globals.hh"
+#include "G4ProcessTable.hh"
 
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
 {
-  fMessenger = new KBG4RunMessenger(this);
-}
+  fSensitiveDetectors = new KBParameterContainer();
+  fSensitiveDetectors -> SetName("SensitiveDetectors");
 
-KBG4RunManager::KBG4RunManager(const char *name)
-:KBG4RunManager()
-{
-  auto data = new KBMCDataManager(name);
-  data -> SetParameterContainer(fPar);
+  fProcessTable = new KBParameterContainer();
+  fProcessTable -> SetName("ProcessTable");
 }
 
 KBG4RunManager::~KBG4RunManager()
 {
-  KBMCDataManager::Instance() -> EndOfRun();
-  delete fMessenger;
 }
 
 void KBG4RunManager::Initialize()
@@ -31,6 +27,12 @@ void KBG4RunManager::Initialize()
 
   SetOutputFile(fPar->GetParString("G4OutputFile").Data());
   SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+
+  auto procNames = G4ProcessTable::GetProcessTable() -> GetNameList();
+  Int_t idx = 0;
+  fProcessTable -> SetPar("Primary", idx++);
+  for (auto name : *procNames)
+    fProcessTable -> SetPar(name, idx++);
 }
 
 void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
@@ -39,21 +41,28 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
   TString command("/control/execute ");
 
   if (fPar->CheckPar("G4VisFile")) {
+    auto fileName = fPar -> GetParString("G4VisFile");
+
     G4VisManager* visManager = new G4VisExecutive;
     visManager -> Initialize();
 
     G4UIExecutive* uiExecutive = new G4UIExecutive(argc,argv,type);
-    auto fileName = fPar -> GetParString("G4VisFile");
+    g4_info << "Initializing Geant4 run with viewer macro " << fileName << endl;
     uiManager -> ApplyCommand(command+fileName);
     uiExecutive -> SessionStart();
 
-    delete uiExecutive;
     delete visManager;
+    delete uiExecutive;
   }
   else if (fPar->CheckPar("G4MacroFile")) {
     auto fileName = fPar -> GetParString("G4MacroFile");
+    g4_info << "Initializing Geant4 run with macro " << fileName << endl;
     uiManager -> ApplyCommand(command+fileName);
   }
+
+  fData -> WriteToFile(fProcessTable);
+  fData -> WriteToFile(fSensitiveDetectors);
+  fData -> EndOfRun();
 }
 
 void KBG4RunManager::SetGeneratorFile(TString value)
@@ -66,17 +75,29 @@ void KBG4RunManager::SetGeneratorFile(TString value)
 void KBG4RunManager::SetOutputFile(TString value)
 {
   fPar -> ReplaceEnvironmentVariable(value);
-  auto data = new KBMCDataManager(value.Data());
-  data -> SetParameterContainer(fPar);
-  data -> SetStepPersistency(fPar->GetParBool("MCStepPersistency"));
+  fData = new KBMCDataManager(value.Data());
+  fData -> SetPar(fPar);
+  fData -> SetStepPersistency(fPar->GetParBool("MCStepPersistency"));
 
-  for (auto copyNo : fCopyNoArray) {
-    G4cout << "Set detector " << copyNo << G4endl;
-    data -> SetDetector(copyNo);
+  TIter itDetectors(fSensitiveDetectors);
+  TParameter<Int_t> *det;
+  while ((det = dynamic_cast<TParameter<Int_t>*>(itDetectors())))
+  {
+    TString name = det -> GetName();
+    Int_t copyNo = det -> GetVal();
+
+    g4_info << "Set " << name << " " << copyNo << endl;
+    fData -> SetDetector(copyNo);
   }
 }
 
 void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume)
 {
-  fCopyNoArray.push_back(physicalVolume->GetCopyNo());
+  TString name = physicalVolume -> GetName().data();
+  Int_t copyNo = physicalVolume -> GetCopyNo();
+
+  fSensitiveDetectors -> SetPar(name, copyNo);
 }
+
+KBParameterContainer *KBG4RunManager::GetSensitiveDetectors() { return fSensitiveDetectors; }
+KBParameterContainer *KBG4RunManager::GetProcessTable()       { return fProcessTable; }

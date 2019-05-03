@@ -1,4 +1,5 @@
 #include "KBPrimaryGeneratorAction.hh"
+#include "KBG4RunManager.hh"
 
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
@@ -41,8 +42,10 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     fParticleGun -> SetParticleMomentumDirection(momentum.unit());
 
     G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+    // Removing print outs in between here ------------->
     if (fReadMomentumOrEnergy) fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
     else                       fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
+    // <------------- to here
     G4cout.rdbuf(oldBuffer);
 
     fParticleGun -> GeneratePrimaryVertex(anEvent);

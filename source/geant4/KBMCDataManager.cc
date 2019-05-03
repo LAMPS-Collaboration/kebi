@@ -1,3 +1,4 @@
+#include "KBG4RunManager.hh"
 #include "KBMCDataManager.hh"
 #include "KBMCStep.hh"
 #include "globals.hh"
@@ -41,11 +42,11 @@ void KBMCDataManager::SetDetector(Int_t detectorID)
   fStepArrayList -> Add(stepArray);
 }
 
-void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
+void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
 {
   fTrackID = trackID;
   fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
-  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz);
+  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz, processID);
 }
 
 void KBMCDataManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
@@ -66,7 +67,7 @@ void KBMCDataManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double
 
 void KBMCDataManager::NextEvent()
 { 
-  G4cout << "End of Event-" << fTree -> GetEntries() << G4endl;
+  g4_info << "End of Event " << fTree -> GetEntries() << endl;
   fTree -> Fill();
 
   fTrackArray -> Clear("C");
@@ -77,11 +78,20 @@ void KBMCDataManager::NextEvent()
     stepArray -> Clear("C");
 }
 
+void KBMCDataManager::WriteToFile(TObject *obj)
+{
+  fFile -> cd();
+  g4_info << "Writing " << obj -> GetName() << " to output file" << endl;
+  obj -> Write(obj->GetName(),TObject::kSingleKey);
+}
+
 void KBMCDataManager::EndOfRun() 
 { 
   fFile -> cd();
-  G4cout << "[KBMCDataManager] Writing file " << fFile -> GetName() << G4endl;
+  g4_info << "Writing " << fTree -> GetName() << " to output file" << endl;
   fTree -> Write(); 
+  g4_info << "Writing " << fPar -> GetName() << " to output file" << endl;
   fPar -> Write(fPar->GetName(),TObject::kSingleKey);
   fFile -> Close();
+  g4_info << "Output: " << fFile -> GetName() << endl;
 }

@@ -1,6 +1,8 @@
 #ifndef KBG4RUNMANAGER_HH
 #define KBG4RUNMANAGER_HH
 
+#define g4_info KBLog("KBG4RunManager",__FUNCTION__,0,2)
+
 #include "G4RunManager.hh"
 #include "G4VPhysicalVolume.hh"
 #include "KBMCDataManager.hh"
@@ -15,21 +17,23 @@ class KBG4RunManager : public G4RunManager, public KBGear
 {
   public:
     KBG4RunManager();
-    KBG4RunManager(const char *name);
     virtual ~KBG4RunManager();
 
     virtual void Initialize();
     void Run(G4int argc=0, char **argv=nullptr, const G4String &type="");
 
+    void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume);
+
+    KBParameterContainer *GetSensitiveDetectors();
+    KBParameterContainer *GetProcessTable();
+
+  private:
     void SetGeneratorFile(TString value);
     void SetOutputFile(TString value);
 
-    void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume);
-
-  private:
-    KBG4RunMessenger *fMessenger;
-
-    vector<G4int> fCopyNoArray;
+    KBMCDataManager *fData;
+    KBParameterContainer *fSensitiveDetectors;
+    KBParameterContainer *fProcessTable;
 };
 
 #endif

@@ -59,8 +59,9 @@ void KBMCTrack::SetVX(Double_t val)     { fVX[0] = val; }
 void KBMCTrack::SetVY(Double_t val)     { fVY[0] = val; }
 void KBMCTrack::SetVZ(Double_t val)     { fVZ[0] = val; }
 void KBMCTrack::SetDetectorID(Int_t id) { fDetectorID[0] = id; }
+void KBMCTrack::SetProcessID(Int_t id)  { fCreatorProcessID = id; }
 
-void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
+void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
 {
   fTrackID = trackID;
   fParentID = parentID;
@@ -72,6 +73,7 @@ void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px
   fVY[0] = vy;
   fVZ[0] = vz;
   fDetectorID[0] = detectorID;
+  fCreatorProcessID = processID;
 }
 
 void KBMCTrack::AddVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
