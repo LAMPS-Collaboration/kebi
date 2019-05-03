@@ -64,7 +64,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---libs: Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
 #---evelibs: Eve EG TreePlayer Geom Ged RGL Gui Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc pthread
 if(ACTIVATE_EVE)
-  find_package(ROOT REQUIRED COMPONENTS RIO Net Eve RGL Geom Gui Graf Graf3d Ged Matrix MathCore)
+  find_package(ROOT REQUIRED COMPONENTS RIO Net Eve EG RGL Geom Gui Graf Graf3d Ged Matrix MathCore)
 else(ACTIVATE_EVE)
   find_package(ROOT REQUIRED COMPONENTS RIO Net Geom Gui Graf Graf3d Ged Matrix MathCore)
 endif(ACTIVATE_EVE)
