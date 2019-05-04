@@ -51,8 +51,8 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
     uiManager -> ApplyCommand(command+fileName);
     uiExecutive -> SessionStart();
 
-    delete visManager;
     delete uiExecutive;
+    delete visManager;
   }
   else if (fPar->CheckPar("G4MacroFile")) {
     auto fileName = fPar -> GetParString("G4MacroFile");

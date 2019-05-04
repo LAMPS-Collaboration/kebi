@@ -1242,7 +1242,7 @@ void KBRun::SetLogFile(TString name) {
     name += ".log";
   }
   fRunLogFileName = name;
-  fRunLogFileStream = std::ofstream(fRunLogFileName);
+  //fRunLogFileStream = std::ofstream(fRunLogFileName); // @todo Do not work for the version of gcc below 5.0.0
 }
 
 TString KBRun::GetLogFile() { return fRunLogFileName; }

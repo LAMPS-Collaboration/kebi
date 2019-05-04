@@ -45,6 +45,7 @@ else
     cp ${KEBIPATH}/macros/dummies/eve.C          ${1}/macros/
     cp ${KEBIPATH}/macros/dummies/mc.cc          ${1}/macros/${1}.mc.cc
     cp ${KEBIPATH}/macros/dummies/dummy.par      ${1}/macros/${1}.par
+    cp ${KEBIPATH}/macros/dummies/dummy.gen      ${1}/macros/${1}.gen
     cp ${KEBIPATH}/macros/dummies/run_geant4.mac ${1}/macros/
     cp ${KEBIPATH}/macros/dummies/vis.mac        ${1}/macros/
     cp ${KEBIPATH}/macros/dummies/doSomething.C  ${1}/macros/

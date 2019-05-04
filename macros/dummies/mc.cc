@@ -1,22 +1,47 @@
 #include "globals.hh"
 #include "KBCompiled.h"
-
-#include "KBG4RunManager.hh"
-#include "G4VisExecutive.hh"
-#include "G4UImanager.hh"
-#include "G4UIExecutive.hh"
-#include "G4StepLimiterPhysics.hh"
-
 #include "KBParameterContainer.hh"
-
 #include "QGSP_BERT.hh"
+#include "G4StepLimiterPhysics.hh"
+#include "KBG4RunManager.hh"
 #include "KBMCDataManager.hh"
 #include "DUMMYDetectorConstruction.hh"
 #include "KBPrimaryGeneratorAction.hh"
-
 #include "KBEventAction.hh"
 #include "KBTrackingAction.hh"
 #include "KBSteppingAction.hh"
+
+/**
+ * How to run geant4 simulation
+ *
+ * - The least change user should make is rewritting Construct() of DUMMYDetectorConstruction.
+ *   The class source should be inside geant4/ of the project folder by default.
+ * - The primary tracks are created by input generator file.
+ *   The input generator file is set by G4InputFile describe below.
+ *   Refere to KBMCEventGenerator for the format of generator file.
+ *   (http://nuclear.korea.ac.kr/~lamps/kebi/classKBMCEventGenerator.html)
+ *
+ * - The physics list may be replaced by user list.
+ * - The PrimaryGeneratorAction, EventAction, TrackingAction, KBSteppingAction
+ *   may be replaced by user actions but the data handling has to be done again.
+ *   Refere to KBMCDataManager for this case.
+ *   (http://nuclear.korea.ac.kr/~lamps/kebi/classKBMCDataManager.html)
+ *
+ * - The parameter file is essential for running simulation ex) dummy.par
+ * - In the parameter file, 5 parameters can be used for simulation.
+ *   (Note, one should use only one of G4VisFile and G4MacroFile for the geant4 macro)
+ *
+ *   1) G4VisFile:         Geant4 macro file name for event display.
+ *   2) G4MacroFile:       Geant4 macro file name file.
+ *   3) G4InputFile:       Input generator file name for the primary tracks.
+ *   4) G4OutputFile:      Output file name of the simulation
+ *   5) MCStepPersistency: true/false for the write flag of step information.
+ *
+ *   Refere KBParameterContainer for the format of parameter file.
+ *   (http://nuclear.korea.ac.kr/~lamps/kebi/classKBParameterContainer.html)
+ *
+ * - Run simulation: ./dummy.mc.g4sim dummy.par
+ */
 
 int main(int argc, char** argv)
 {
@@ -26,36 +51,14 @@ int main(int argc, char** argv)
   physicsList -> RegisterPhysics(new G4StepLimiterPhysics());
 
   runManager -> SetUserInitialization(physicsList);
-  if (argc >= 2)
-    runManager -> SetParameterContainer(argv[2]);
-  else
-    runManager -> SetParameterContainer("dummy.par");
+  runManager -> SetParameterContainer(argv[1]);
   runManager -> SetUserInitialization(new DUMMYDetectorConstruction());
   runManager -> SetUserAction(new KBPrimaryGeneratorAction());
   runManager -> SetUserAction(new KBEventAction());
   runManager -> SetUserAction(new KBTrackingAction());
   runManager -> SetUserAction(new KBSteppingAction());
   runManager -> Initialize();
-
-  G4UImanager* uiManager = G4UImanager::GetUIpointer();
-  if (argc != 1) {
-    G4String command = "/control/execute ";
-    G4String fileName = argv[1];
-    uiManager -> ApplyCommand(command+fileName);
-  }
-  else {
-    G4VisManager* visManager = new G4VisExecutive;
-    visManager -> Initialize();
-
-    G4UIExecutive* uiExecutive = new G4UIExecutive(argc, argv);
-    uiManager -> ApplyCommand("/control/execute vis.mac"); 
-    uiExecutive -> SessionStart();
-
-    delete uiExecutive;
-    delete visManager;
-  }
-
-  delete runManager;
+  runManager -> Run(argc, argv);
 
   return 0;
 }

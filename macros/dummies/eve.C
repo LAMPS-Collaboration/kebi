@@ -6,12 +6,13 @@ void nx(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void eve(TString name = "dummy.mc")
+// the last output from KBRun is used if input is "last".
+void eve(TString input = "dummy.mc")
 {
   auto run = new KBRun();
-  run -> SetInputFile(name);
+  run -> SetInputFile(input);
   run -> SetTag("eve");
-  run -> AddParameterFile("dummy.par");
+  run -> AddPar("dummy.par");
   run -> AddDetector(new DUMMYDetector());
   run -> Init();
   run -> SetGeoTransparency(80);

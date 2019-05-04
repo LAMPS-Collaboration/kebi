@@ -13,7 +13,6 @@
 
 typedef KBVector3::Axis kbaxis_t;
 
-/// Rotation not supported
 class KBGeoBoxStack : public KBGeometry
 {
   public:
