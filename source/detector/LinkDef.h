@@ -14,4 +14,6 @@
 
 #pragma link C++ class KBScintWall+;
 
+#pragma link C++ class KBGDMLDetector+;
+
 #endif
