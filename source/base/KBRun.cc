@@ -230,10 +230,12 @@ void KBRun::AddInput(TString fileName) { fInputFileNameArray.push_back(Configure
 void KBRun::AddFriend(TString fileName) { fFriendFileNameArray.push_back(ConfigureDataPath(fileName,true)); }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 
+TFile *KBRun::GetInputFile() { return fInputFile; }
 TChain *KBRun::GetInputChain()  const { return fInputTree; }
 TChain *KBRun::GetFriendChain(Int_t iFriend)  const { return ((TChain *) fFriendTrees -> At(iFriend)); }
 
 void KBRun::SetOutputFile(TString name) { fOutputFileName = name; }
+TFile *KBRun::GetOutputFile() { return fOutputFile; }
 TTree *KBRun::GetOutputTree() { return fOutputTree; }
 void KBRun::SetTag(TString tag) { fTag = tag; }
 void KBRun::SetSplit(Int_t split, Long64_t numSplitEntries)

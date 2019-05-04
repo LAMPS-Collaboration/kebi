@@ -69,10 +69,12 @@ class KBRun : public KBTask
     void AddInput(TString fileName); ///< Add file to input file
     void AddFriend(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
+    TFile *GetInputFile();
     TChain *GetInputChain() const;
     TChain *GetFriendChain(Int_t iFriend) const;
 
     void SetOutputFile(TString name); ///< Set output file name
+    TFile *GetOutputFile();
     TTree *GetOutputTree();
     void SetTag(TString tag);
     void SetSplit(Int_t split, Long64_t numSplitEntries);

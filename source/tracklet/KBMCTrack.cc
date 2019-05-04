@@ -28,6 +28,8 @@ void KBMCTrack::Clear(Option_t *option)
   fVY.clear(); fVY.push_back(-999);
   fVZ.clear(); fVZ.push_back(-999);
   fDetectorID.clear(); fDetectorID.push_back(-999);
+
+  fCreatorProcessID = 0;
 }
 
 void KBMCTrack::Print(Option_t *option) const
@@ -35,7 +37,7 @@ void KBMCTrack::Print(Option_t *option) const
   TString opts = TString(option);
 
   if (TString(option).Index("all")>=0) {
-    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ")" << setw(11) << fPDG << endl;
+    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ") " << setw(11) << fPDG << "[" << setw(2) << fCreatorProcessID << "]" << endl;
     Int_t n = fPX.size();
     for (auto i=0; i<n; ++i) {
       kr_info(0) << "  " << i
@@ -45,7 +47,8 @@ void KBMCTrack::Print(Option_t *option) const
     }
   }
   else {
-    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ")" << setw(11) << fPDG
+    kr_info(0) << "MC-" << setw(3) << fTrackID << "(" << setw(3) << fParentID << ") " << setw(11) << fPDG
+      << "[" << setw(2) << fCreatorProcessID << "]"
       << " mom=(" << setw(12) << fPX[0] << "," << setw(12) << fPY[0] << "," << setw(12) << fPZ[0] << "),"
       << " det="  << setw(12) << fDetectorID[0] << ","
       << " pos=(" << setw(12) << fVX[0] << "," << setw(12) << fVY[0] << "," << setw(12) << fVZ[0] << ")" << endl;
@@ -59,7 +62,7 @@ void KBMCTrack::SetVX(Double_t val)     { fVX[0] = val; }
 void KBMCTrack::SetVY(Double_t val)     { fVY[0] = val; }
 void KBMCTrack::SetVZ(Double_t val)     { fVZ[0] = val; }
 void KBMCTrack::SetDetectorID(Int_t id) { fDetectorID[0] = id; }
-void KBMCTrack::SetProcessID(Int_t id)  { fCreatorProcessID = id; }
+void KBMCTrack::SetCreatorProcessID(Int_t id)  { fCreatorProcessID = id; }
 
 void KBMCTrack::SetMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
 {
@@ -100,6 +103,8 @@ Double_t KBMCTrack::GetVZ(Int_t idx) const { return fVZ[idx]; }
 TVector3 KBMCTrack::GetVertex(Int_t idx) const { return TVector3(fVX[idx], fVY[idx], fVZ[idx]); }
 
 Int_t KBMCTrack::GetDetectorID(Int_t idx) const { return fDetectorID[idx]; }
+
+Int_t KBMCTrack::GetCreatorProcessID() const { return fCreatorProcessID; }
 
 TVector3 KBMCTrack::GetPrimaryPosition() const { return TVector3(fVX[0], fVY[0], fVZ[0]); }
    Int_t KBMCTrack::GetPrimaryDetectorID() const { return fDetectorID[0]; }
