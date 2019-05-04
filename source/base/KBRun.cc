@@ -982,7 +982,7 @@ void KBRun::RunEve(Long64_t eventID, TString option)
             continue;
 
           TEveLine *eveElement = (TEveLine *) eveTrk -> CreateEveElement();
-          eveTrk -> SetEveElement(eveElement);
+          eveTrk -> SetEveElement(eveElement, fEveScale);
           TString name = TString(eveElement -> GetElementName()) + Form("_%d",iObject);
           eveElement -> SetElementName(name);
           gEve -> AddElement(eveElement);
@@ -993,7 +993,7 @@ void KBRun::RunEve(Long64_t eventID, TString option)
         TEveElement *eveSet = eveObj -> CreateEveElement();
         for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
           eveObj = (KBContainer *) branch -> At(iObject);
-          eveObj -> AddToEveSet(eveSet);
+          eveObj -> AddToEveSet(eveSet, fEveScale);
         }
         gEve -> AddElement(eveSet);
         fEveElementList.push_back(eveSet);
@@ -1109,6 +1109,8 @@ void KBRun::RunEve(Long64_t eventID, TString option)
     gStyle -> SetPalette(kBird);
   }
 }
+
+void KBRun::SetEveScale(Double_t scale) { fEveScale = scale; }
 
 void KBRun::SelectEveBranches(TString option) { fEveBranches = option; }
 

@@ -128,6 +128,7 @@ class KBRun : public KBTask
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
     void RunEve(Long64_t eventID, TString option="ep"); void SelectEveBranches(TString option);
+    void SetEveScale(Double_t scale);
     Color_t GetColor();
 
     static void ClickSelectedPadPlane();
@@ -204,6 +205,8 @@ class KBRun : public KBTask
 #ifdef ACTIVATE_EVE
     TEveEventManager *fEveEventManager = nullptr;
     std::vector<TEveElement *> fEveElementList;
+
+    Double_t fEveScale = 1;
 #endif
     TString fEveBranches;
     TString fEveOption;

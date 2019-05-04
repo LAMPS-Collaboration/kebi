@@ -53,8 +53,8 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void SetEveElement(TEveElement *);
-    virtual void AddToEveSet(TEveElement *eveSet);
+    virtual void SetEveElement(TEveElement *, Double_t scale=1);
+    virtual void AddToEveSet(TEveElement *eveSet, Double_t scale=1);
 #endif
 
     virtual bool Fit();

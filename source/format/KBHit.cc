@@ -228,13 +228,13 @@ TEveElement *KBHit::CreateEveElement()
   return pointSet;
 }
 
-void KBHit::SetEveElement(TEveElement *)
+void KBHit::SetEveElement(TEveElement *, Double_t scale)
 {
 }
 
-void KBHit::AddToEveSet(TEveElement *eveSet)
+void KBHit::AddToEveSet(TEveElement *eveSet, Double_t scale)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fX, fY, fZ);
+  pointSet -> SetNextPoint(scale*fX, scale*fY, scale*fZ);
 }
 #endif

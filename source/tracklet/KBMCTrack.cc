@@ -145,7 +145,7 @@ TEveElement *KBMCTrack::CreateEveElement()
   return element;
 }
 
-void KBMCTrack::SetEveElement(TEveElement *element)
+void KBMCTrack::SetEveElement(TEveElement *element, Double_t scale)
 {
   auto line = (TEveLine *) element;
   line -> Reset();
@@ -202,19 +202,19 @@ void KBMCTrack::SetEveElement(TEveElement *element)
 
   Int_t numVertices = fPX.size();
   if (numVertices==1) {
-    TVector3 pos0 = GetPrimaryPosition();
-    TVector3 pos1 = pos0 + 10. * GetMomentum().Unit();
+    TVector3 pos0 = scale*GetPrimaryPosition();
+    TVector3 pos1 = scale*pos0 + scale*GetMomentum().Unit();
 
     line -> SetNextPoint(pos0.X(), pos0.Y(), pos0.Z());
     line -> SetNextPoint(pos1.X(), pos1.Y(), pos1.Z());
   }
   else {
     for (auto idx = 0; idx < numVertices; ++idx)
-      line -> SetNextPoint(fVX[idx], fVY[idx], fVZ[idx]);
+      line -> SetNextPoint(scale*fVX[idx], scale*fVY[idx], scale*fVZ[idx]);
   }
 }
 
-void KBMCTrack::AddToEveSet(TEveElement *)
+void KBMCTrack::AddToEveSet(TEveElement *, Double_t)
 {
 }
 #endif

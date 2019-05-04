@@ -88,13 +88,13 @@ TEveElement *KBMCStep::CreateEveElement()
   return pointSet;
 }
 
-void KBMCStep::SetEveElement(TEveElement *)
+void KBMCStep::SetEveElement(TEveElement *, Double_t scale)
 {
 }
 
-void KBMCStep::AddToEveSet(TEveElement *eveSet)
+void KBMCStep::AddToEveSet(TEveElement *eveSet, Double_t scale)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fX, fY, fZ);
+  pointSet -> SetNextPoint(scale*fX, scale*fY, scale*fZ);
 }
 #endif

@@ -123,7 +123,7 @@ TEveElement *KBHelixTrack::CreateEveElement()
   return element;
 }
 
-void KBHelixTrack::SetEveElement(TEveElement *element)
+void KBHelixTrack::SetEveElement(TEveElement *element, Double_t scale)
 {
   auto line = (TEveLine *) element;
   line -> SetElementName("HelixTrack");
@@ -147,12 +147,12 @@ void KBHelixTrack::SetEveElement(TEveElement *element)
   }
 
   for (Double_t alpha = t; alpha < h; alpha += dalpha) {
-    auto pos = PositionAtAlpha(alpha);
+    auto pos = scale*PositionAtAlpha(alpha);
     line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
   }
 }
 
-void KBHelixTrack::AddToEveSet(TEveElement *)
+void KBHelixTrack::AddToEveSet(TEveElement *, Double_t scale)
 {
 }
 #endif

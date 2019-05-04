@@ -114,7 +114,7 @@ TEveElement *KBTracklet::CreateEveElement()
   return element;
 }
 
-void KBTracklet::SetEveElement(TEveElement *element)
+void KBTracklet::SetEveElement(TEveElement *element, Double_t scale)
 {
   auto line = (TEveLine *) element;
   line -> SetElementName("Tracklet");
@@ -132,12 +132,12 @@ void KBTracklet::SetEveElement(TEveElement *element)
     dr = 5./TrackLength();
 
   for (Double_t r = 0.; r < 1.0001; r += dr) {
-    auto pos = ExtrapolateByRatio(r);
+    auto pos = scale*ExtrapolateByRatio(r);
     line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
   }
 }
 
-void KBTracklet::AddToEveSet(TEveElement *)
+void KBTracklet::AddToEveSet(TEveElement *, Double_t)
 {
 }
 #endif

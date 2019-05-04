@@ -70,8 +70,8 @@ class KBMCTrack : public KBTracklet
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void SetEveElement(TEveElement *);
-    virtual void AddToEveSet(TEveElement *);
+    virtual void SetEveElement(TEveElement *, Double_t scale=1);
+    virtual void AddToEveSet(TEveElement *, Double_t scale=1);
 #endif
 
   protected:

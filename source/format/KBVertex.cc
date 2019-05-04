@@ -59,8 +59,8 @@ TEveElement *KBVertex::CreateEveElement() {
   return pointSet;
 }
 
-void KBVertex::AddToEveSet(TEveElement *eveSet) {
+void KBVertex::AddToEveSet(TEveElement *eveSet, Double_t scale) {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fX, fY, fZ);
+  pointSet -> SetNextPoint(scale*fX, scale*fY, scale*fZ);
 }
 #endif

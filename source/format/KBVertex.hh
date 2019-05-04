@@ -31,7 +31,7 @@ class KBVertex : public KBHit
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void AddToEveSet(TEveElement *eveSet);
+    virtual void AddToEveSet(TEveElement *eveSet, Double_t scale=1);
 #endif
 
   private:

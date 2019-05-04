@@ -29,8 +29,8 @@ class KBContainer : public TObject
     virtual bool DrawByDefault()              { return false; } ///< return true if to be displayed on eve.
     virtual bool IsEveSet()                   { return false; } ///< Check if this element should be a "set" of TEveElements (e.g. TEvePointSet, TEveStraightLineSet)
     virtual TEveElement *CreateEveElement()   { return nullptr; } ///< Create TEveElement
-    virtual void SetEveElement(TEveElement *) {} ///< Set TEveElement. For when IsEveSet() is false.
-    virtual void AddToEveSet(TEveElement *)   {} ///< Add TEveElement to this eve-set
+    virtual void SetEveElement(TEveElement *, Double_t scale = 1) {} ///< Set TEveElement. For when IsEveSet() is false.
+    virtual void AddToEveSet(TEveElement *, Double_t scale = 1)   {} ///< Add TEveElement to this eve-set
 #endif
 
   ClassDef(KBContainer, 4)
