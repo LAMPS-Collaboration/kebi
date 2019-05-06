@@ -6,6 +6,8 @@
 #include "G4UIExecutive.hh"
 #include "globals.hh"
 #include "G4ProcessTable.hh"
+#include "G4GDMLParser.hh"
+#include "TSystem.h"
 
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
@@ -33,6 +35,23 @@ void KBG4RunManager::Initialize()
   fProcessTable -> SetPar("Primary", idx++);
   for (auto name : *procNames)
     fProcessTable -> SetPar(name, idx++);
+
+  if (fPar->CheckPar("G4ExportGDML"))
+  {
+    TString fileName = fPar -> GetParString("G4ExportGDML");
+    TString name = gSystem -> Which(".", fileName.Data());
+
+    if (name.IsNull()) {
+      g4_info << "Exporting geometry in GMDL format: " << fileName << endl;
+      G4GDMLParser parser;
+      auto world = G4RunManagerKernel::GetRunManagerKernel() -> GetCurrentWorld();
+      parser.Write(fileName.Data(),world);
+    }
+    else {
+      g4_warning << "The file " << fileName << " exist already." << endl;
+      g4_warning << "Stopped exporting geomtry" << endl;
+    }
+  }
 }
 
 void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
