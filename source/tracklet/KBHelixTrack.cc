@@ -166,6 +166,11 @@ bool KBHelixTrack::Fit()
   SetIsHelix();
   KBGeoHelix::SetHelix(helix.GetI(), helix.GetJ(), helix.GetR(), helix.GetS(),
                        helix.GetK(), helix.GetT(), helix.GetH(), helix.GetA());
+
+  SetRMS(helix.GetRMS());
+  SetRMSR(helix.GetRMSR());
+  SetRMST(helix.GetRMST());
+
   return true;
 }
 
