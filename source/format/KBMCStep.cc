@@ -81,8 +81,8 @@ bool KBMCStep::IsEveSet() { return true; }
 TEveElement *KBMCStep::CreateEveElement()
 {
   auto pointSet = new TEvePointSet("MCStep");
-  pointSet -> SetMarkerColor(kBlue);
-  pointSet -> SetMarkerSize(0.8);
+  pointSet -> SetMarkerColor(kRed-5);
+  pointSet -> SetMarkerSize(0.2);
   pointSet -> SetMarkerStyle(20);
 
   return pointSet;

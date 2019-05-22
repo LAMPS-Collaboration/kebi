@@ -228,7 +228,7 @@ TEveElement *KBHit::CreateEveElement()
   return pointSet;
 }
 
-void KBHit::SetEveElement(TEveElement *, Double_t scale)
+void KBHit::SetEveElement(TEveElement *, Double_t)
 {
 }
 

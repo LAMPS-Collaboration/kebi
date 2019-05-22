@@ -72,8 +72,8 @@ class KBWPoint : public KBMCTagged
     virtual bool DrawByDefault();
     virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void SetEveElement(TEveElement *element);
-    virtual void AddToEveSet(TEveElement *eveSet);
+    virtual void SetEveElement(TEveElement *element, Double_t scale = 1);
+    virtual void AddToEveSet(TEveElement *eveSet, Double_t scale = 1);
 #endif
 
   protected:

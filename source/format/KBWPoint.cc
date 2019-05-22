@@ -87,13 +87,13 @@ TEveElement *KBWPoint::CreateEveElement()
   return pointSet;
 }
 
-void KBWPoint::SetEveElement(TEveElement *)
+void KBWPoint::SetEveElement(TEveElement *, Double_t)
 {
 }
 
-void KBWPoint::AddToEveSet(TEveElement *eveSet)
+void KBWPoint::AddToEveSet(TEveElement *eveSet, Double_t scale)
 {
   auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fX, fY, fZ);
+  pointSet -> SetNextPoint(scale*fX, scale*fY, scale*fZ);
 }
 #endif
