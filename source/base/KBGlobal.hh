@@ -61,8 +61,9 @@ class KBLog
 
     KBLog(const std::string &title ,int line)
     {
-      TString header = Form("[+%d %s] ", line, title.c_str());
-      std::cout<<"\033[0;36m"<<"debug "<<"\033[0m "<<header;
+      //TString header = Form("[+%d %s] ", line, title.c_str());
+      //std::cout<<"\033[0;36m"<<"debug "<<"\033[0m "<<header;
+      std::cout<<"+\033[0;36m"<<Form("%d ",line)<<"\033[0m "<<Form("%s # ", title.c_str());
     }
 
     template <class T> KBLog &operator<<(const T &v)

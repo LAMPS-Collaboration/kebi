@@ -22,6 +22,10 @@ class KBTask : public TTask, public KBGear
     bool InitTasks();
     virtual bool Init();
 
+    bool EndOfRunTask();
+    bool EndOfRunTasks();
+    virtual bool EndOfRun();
+
     ClassDef(KBTask, 1)
 };
 

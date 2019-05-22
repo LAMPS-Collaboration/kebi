@@ -30,6 +30,10 @@
 #include <stdlib.h>
 using namespace std;
 
+#include "TSysEvtHandler.h"
+
+class InterruptHandler;
+
 class KBRun : public KBTask
 {
   public:
@@ -65,7 +69,7 @@ class KBRun : public KBTask
     void SetDataPath(TString path); ///< Set data directory path. Default directory : path/to/KEBI/data
     TString GetDataPath();
 
-    void SetInputFile(TString fileName, TString treeName = "data"); ///< Set input file and tree name
+    void SetInputFile(TString fileName, TString treeName = "event"); ///< Set input file and tree name
     void AddInput(TString fileName); ///< Add file to input file
     void AddFriend(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
@@ -79,7 +83,7 @@ class KBRun : public KBTask
     void SetTag(TString tag);
     void SetSplit(Int_t split, Long64_t numSplitEntries);
 
-    void SetIOFile(TString inputName, TString outputName, TString treeName = "data");
+    void SetIOFile(TString inputName, TString outputName, TString treeName = "event");
 
     bool Init(); ///< Initailize KBRun. Init() must be done before Run().
 
@@ -119,17 +123,20 @@ class KBRun : public KBTask
     bool NextEvent();
 
     void Run(); ///< Run all events
-    void EndOfEvent();
 
     void RunSingle(Long64_t eventID); ///< Run single event given eventID
     void RunInRange(Long64_t startID, Long64_t endID); ///< Run in range from startID to endID
     void RunInEventRange(Long64_t startID, Long64_t endID); ///< @todo Write this method
 
+    void SignalEndOfRun();
+    void SignalInterrupt();
+
     /// Run eventdisplay of given eventID.
     /// option is used to activate following displays:
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
-    void RunEve(Long64_t eventID, TString option="ep"); void SelectEveBranches(TString option);
+    void RunEve(Long64_t eventID, TString option="ep");
+    void SelectEveBranches(TString option);
     void SetEveScale(Double_t scale);
     Color_t GetColor();
 
@@ -194,11 +201,14 @@ class KBRun : public KBTask
 
     Long64_t fNumEntries = 0;
 
+
+    Long64_t fIdxEntry = 0;
     Long64_t fStartEventID = -1;
     Long64_t fEndEventID = -1;
     Long64_t fCurrentEventID = 0;
     Long64_t fEventCount = 0;
-    bool fSignalEndOfEvent = false;
+    bool fSignalEndOfRun = false;
+    bool fCheckIn = false;
 
     KBParameterContainer *fRunHeader = nullptr;
 
@@ -227,11 +237,25 @@ class KBRun : public KBTask
 
     Bool_t fAutoTerminate = true;
 
+    InterruptHandler *fInterruptHandler = nullptr;
+
   private:
     static KBRun *fInstance;
 
 
     ClassDef(KBRun, 1)
+};
+
+class InterruptHandler : public TSignalHandler
+{
+  public:
+    InterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
+
+    virtual Bool_t Notify()
+    {
+      KBRun::GetRun() -> SignalInterrupt();
+      return kTRUE;
+    }
 };
 
 #endif

@@ -22,7 +22,8 @@ void KBTask::Add(TTask *task)
 }
 
 bool KBTask::InitTask() 
-{ if (!fActive) 
+{
+  if (!fActive)
     return false;
 
   bool initialized = Init();
@@ -46,6 +47,39 @@ bool KBTask::InitTasks()
     cout << "  " << "Initializing " << task -> GetName() << "." << endl;
     if (task -> Init() == false) {
       cout << "  Initialization failed!" << endl;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool KBTask::EndOfRunTask()
+{
+  if (!fActive)
+    return false;
+
+  bool endofrun = EndOfRun();
+  if (!endofrun)
+    return false;
+
+  return EndOfRunTasks();
+}
+
+bool KBTask::EndOfRun()
+{
+  return true;
+}
+
+bool KBTask::EndOfRunTasks()
+{
+  TIter iter(GetListOfTasks());
+  KBTask* task;
+
+  while ( (task = dynamic_cast<KBTask*>(iter())) ) {
+    cout << "  " << "EndOfRun " << task -> GetName() << "." << endl;
+    if (task -> EndOfRun() == false) {
+      cout << "  EndOfRun failed!" << endl;
       return false;
     }
   }

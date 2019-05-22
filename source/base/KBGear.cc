@@ -21,7 +21,7 @@ void KBGear::AddParameterContainer(KBParameterContainer *par) {
 
 void KBGear::AddParameterContainer(TString fname) {
   if (fPar == nullptr)
-    fPar = new KBParameterContainer(fname);
+    fPar = new KBParameterContainer();
   fPar -> AddFile(fname);
 }
 

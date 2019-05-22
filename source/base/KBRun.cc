@@ -26,6 +26,7 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TEvePointSet.h"
 #include "TEveLine.h"
+#include "TEveArrow.h"
 #endif
 
 #include "KBHit.hh"
@@ -111,19 +112,44 @@ void KBRun::Print(Option_t *option) const
     fDetectorSystem -> Print();
   }
 
+  auto printTree = [](TTree *tree) {
+    kb_out << "  Entries " << tree -> GetEntries() << endl;
+    auto branchList = tree -> GetListOfBranches();
+    auto numBranches = branchList -> GetEntries();
+    if (numBranches < 10)
+      for (auto ib=0; ib<numBranches; ++ib)
+        kb_out << "  Branch " << ((TBranch *) branchList -> At(ib)) -> GetName() << endl;
+    else {
+      kb_out << "  Branches: ";
+      Int_t count = 0;
+      for (auto ib=0; ib<numBranches; ++ib) {
+        auto b = (TBranch *) branchList -> At(ib);
+        kb_out << b -> GetName() << " ";
+        if (++count == 10) {
+          kb_out << endl;
+          count = 0;
+        }
+      }
+      kb_out << endl;
+    }
+  };
+
   kb_out << "-------------------------------------------------------------------------------------------" << endl;
   kb_info << "Input: " << fInputFileName << endl;
   if (fInputTree != nullptr && option_print.Index("i") >= 0) {
-    fInputTree -> Print("toponly");
+    //fInputTree -> Print("toponly");
+    printTree(fInputTree);
 
     for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++)
-      GetFriendChain(iFriend) -> Print("toponly");
+      //GetFriendChain(iFriend) -> Print("toponly");
+      printTree(GetFriendChain(iFriend));
   }
 
   kb_out << "-------------------------------------------------------------------------------------------" << endl;
   kb_info << "Output: " << fOutputFileName << endl;
   if (fOutputTree != nullptr && option_print.Index("o") >= 0)
-    fOutputTree -> Print("toponly");
+    //fOutputTree -> Print("toponly");
+    printTree(fOutputTree);
 
   if (!fInitialized) {
     kb_out << "-------------------------------------------------------------------------------------------" << endl;
@@ -252,6 +278,7 @@ void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 
 bool KBRun::Init()
 {
+  if (fInitialized)
   fInitialized = false;
 
   kb_print << "Initializing" << endl;
@@ -273,7 +300,7 @@ bool KBRun::Init()
     fInputFile = new TFile(fInputFileName, "read");
 
     if (fInputTreeName.IsNull())
-      fInputTreeName = "data";
+      fInputTreeName = "event";
 
     fInputTree = new TChain(fInputTreeName);
     fInputTree -> AddFile(fInputFileName);
@@ -298,13 +325,28 @@ bool KBRun::Init()
 
     TObjArray *branchArray = fInputTree -> GetListOfBranches();
     Int_t nBranches = branchArray -> GetEntries();
+    vector<TString> arrMCStepIDs;
+    Int_t numMCStepIDs = 0;
     for (Int_t iBranch = 0; iBranch < nBranches; iBranch++) {
       TBranch *branch = (TBranch *) branchArray -> At(iBranch);
       fInputTree -> SetBranchStatus(branch -> GetName(), 1);
       fInputTree -> SetBranchAddress(branch -> GetName(), &fBranchPtr[fNBranches]);
       fBranchPtrMap[branch -> GetName()] = fBranchPtr[fNBranches];
       fNBranches++;
-      kb_info << "Input branch " << branch -> GetName() << " found" << endl;
+      TString branchName = branch -> GetName();
+      if (branchName.Index("MCStep")==0) {
+        arrMCStepIDs.push_back(branchName.ReplaceAll("MCStep","").Data());
+        ++numMCStepIDs;
+      } else
+        kb_info << "Input branch " << branchName << " found" << endl;
+    }
+    if (numMCStepIDs != 0) {
+      kb_info << "Input branch (" << numMCStepIDs  << ") MCStep[";
+      for (Int_t iID = 0; iID < numMCStepIDs-1; iID++) {
+        auto id = arrMCStepIDs[iID];
+        kb_out << id << ", ";
+      }
+      kb_out << arrMCStepIDs.back() << "] found" << endl;
     }
 
     for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++) {
@@ -411,7 +453,7 @@ bool KBRun::Init()
     kb_out << endl;
     kb_info << "Output file : " << fOutputFileName << endl;
     fOutputFile = new TFile(fOutputFileName, "recreate");
-    fOutputTree = new TTree("data", "");
+    fOutputTree = new TTree("event", "");
   }
 
   fInitialized = InitTasks();
@@ -425,6 +467,8 @@ bool KBRun::Init()
     kb_error << "[KBRun] FAILED initializing tasks." << endl;
 
   fCurrentEventID = -1;
+
+  fInterruptHandler = new InterruptHandler();
 
   return fInitialized;
 }
@@ -598,8 +642,10 @@ void KBRun::Run()
   if (fInitialized == false) {
     kb_info << "KBRun is not initialized!" << endl;
     kb_info << "try initialization..." << endl;
-    if (!Init())
+    if (!Init()) {
       kb_error << "Exit Run() due to initialization fail." << endl;
+      return;
+    }
   }
 
   CheckIn();
@@ -618,32 +664,30 @@ void KBRun::Run()
 
   Int_t numRunEntries = fEndEventID - fStartEventID + 1;
 
-  fSignalEndOfEvent = false;
-
   fEventCount = 1;
 
-  Long64_t iEntry = 0;
-  for (iEntry = fStartEventID; iEntry <= fEndEventID; iEntry++) {
-    fCurrentEventID = iEntry;
+  for (fIdxEntry = fStartEventID; fIdxEntry <= fEndEventID; ++fIdxEntry) {
+    fCurrentEventID = fIdxEntry;
     if (fInputTree != nullptr) {
-      fInputTree -> GetEntry(iEntry);
+      fInputTree -> GetEntry(fIdxEntry);
       ///TODO @todo fCurrentEventID = EventHeader -> GetEventID();
       for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++)
-        GetFriendChain(iFriend) -> GetEntry(iEntry);
+        GetFriendChain(iFriend) -> GetEntry(fIdxEntry);
     }
 
     kb_out << endl;
-    kb_info << "Execute Event " << iEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
+    kb_info << "Execute Event " << fIdxEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
     ExecuteTask("");
 
-    if (fSignalEndOfEvent)
+    if (fSignalEndOfRun)
       break;
-
     if (fOutputTree != nullptr)
       fOutputTree -> Fill();
 
     ++fEventCount;
   }
+
+  EndOfRunTasks();
 
   if (fOutputTree != nullptr) {
     fOutputFile -> cd();
@@ -654,8 +698,8 @@ void KBRun::Run()
 
   kb_out << endl;
   kb_info << "End of Run " << fStartEventID << " -> " << fEndEventID << " (" << fEndEventID - fStartEventID + 1 << ")" << endl;
-  if (fSignalEndOfEvent)
-    kb_info << "Run stoped at event " << iEntry - 1 << " (" << iEntry - fStartEventID << ") because EndOfEvent signal was sent" << endl;
+  if (fSignalEndOfRun)
+    kb_info << "Run stoped at event " << fIdxEntry << " (" << fIdxEntry - fStartEventID << ") because EndOfRun signal was sent" << endl;
 
   kb_out << endl;
   Print("cio");
@@ -672,7 +716,38 @@ void KBRun::Run()
   if (fAutoTerminate) Terminate(this);
 }
 
-void KBRun::EndOfEvent() { fSignalEndOfEvent = true; }
+
+void KBRun::SignalInterrupt()
+{
+  if (fCheckIn)
+    return;
+
+  if (fOutputTree != nullptr) {
+    fOutputTree -> Fill();
+    fOutputFile -> cd();
+    fOutputTree -> Write();
+    fPar -> SetPar("Interrupted",true);
+    fPar -> Write(fPar->GetName(),TObject::kSingleKey);
+    fRunHeader -> Write(fRunHeader->GetName(),TObject::kSingleKey);
+  }
+
+  kb_info << "Run stoped at event " << fIdxEntry << " (" << fIdxEntry - fStartEventID << ") because of Interrupt signal (SIGINT)." << endl;
+  kb_out << endl;
+  Print("cio");
+
+  if (fOutputTree != nullptr) {
+    fOutputFile -> Close();
+    TString linkName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
+    unlink(linkName.Data());
+    symlink(fOutputFileName.Data(), linkName.Data());
+  }
+
+  CheckOut();
+
+  if (fAutoTerminate) Terminate(this,Form("Interrupted at event %lld",fEventCount));
+}
+
+void KBRun::SignalEndOfRun() { fSignalEndOfRun = true; }
 
 void KBRun::RunSingle(Long64_t eventID)
 {
@@ -928,6 +1003,10 @@ void KBRun::RunEve(Long64_t eventID, TString option)
       if (numSelectedBranches != 0) {
         TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
         branch = (TClonesArray *) fBranchPtrMap[branchName];
+        if (branch == nullptr) {
+          kb_error << "No eve-branch name " << branchName << endl;
+          continue;
+        }
       }
       else
         branch = (TClonesArray *) fBranchPtr[iBranch];
@@ -954,32 +1033,19 @@ void KBRun::RunEve(Long64_t eventID, TString option)
         for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
           KBTracklet *eveTrk = (KBTracklet *) branch -> At(iObject);
 
-          bool isGood = true;
-          if (chooseTracks==1) {
-            isGood = false;
-            for (auto id : choosenTracks)
-              if (eveTrk->GetTrackID()==id) { isGood = true; break; }
-          } else if (chooseTracks==-1) {
-            isGood = true;
-            for (auto id : choosenTracks)
-              if (eveTrk->GetTrackID()==id) { isGood = false; break; }
-          } if (chooseParents==1) {
-            isGood = false;
-            for (auto id : choosenParents)
-              if (eveTrk->GetParentID()==id) { isGood = true; break; }
-          } else if (chooseParents==-1) {
-            isGood = true;
-            for (auto id : choosenParents)
-              if (eveTrk->GetParentID()==id) { isGood = false; break; }
-          } if (choosePDGs==1) {
-            isGood = false;
-            for (auto id : choosenPDGs)
-              if (eveTrk->GetPDG()==id) { isGood = true; break; }
-          } else if (choosePDGs==-1) {
-            isGood = true;
-            for (auto id : choosenPDGs)
-              if (eveTrk->GetPDG()==id) { isGood = false; break; }
-          }
+          bool isGood = 1;
+               if (chooseTracks ==  1) { isGood = 0; for (auto id : choosenTracks)  { if (eveTrk->GetTrackID() ==id) { isGood = 1; break; } } }
+          else if (chooseTracks == -1) { isGood = 1; for (auto id : choosenTracks)  { if (eveTrk->GetTrackID() ==id) { isGood = 0; break; } } }
+          if (!isGood)
+            continue;
+
+               if (chooseParents==  1) { isGood = 0; for (auto id : choosenParents) { if (eveTrk->GetParentID()==id) { isGood = 1; break; } } }
+          else if (chooseParents== -1) { isGood = 1; for (auto id : choosenParents) { if (eveTrk->GetParentID()==id) { isGood = 0; break; } } }
+          if (!isGood)
+            continue;
+
+               if (choosePDGs   ==  1) { isGood = 0; for (auto id : choosenPDGs)    { if (eveTrk->GetPDG()     ==id) { isGood = 1; break; } } }
+          else if (choosePDGs   == -1) { isGood = 1; for (auto id : choosenPDGs)    { if (eveTrk->GetPDG()     ==id) { isGood = 0; break; } } }
           if (!isGood)
             continue;
 
@@ -987,6 +1053,9 @@ void KBRun::RunEve(Long64_t eventID, TString option)
           eveTrk -> SetEveElement(eveElement, fEveScale);
           TString name = TString(eveElement -> GetElementName()) + Form("_%d",iObject);
           eveElement -> SetElementName(name);
+          //eveElement -> SetLineColor(GetColor());
+          if (fPar->CheckPar("eveTrackLineWidth"))
+            eveElement -> SetLineWidth(fPar->GetParInt("eveTrackLineWidth"));
           gEve -> AddElement(eveElement);
           fEveElementList.push_back(eveElement);
         }
@@ -1004,7 +1073,7 @@ void KBRun::RunEve(Long64_t eventID, TString option)
         for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
           eveObj = (KBContainer *) branch -> At(iObject);
           TEveElement *eveElement = eveObj -> CreateEveElement();
-          eveObj -> SetEveElement(eveElement);
+          eveObj -> SetEveElement(eveElement, fEveScale);
           TString name = TString(eveElement -> GetElementName()) + Form("_%d",iObject);
           eveElement -> SetElementName(name);
           gEve -> AddElement(eveElement);
@@ -1012,6 +1081,24 @@ void KBRun::RunEve(Long64_t eventID, TString option)
         }
       }
     }
+
+    if (fPar->CheckPar("eveAxisX")) {
+      Double_t length = 100.;
+      if (fPar->CheckPar("eveAxisL"))
+        length = fPar->GetParDouble("eveAxisL");
+      TVector3 origin(fPar->GetParDouble("eveAxisX"), fPar->GetParDouble("eveAxisY"), fPar->GetParDouble("eveAxisZ"));
+      for (auto kaxis : {KBVector3::kX,KBVector3::kY,KBVector3::kZ}) {
+        KBVector3 direction(0,0,0);
+        direction.AddAt(length,kaxis);
+        auto axis = new TEveArrow(direction.X(),direction.Y(),direction.Z(),origin.X(),origin.Y(),origin.Z());
+        if (kaxis==KBVector3::kX) axis -> SetMainColor(kRed);
+        if (kaxis==KBVector3::kY) axis -> SetMainColor(kBlue);
+        if (kaxis==KBVector3::kZ) axis -> SetMainColor(kBlack);
+        gEve -> AddElement(axis);
+        fEveElementList.push_back(axis);
+      }
+    }
+
     gEve -> Redraw3D();
   }
 #endif
@@ -1269,6 +1356,11 @@ bool KBRun::CheckFileExistence(TString fileName, bool print)
 
 void KBRun::CheckIn()
 {
+  fSignalEndOfRun = false;
+  fCheckIn = true;
+
+  fInterruptHandler -> Add();
+
   fstream kblogFile(fKBLogFileName.Data(), ios::out | ios::app);
 
   time_t t = time(0);
@@ -1297,4 +1389,8 @@ void KBRun::CheckOut()
 
   kblogFile << fHash << "  " << ldate << "  " << ltime << "  END" << endl;
   kblogFile.close();
+
+  fInterruptHandler -> Remove();
+
+  fCheckIn = false;
 }
