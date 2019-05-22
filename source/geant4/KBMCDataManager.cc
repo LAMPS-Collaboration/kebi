@@ -26,7 +26,7 @@ void KBMCDataManager::Init()
 
   fTrackArray = new TClonesArray("KBMCTrack", 100);
 
-  fTree = new TTree("data", fName);
+  fTree = new TTree("event", fName);
   fTree -> Branch("MCTrack", &fTrackArray);
 
   fStepArrayList = new TObjArray();
