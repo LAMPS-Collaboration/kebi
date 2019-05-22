@@ -12,7 +12,6 @@ void eve(TString input = "dummy.mc")
   auto run = new KBRun();
   run -> SetInputFile(input);
   run -> SetTag("eve");
-  run -> AddPar("dummy.par");
   run -> AddDetector(new DUMMYDetector());
   run -> Init();
   run -> SetGeoTransparency(80);

@@ -1,4 +1,4 @@
-void doSomething()
+void task()
 {
   auto run = new KBRun();
   run -> SetRunID(0);

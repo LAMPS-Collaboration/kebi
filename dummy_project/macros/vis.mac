@@ -3,7 +3,7 @@
 
 /run/setCutForAGivenParticle e- 100. mm
 
-#/vis/scene/add/axes 0 0 0 500 mm
+#/vis/scene/add/axes 0 0 0 50 mm
 /vis/viewer/flush
 
 /vis/viewer/set/lightsVector -1 0 0

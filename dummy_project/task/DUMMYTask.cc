@@ -1,15 +1,15 @@
 #include "KBRun.hh"
 #include "KBChannelHit.hh"
-#include "DUMMYDoSomethingTask.hh"
+#include "DUMMYTask.hh"
 
-ClassImp(DUMMYDoSomethingTask)
+ClassImp(DUMMYTask)
 
-DUMMYDoSomethingTask::DUMMYDoSomethingTask()
-:KBTask("DUMMYDoSomethingTask","")
+DUMMYTask::DUMMYTask()
+:KBTask("DUMMYTask","")
 {
 }
 
-bool DUMMYDoSomethingTask::Init()
+bool DUMMYTask::Init()
 {
   bool saveThisBranch = true;
   fChannelArray = new TClonesArray("KBChannelHit", 100);
@@ -18,7 +18,7 @@ bool DUMMYDoSomethingTask::Init()
   return true;
 }
 
-void DUMMYDoSomethingTask::Exec(Option_t*)
+void DUMMYTask::Exec(Option_t*)
 {
   fChannelArray -> Clear("C");
 
