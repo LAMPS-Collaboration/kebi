@@ -1,8 +1,8 @@
 #ifndef KBG4RUNMANAGER_HH
 #define KBG4RUNMANAGER_HH
 
-#define g4_info KBLog("KBG4RunManager",__FUNCTION__,0,2)
-#define g4_warning KBLog("KBG4RunManager",__FUNCTION__,0,3)
+#define g4_info KBLog("Geant4",__FUNCTION__,0,2)
+#define g4_warning KBLog("Geant4",__FUNCTION__,0,3)
 
 #include "G4RunManager.hh"
 #include "G4VPhysicalVolume.hh"
@@ -21,7 +21,9 @@ class KBG4RunManager : public G4RunManager, public KBGear
     void Run(G4int argc=0, char **argv=nullptr, const G4String &type="");
 
     void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume);
+    void SetVolume(G4VPhysicalVolume *physicalVolume);
 
+    KBParameterContainer *GetVolumes();
     KBParameterContainer *GetSensitiveDetectors();
     KBParameterContainer *GetProcessTable();
 
@@ -30,6 +32,7 @@ class KBG4RunManager : public G4RunManager, public KBGear
     void SetOutputFile(TString value);
 
     KBMCDataManager *fData;
+    KBParameterContainer *fVolumes;
     KBParameterContainer *fSensitiveDetectors;
     KBParameterContainer *fProcessTable;
 };

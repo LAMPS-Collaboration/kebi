@@ -18,7 +18,9 @@ KBMCDataManager::~KBMCDataManager()
 {
 }
 
-void KBMCDataManager::SetStepPersistency(bool persistence) { fStepPersistency = persistence; }
+void KBMCDataManager::SetStepPersistency(bool v) { fStepPersistency = v; }
+void KBMCDataManager::SetSecondaryPersistency(bool v) { fSecondaryPersistency = v; }
+void KBMCDataManager::SetTrackVertexPersistency(bool v) { fTrackVertexPersistency = v; }
 
 void KBMCDataManager::Init()
 {
@@ -44,6 +46,11 @@ void KBMCDataManager::SetDetector(Int_t detectorID)
 
 void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
 {
+  if (parentID != 0 && !fSecondaryPersistency) {
+    fCurrentTrack = nullptr;
+    return;
+  }
+
   fTrackID = trackID;
   fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
   fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz, processID);
@@ -51,6 +58,9 @@ void KBMCDataManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Doubl
 
 void KBMCDataManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
 {
+  if (fCurrentTrack == nullptr || !fTrackVertexPersistency)
+    return;
+
   fCurrentTrack -> AddVertex(px, py, pz, detectorID, vx, vy, vz);
 }
 
@@ -73,9 +83,10 @@ void KBMCDataManager::NextEvent()
   fTrackArray -> Clear("C");
   TIter it(fStepArrayList);
 
-  if (!fStepPersistency) return;
-  while (auto stepArray = (TClonesArray *) it.Next())
-    stepArray -> Clear("C");
+  if (fStepPersistency) {
+    while (auto stepArray = (TClonesArray *) it.Next())
+      stepArray -> Clear("C");
+  }
 }
 
 void KBMCDataManager::WriteToFile(TObject *obj)

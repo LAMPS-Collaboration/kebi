@@ -12,6 +12,9 @@
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
 {
+  fVolumes = new KBParameterContainer();
+  fVolumes -> SetName("Volumes");
+
   fSensitiveDetectors = new KBParameterContainer();
   fSensitiveDetectors -> SetName("SensitiveDetectors");
 
@@ -81,6 +84,7 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
 
   fData -> WriteToFile(fProcessTable);
   fData -> WriteToFile(fSensitiveDetectors);
+  fData -> WriteToFile(fVolumes);
   fData -> EndOfRun();
 }
 
@@ -97,6 +101,8 @@ void KBG4RunManager::SetOutputFile(TString value)
   fData = new KBMCDataManager(value.Data());
   fData -> SetPar(fPar);
   fData -> SetStepPersistency(fPar->GetParBool("MCStepPersistency"));
+  fData -> SetSecondaryPersistency(fPar->GetParBool("MCSecondaryPersistency"));
+  fData -> SetTrackVertexPersistency(fPar->GetParBool("MCTrackVertexPersistency"));
 
   TIter itDetectors(fSensitiveDetectors);
   TParameter<Int_t> *det;
@@ -110,6 +116,14 @@ void KBG4RunManager::SetOutputFile(TString value)
   }
 }
 
+void KBG4RunManager::SetVolume(G4VPhysicalVolume *physicalVolume)
+{
+  TString name = physicalVolume -> GetName().data();
+  Int_t copyNo = physicalVolume -> GetCopyNo();
+
+  fVolumes -> SetPar(name, copyNo);
+}
+
 void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume)
 {
   TString name = physicalVolume -> GetName().data();
@@ -118,5 +132,6 @@ void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume)
   fSensitiveDetectors -> SetPar(name, copyNo);
 }
 
+KBParameterContainer *KBG4RunManager::GetVolumes() { return fVolumes; }
 KBParameterContainer *KBG4RunManager::GetSensitiveDetectors() { return fSensitiveDetectors; }
 KBParameterContainer *KBG4RunManager::GetProcessTable()       { return fProcessTable; }

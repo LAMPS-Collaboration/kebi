@@ -1,4 +1,5 @@
 #include "KBMCEventGenerator.hh"
+#include "KBG4RunManager.hh"
 #include "KBMCTrack.hh"
 #include "TSystem.h"
 
@@ -18,6 +19,8 @@ KBMCEventGenerator::KBMCEventGenerator(TString fileName)
   else if (me == "e") fReadMomentumOrEnergy = false;
 
   fInputFile >> fNumEvents;
+
+  g4_info << fileName << " containing " << fNumEvents << " initialized with " << me << endl;
 }
 
 KBMCEventGenerator::~KBMCEventGenerator()

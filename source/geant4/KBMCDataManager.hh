@@ -19,7 +19,9 @@ class KBMCDataManager : public KBGear
 
     virtual ~KBMCDataManager();
 
-    void SetStepPersistency(bool persistence);
+    void SetStepPersistency(bool v);
+    void SetSecondaryPersistency(bool v);
+    void SetTrackVertexPersistency(bool v);
 
     void SetDetector(Int_t detectorID);
 
@@ -42,6 +44,8 @@ class KBMCDataManager : public KBGear
     KBMCTrack *fCurrentTrack = nullptr;
 
     bool fStepPersistency = true;
+    bool fSecondaryPersistency = true;
+    bool fTrackVertexPersistency = true;
 
     TClonesArray *fTrackArray;
     TObjArray *fStepArrayList;
