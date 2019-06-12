@@ -163,3 +163,29 @@ TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axi
 
   return fTrajectoryOnPlane;
 }
+
+TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos))
+{
+  if (fTrajectoryOnPlane == nullptr) {
+    fTrajectoryOnPlane = new TGraph();
+    fTrajectoryOnPlane -> SetLineColor(kRed);
+  }
+
+  fTrajectoryOnPlane -> Set(0);
+
+  bool isout;
+  for (Double_t r = 0.; r < 100.; r += 0.05) {
+    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
+    isout = fisout(pos);
+    if (isout)
+      break;
+
+    fTrajectoryOnPlane -> SetPoint(fTrajectoryOnPlane->GetN(), pos.At(axis1), pos.At(axis2));
+  }
+
+  fTrajectoryOnPlane -> SetLineColor(kRed);
+  if (isout)
+    fTrajectoryOnPlane -> SetLineColor(kGray+1);
+
+  return fTrajectoryOnPlane;
+}

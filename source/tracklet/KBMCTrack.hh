@@ -12,6 +12,16 @@ using namespace std;
 #include "TEveElement.h"
 #endif
 
+/**
+ * Eve naming concept : mc_pnm:tid(pid)[mom]{dnm;nvx}
+ * - pnm: particle name or PDG encoding number
+ * - tid: track id
+ * - pid: parent id
+ * - mom: momentum value in MeV/c
+ * - dnm: detector name or detector id
+ * - nvx: number of vertex
+ */
+
 class KBMCTrack : public KBTracklet
 {
   public:

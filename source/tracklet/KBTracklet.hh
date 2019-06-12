@@ -9,6 +9,8 @@
 #include "KBHit.hh"
 #include "KBVector3.hh"
 
+#include <functional>
+
 class KBTracklet : public KBMCTagged
 {
   protected:
@@ -68,6 +70,7 @@ class KBTracklet : public KBMCTagged
 
     virtual bool DoDrawOnDetectorPlane();
     virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
+    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos));
 
   ClassDef(KBTracklet, 3)
 };

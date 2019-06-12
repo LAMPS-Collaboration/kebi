@@ -9,4 +9,6 @@
 #pragma link C++ class KBHelixTrack+;
 #pragma link C++ class KBMCTrack+;
 
+#pragma link C++ class KBExtrapolatedTrack+;
+
 #endif
