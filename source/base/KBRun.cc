@@ -38,7 +38,7 @@
 #include <iostream>
 #include <ctime>
 
-ClassImp(KBRun)
+ClassImp(KBRun);
 
 KBRun* KBRun::fInstance = nullptr;
 
@@ -376,6 +376,12 @@ bool KBRun::Init()
     }
   }
 
+  if (fInputFile != nullptr) {
+    fProcessTable = (KBParameterContainer *) fInputFile -> Get("ProcessTable");
+    fSDTable = (KBParameterContainer *) fInputFile -> Get("SensitiveDetectors");
+    fVolumeTable = (KBParameterContainer *) fInputFile -> Get("Volumes");
+  }
+
   if (fInputFile != nullptr && fInputFile -> Get("RunHeader") != nullptr) {
     KBParameterContainer *runHeaderIn = (KBParameterContainer *) fInputFile -> Get("RunHeader");
 
@@ -472,6 +478,10 @@ bool KBRun::Init()
 
   return fInitialized;
 }
+
+KBParameterContainer *KBRun::GetProcessTable() const { return fProcessTable; }
+KBParameterContainer *KBRun::GetSDTable() const { return fSDTable; }
+KBParameterContainer *KBRun::GetVolumeTable() const { return fVolumeTable; }
 
 TDatabasePDG *KBRun::GetDatabasePDG()
 {
@@ -871,6 +881,27 @@ void KBRun::OpenEventDisplay()
   gEve -> ElementSelect(gEve -> GetCurrentEvent());
   gEve -> GetWindowManager() -> HideAllEveDecorations();
 }
+
+void KBRun::AddEveElementToEvent(KBContainer *eveObj, bool permanent)
+{
+  if (eveObj -> IsEveSet()) {
+    TEveElement *eveSet = eveObj -> CreateEveElement();
+    eveObj -> AddToEveSet(eveSet, fEveScale);
+    AddEveElementToEvent(eveSet);
+  }
+  else {
+    TEveElement *eveElement = eveObj -> CreateEveElement();
+    eveObj -> SetEveElement(eveElement, fEveScale);
+    AddEveElementToEvent(eveElement);
+  }
+}
+
+void KBRun::AddEveElementToEvent(TEveElement *element, bool permanent)
+{
+  gEve -> AddElement(element);
+  if (!permanent) fEveElementList.push_back(element);
+  gEve -> Redraw3D();
+}
 #endif
 
 void KBRun::RunEve(Long64_t eventID, TString option)
@@ -984,6 +1015,10 @@ void KBRun::RunEve(Long64_t eventID, TString option)
     break;
   }
 
+  bool removePointTrack = false;
+  if (fPar -> CheckPar("eveRemovePointTrack"))
+    removePointTrack = fPar -> GetParBool("eveRemovePointTrack");
+
   TObjArray *eveBranchNames = fEveBranches.Tokenize(":");
   auto numSelectedBranches = eveBranchNames -> GetEntries();
 
@@ -1032,6 +1067,11 @@ void KBRun::RunEve(Long64_t eventID, TString option)
       {
         for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
           KBTracklet *eveTrk = (KBTracklet *) branch -> At(iObject);
+
+          if (removePointTrack)
+            if (eveTrk -> InheritsFrom("KBMCTrack"))
+              if (((KBMCTrack *) eveTrk) -> GetNumVertices() < 2)
+                continue;
 
           bool isGood = 1;
                if (chooseTracks ==  1) { isGood = 0; for (auto id : choosenTracks)  { if (eveTrk->GetTrackID() ==id) { isGood = 1; break; } } }
@@ -1393,4 +1433,70 @@ void KBRun::CheckOut()
   fInterruptHandler -> Remove();
 
   fCheckIn = false;
+}
+
+void KBRun::PrintMCTrack(KBMCTrack *track, Option_t *)
+{
+  Int_t trackID = track -> GetTrackID();
+  Int_t parentID = track -> GetParentID();
+
+  TString particleName = Form("%d",track -> GetPDG());
+  auto particle = GetParticle(track -> GetPDG());
+  if (particle != nullptr)
+    particleName = particle -> GetName();
+
+  Int_t detectorID = track -> GetDetectorID(0);
+  TString detectorName = Form("%d",detectorID);
+  if (fSDTable != nullptr) {
+    Int_t numDetectors = fSDTable -> GetEntries();
+    for (auto iDetector=0; iDetector<numDetectors; ++iDetector) {
+      auto detector = (TParameter<Int_t> *) fSDTable -> At(iDetector);
+      if (detector -> GetVal() == detectorID) {
+        detectorName = TString("[SD]") + detector -> GetName();
+        break;
+      }
+    }
+  }
+  if (fVolumeTable != nullptr) {
+    Int_t numVolumes = fVolumeTable -> GetEntries();
+    for (auto iDetector=0; iDetector<numVolumes; ++iDetector) {
+      auto detector = (TParameter<Int_t> *) fVolumeTable -> At(iDetector);
+      if (detector -> GetVal() == detectorID) {
+        detectorName = detector -> GetName();
+        break;
+      }
+    }
+  }
+
+
+  Int_t processID = track -> GetCreatorProcessID();
+  TString processName = Form("%d",processID);
+  if (fProcessTable != nullptr) {
+    Int_t numProcesses = fProcessTable -> GetEntries();
+    for (auto iProcess=0; iProcess<numProcesses; ++iProcess) {
+      auto process = (TParameter<Int_t> *) fProcessTable -> At(iProcess);
+      if (process -> GetVal() == processID) {
+        processName = process -> GetName();
+        break;
+      }
+    }
+  }
+
+  /*
+  Double_t px = track -> GetPX(0);
+  Double_t py = track -> GetPY(0);
+  Double_t pz = track -> GetPZ(0);
+  Double_t vx = track -> GetVX(0);
+  Double_t vy = track -> GetVY(0);
+  Double_t vz = track -> GetVZ(0);
+  */
+
+  kr_info(0) << "MC-" << setw(4) << trackID << "(" << setw(4) << parentID << ") "
+                << setw(13) << particleName
+    <<     "["  << setw(20) << processName << "]"
+    << " det="  << setw(20) << detectorName << ","
+    << " mom="  << setw(12) << track -> Momentum().Mag() << ","
+    << " len="  << setw(12) << track -> TrackLength() << endl;
+    //<< " mom=(" << px << "," << py << "," << pz << "),"
+    //<< " pos=(" << vx << "," << vy << "," << vz << ")" << endl;
 }

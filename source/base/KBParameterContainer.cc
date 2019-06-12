@@ -13,19 +13,19 @@ using namespace std;
 
 ClassImp(KBParameterContainer)
 
-KBParameterContainer::KBParameterContainer(bool debug)
+KBParameterContainer::KBParameterContainer(Bool_t debug)
 :TObjArray(), fDebugMode(debug)
 {
   fName = "ParameterContainer";
 }
 
-KBParameterContainer::KBParameterContainer(const char *parName, bool debug)
+KBParameterContainer::KBParameterContainer(const char *parName, Bool_t debug)
 :KBParameterContainer(debug)
 {
   AddFile(TString(parName));
 }
 
-void KBParameterContainer::SetDebugMode(bool val) { fDebugMode = val; }
+void KBParameterContainer::SetDebugMode(Bool_t val) { fDebugMode = val; }
 
 void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
 {
@@ -46,7 +46,7 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
       if (className == "TNamed") {
         TNamed *par = (TNamed *) obj;
         TString key = par -> GetName();
-        bool newpar = false;
+        Bool_t newpar = false;
         if (key.Index("NEWPAR")==0) {
           key.Remove(0,6);
           newpar = true;
@@ -65,7 +65,7 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
       else if (className == "TParameter<int>") {
         TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
         TString key = par -> GetName();
-        bool newpar = false;
+        Bool_t newpar = false;
         if (key.Index("NEWPAR")==0) {
           key.Remove(0,6);
           newpar = true;
@@ -79,7 +79,7 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
       else if (className == "TParameter<double>") {
         TParameter<Double_t> *par = (TParameter<Double_t> *) obj;
         TString key = par -> GetName();
-        bool newpar = false;
+        Bool_t newpar = false;
         if (key.Index("NEWPAR")==0) {
           key.Remove(0,6);
           newpar = true;
@@ -90,10 +90,10 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
           out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
         out << endl;
       }
-      else if (className == "TParameter<bool>") {
-        TParameter<bool> *par = (TParameter<bool> *) obj;
+      else if (className == "TParameter<Bool_t>") {
+        TParameter<Bool_t> *par = (TParameter<Bool_t> *) obj;
         TString key = par -> GetName();
-        bool newpar = false;
+        Bool_t newpar = false;
         if (key.Index("NEWPAR")==0) {
           key.Remove(0,6);
           newpar = true;
@@ -180,7 +180,7 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
       ReplaceEnvironmentVariable(val);
       AddFile(val, parName);
     }
-    else if (parType == "b" || parType == "bool" || parType == "bool_t") {
+    else if (parType == "b" || parType == "bool" || parType == "Bool_t") {
       TString sval;
       ss >> sval;
       sval.ToLower();
@@ -297,8 +297,8 @@ void KBParameterContainer::Print(Option_t *option) const
       Double_t value = par -> GetVal();
       kr_info(0) << left << "  " << setw(25) << key << "  d  " << value << endl;
     }
-    else if (className == "TParameter<bool>") {
-      TParameter<bool> *par = (TParameter<bool> *) obj;
+    else if (className == "TParameter<Bool_t>") {
+      TParameter<Bool_t> *par = (TParameter<Bool_t> *) obj;
       TString key = par -> GetName();
       TString value = par -> GetVal() == true ? "true" : "false";
       kr_info(0) << left << "  " << setw(25) << key << "  b  " << value << endl;
@@ -307,7 +307,7 @@ void KBParameterContainer::Print(Option_t *option) const
 }
 
 
-bool KBParameterContainer::SetPar(TString name, Bool_t val, Bool_t overwrite)
+Bool_t KBParameterContainer::SetPar(TString name, Bool_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
     if (overwrite)
@@ -322,7 +322,7 @@ bool KBParameterContainer::SetPar(TString name, Bool_t val, Bool_t overwrite)
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, Int_t val, Bool_t overwrite)
+Bool_t KBParameterContainer::SetPar(TString name, Int_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
     if (overwrite)
@@ -337,7 +337,7 @@ bool KBParameterContainer::SetPar(TString name, Int_t val, Bool_t overwrite)
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, Double_t val, Bool_t overwrite)
+Bool_t KBParameterContainer::SetPar(TString name, Double_t val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
     if (overwrite)
@@ -352,7 +352,7 @@ bool KBParameterContainer::SetPar(TString name, Double_t val, Bool_t overwrite)
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, TString val, Bool_t overwrite)
+Bool_t KBParameterContainer::SetPar(TString name, TString val, Bool_t overwrite)
 {
   if (FindObject(name) != nullptr) {
     if (overwrite)
@@ -367,12 +367,12 @@ bool KBParameterContainer::SetPar(TString name, TString val, Bool_t overwrite)
   return true;
 }
 
-bool KBParameterContainer::SetPar(TString name, const char* val, Bool_t overwrite)
+Bool_t KBParameterContainer::SetPar(TString name, const char* val, Bool_t overwrite)
 {
   return SetPar(name, TString(val), overwrite);
 }
 
-bool KBParameterContainer::GetParBool(TString name)
+Bool_t KBParameterContainer::GetParBool(TString name)
 {
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -452,7 +452,7 @@ KBVector3::Axis KBParameterContainer::GetParAxis(TString name)
   return KBVector3::kNon;
 }
 
-bool KBParameterContainer::CheckPar(TString name)
+Bool_t KBParameterContainer::CheckPar(TString name)
 {
   if (FindObject(name) == nullptr)
     return false;

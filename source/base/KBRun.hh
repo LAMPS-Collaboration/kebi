@@ -8,6 +8,7 @@
 #include "KBDetector.hh"
 #include "KBTpc.hh"
 #include "KBPadPlane.hh"
+#include "KBMCTrack.hh"
 
 #include "TDatabasePDG.h"
 #include "TError.h"
@@ -87,6 +88,10 @@ class KBRun : public KBTask
 
     bool Init(); ///< Initailize KBRun. Init() must be done before Run().
 
+    KBParameterContainer *GetProcessTable() const;
+    KBParameterContainer *GetSDTable() const;
+    KBParameterContainer *GetVolumeTable() const;
+
     void CreateParameterFile(TString name);
 
     /**
@@ -140,6 +145,11 @@ class KBRun : public KBTask
     void SetEveScale(Double_t scale);
     Color_t GetColor();
 
+#ifdef ACTIVATE_EVE
+    void AddEveElementToEvent(KBContainer *eveObj, bool permanent = true);
+    void AddEveElementToEvent(TEveElement *element, bool permanent = true);
+#endif
+
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
 
@@ -159,10 +169,13 @@ class KBRun : public KBTask
     TParticlePDG *GetParticle(Int_t pdgCode);
     TParticlePDG *GetParticle(const char *name);
 
+    void PrintMCTrack(KBMCTrack *track, Option_t *);
+
   private:
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
+
     void CheckIn();
     void CheckOut();
 
@@ -211,6 +224,9 @@ class KBRun : public KBTask
     bool fCheckIn = false;
 
     KBParameterContainer *fRunHeader = nullptr;
+    KBParameterContainer *fProcessTable = nullptr;
+    KBParameterContainer *fSDTable = nullptr;
+    KBParameterContainer *fVolumeTable = nullptr;
 
     KBDetectorSystem *fDetectorSystem = nullptr;
 
