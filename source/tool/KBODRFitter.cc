@@ -8,7 +8,7 @@
 #include <iomanip>
 using namespace std;
 
-ClassImp(KBODRFitter)
+ClassImp(KBODRFitter);
 
 KBODRFitter* KBODRFitter::fInstance = nullptr;
 

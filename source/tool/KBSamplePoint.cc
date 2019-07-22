@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ClassImp(KBSamplePoint)
+ClassImp(KBSamplePoint);
 
 KBSamplePoint::KBSamplePoint()
 {

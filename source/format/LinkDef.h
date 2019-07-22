@@ -13,6 +13,7 @@
 #pragma link C++ class KBWPoint+;
 #pragma link C++ class KBWPointCluster+;
 #pragma link C++ class KBHit+;
+#pragma link C++ class KBBoxHit+;
 #pragma link C++ class KBTpcHit+;
 #pragma link C++ class KBHitList+;
 #pragma link C++ class KBVertex+;
@@ -23,5 +24,7 @@
 #pragma link C++ class KBVector3+;
 
 #pragma link C++ class KBMCRecoMatching+;
+
+#pragma link C++ class STChannelBar+;
 
 #endif

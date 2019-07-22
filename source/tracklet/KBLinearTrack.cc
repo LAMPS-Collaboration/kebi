@@ -24,7 +24,7 @@ void KBLinearTrack::SetTrack(TVector3 pos1, TVector3 pos2)
   KBGeoLine::SetLine(pos1, pos2);
 }
 
-void KBLinearTrack::Clear(Option_t *option)
+void KBLinearTrack::Clear(Option_t *)
 {
   fX1 = -1;
   fY1 = -1;

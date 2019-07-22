@@ -26,7 +26,7 @@ class KBSamplePoint
     Double_t fRMS;        ///< RMS of the value
     Double_t fWeightSum;  ///< Sum of weights from the updates
 
-  ClassDef(KBSamplePoint, 1)
+  ClassDef(KBSamplePoint, 1);
 };
 
 #endif

@@ -112,7 +112,7 @@ TVector3 KBMCTrack::GetPrimaryPosition() const { return TVector3(fVX[0], fVY[0],
 void KBMCTrack::AddStep(KBMCStep *hit) { fStepArray.push_back(hit); }
 vector<KBMCStep *> *KBMCTrack::GetStepArray() { return &fStepArray; }
 
-TVector3 KBMCTrack::Momentum(Double_t B) const { return GetMomentum(); }
+TVector3 KBMCTrack::Momentum(Double_t) const { return GetMomentum(); }
 TVector3 KBMCTrack::PositionAtHead() const { return GetPrimaryPosition() + GetMomentum(); }
 TVector3 KBMCTrack::PositionAtTail() const { return GetPrimaryPosition(); }
 Double_t KBMCTrack::TrackLength() const

@@ -887,19 +887,20 @@ void KBRun::AddEveElementToEvent(KBContainer *eveObj, bool permanent)
   if (eveObj -> IsEveSet()) {
     TEveElement *eveSet = eveObj -> CreateEveElement();
     eveObj -> AddToEveSet(eveSet, fEveScale);
-    AddEveElementToEvent(eveSet);
+    AddEveElementToEvent(eveSet, permanent);
   }
   else {
     TEveElement *eveElement = eveObj -> CreateEveElement();
     eveObj -> SetEveElement(eveElement, fEveScale);
-    AddEveElementToEvent(eveElement);
+    AddEveElementToEvent(eveElement, permanent);
   }
 }
 
 void KBRun::AddEveElementToEvent(TEveElement *element, bool permanent)
 {
   gEve -> AddElement(element);
-  if (!permanent) fEveElementList.push_back(element);
+  if (permanent) fPermanentEveElementList.push_back(element);
+  else fEveElementList.push_back(element);
   gEve -> Redraw3D();
 }
 #endif

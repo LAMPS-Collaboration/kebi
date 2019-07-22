@@ -18,7 +18,7 @@ KBPadPlane::KBPadPlane(const char *name, const char *title)
 {
 }
 
-void KBPadPlane::Print(Option_t *option) const
+void KBPadPlane::Print(Option_t *) const
 {
   Int_t numChannels = fChannelArray -> GetEntries();
   auto countPads = 0;

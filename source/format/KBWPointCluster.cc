@@ -129,9 +129,6 @@ TVector3 KBWPointCluster::GetPosSigma()
 }
 
 #ifdef ACTIVATE_EVE
-bool KBWPointCluster::DrawByDefault() { return false; }
-bool KBWPointCluster::IsEveSet() { return true; }
-
 TEveElement *KBWPointCluster::CreateEveElement()
 {
   auto pointSet = new TEvePointSet("WPointCluster");
@@ -140,15 +137,5 @@ TEveElement *KBWPointCluster::CreateEveElement()
   pointSet -> SetMarkerStyle(20);
 
   return pointSet;
-}
-
-void KBWPointCluster::SetEveElement(TEveElement *)
-{
-}
-
-void KBWPointCluster::AddToEveSet(TEveElement *eveSet)
-{
-  auto pointSet = (TEvePointSet *) eveSet;
-  pointSet -> SetNextPoint(fX, fY, fZ);
 }
 #endif

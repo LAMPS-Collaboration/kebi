@@ -16,7 +16,7 @@ KBDetector::KBDetector(const char *name, const char *title)
 {
 }
 
-void KBDetector::Print(Option_t *option) const
+void KBDetector::Print(Option_t *) const
 {
   kb_info << fTitle << endl;
   for (auto iPlane = 0; iPlane < fNumPlanes; ++iPlane) {

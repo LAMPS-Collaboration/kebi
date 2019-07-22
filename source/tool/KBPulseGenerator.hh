@@ -109,7 +109,7 @@ class KBPulseGenerator
   private:
     static KBPulseGenerator *fInstance;
 
-  ClassDef(KBPulseGenerator, 1)
+  ClassDef(KBPulseGenerator, 1);
 };
 
 #endif

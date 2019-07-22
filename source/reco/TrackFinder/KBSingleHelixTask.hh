@@ -13,6 +13,7 @@ class KBSingleHelixTask : public KBTask
     virtual ~KBSingleHelixTask() {}
 
     bool Init();
+    bool EndOfRun();
     void Exec(Option_t*);
 
     void SetTrackPersistency(bool val);
@@ -22,6 +23,11 @@ class KBSingleHelixTask : public KBTask
     TClonesArray* fTrackArray;
 
     bool fPersistency = true;
+
+    TTree *fTree = nullptr;
+    Int_t fNumHits;
+    Double_t fLength;
+    Double_t fRMS, fRMSR, fRMST;
 
     KBVector3::Axis fReferenceAxis;
 

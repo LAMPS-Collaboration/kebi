@@ -182,7 +182,7 @@ void KBH2Map::FitCurve(KBCurve* curve, Int_t itMax)
       auto yBinAtXLE = int((yAtXLE - fLowLimitY)/fBinWidthY);
       auto yBinAtXHE = int((yAtXHE - fLowLimitY)/fBinWidthY);
 
-      auto yAtCenterOfXBin = curve -> Eval((xLE+xHE)/2.);
+      //auto yAtCenterOfXBin = curve -> Eval((xLE+xHE)/2.);
 
       if (yBinAtXLE > yBinAtXHE) {
         auto temp = yBinAtXLE;
@@ -204,7 +204,7 @@ void KBH2Map::FitCurve(KBCurve* curve, Int_t itMax)
         //auto dY = yAtYBin - yAtCenterOfXBin;
 
         auto point = fH2Points[ibinx][ibiny];
-        auto vx = point -> GetVX();
+        //auto vx = point -> GetVX();
         auto vy = point -> GetVY();
 
         //curve -> Push(binx, biny, vx/fMaxV, vy/fMaxV);

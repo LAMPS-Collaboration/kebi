@@ -233,6 +233,7 @@ class KBRun : public KBTask
 #ifdef ACTIVATE_EVE
     TEveEventManager *fEveEventManager = nullptr;
     std::vector<TEveElement *> fEveElementList;
+    std::vector<TEveElement *> fPermanentEveElementList;
 
     Double_t fEveScale = 1;
 #endif

@@ -23,7 +23,7 @@ Double_t KBCurve::GetUnitLength() { return fUnitLength; }
 void KBCurve::SetTension(Double_t tension) { fTension = tension; }
 Double_t KBCurve::GetTension() { return fTension; }
 
-void KBCurve::Push(Double_t x, Double_t y, Double_t fx, Double_t fy)
+void KBCurve::Push(Double_t x, Double_t y, Double_t /*fx*/, Double_t fy)
 {
   for (auto iPoint = 0; iPoint < fNpoints; ++iPoint) {
     auto dx = x - fX[iPoint];

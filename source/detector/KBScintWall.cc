@@ -21,7 +21,7 @@ void KBScintWall::Clear(Option_t *option)
   KBDetectorPlane::Clear(option);
 }
 
-void KBScintWall::Print(Option_t *option) const
+void KBScintWall::Print(Option_t *) const
 {
   kb_info << "containing " << fChannelArray -> GetEntries() << " pads" << endl;
 }
@@ -119,19 +119,19 @@ Int_t KBScintWall::FindChannelID(Double_t i, Double_t j)
   return layer;
 }
 
-TCanvas *KBScintWall::GetCanvas(Option_t *option)
+TCanvas *KBScintWall::GetCanvas(Option_t *)
 {
   //@todo
   return new TCanvas();
 }
 
-void KBScintWall::DrawFrame(Option_t *option)
+void KBScintWall::DrawFrame(Option_t *)
 {
   //@todo
   return;
 }
 
-TH2* KBScintWall::GetHist(Option_t *option)
+TH2* KBScintWall::GetHist(Option_t *)
 {
   //@todo
   return (TH2 *) nullptr;

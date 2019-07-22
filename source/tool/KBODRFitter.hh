@@ -100,7 +100,7 @@ class KBODRFitter
   private:
     static KBODRFitter *fInstance;
 
-  ClassDef(KBODRFitter, 1)
+  ClassDef(KBODRFitter, 1);
 };
 
 #endif

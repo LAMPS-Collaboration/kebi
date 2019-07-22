@@ -8,7 +8,7 @@
 #include <iomanip>
 using namespace std;
 
-ClassImp(KBPulseGenerator)
+ClassImp(KBPulseGenerator);
 
 KBPulseGenerator* KBPulseGenerator::fInstance = nullptr;
 

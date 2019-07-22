@@ -6,8 +6,6 @@
 #include <vector>
 #include "KBTracklet.hh"
 
-#include "STExtrapolatedTrack.hh"
-
 using namespace std;
 
 /**

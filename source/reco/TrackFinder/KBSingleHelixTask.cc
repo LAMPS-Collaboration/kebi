@@ -21,6 +21,16 @@ bool KBSingleHelixTask::Init()
   fTrackArray = new TClonesArray("KBHelixTrack");
   run -> RegisterBranch("Tracklet", fTrackArray, fPersistency);
 
+  {
+    run -> GetOutputFile() -> cd();
+    fTree = new TTree("track","");
+    fTree -> Branch("l",&fLength);
+    fTree -> Branch("n",&fNumHits);
+    fTree -> Branch("rms",&fRMS);
+    fTree -> Branch("rmst",&fRMST);
+    fTree -> Branch("rmsr",&fRMSR);
+  }
+
   return true;
 }
 
@@ -40,9 +50,24 @@ void KBSingleHelixTask::Exec(Option_t*)
   track -> Fit();
   track -> FinalizeHits();
 
+  fNumHits = track -> GetNumHits();
+  fLength = track -> TrackLength();
+  fRMS = track -> GetRMS();
+  fRMSR = track -> GetRMSR();
+  fRMST = track -> GetRMST();
+  fTree -> Fill();
+
   track -> Print("s");
 
   return;
+}
+
+bool KBSingleHelixTask::EndOfRun()
+{
+  KBRun::GetRun() -> GetOutputFile() -> cd();
+  fTree -> Write();
+
+  return true;
 }
 
 void KBSingleHelixTask::SetTrackPersistency(bool val) { fPersistency = val; }

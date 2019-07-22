@@ -11,7 +11,7 @@ KBExtrapolatedTrack::KBExtrapolatedTrack()
   Clear();
 }
 
-void KBExtrapolatedTrack::Clear(Option_t *option)
+void KBExtrapolatedTrack::Clear(Option_t *)
 {
   KBTracklet::Clear();
 
@@ -21,7 +21,7 @@ void KBExtrapolatedTrack::Clear(Option_t *option)
   fPoints.clear();
 }
 
-void KBExtrapolatedTrack::Print(Option_t *option) const
+void KBExtrapolatedTrack::Print(Option_t *) const
 {
   cout << "KBExtrapolatedTrack " << fTrackID << "(" << fParentID << ") with "
     << fPoints.size() << " points" << endl;;

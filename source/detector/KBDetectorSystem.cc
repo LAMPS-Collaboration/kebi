@@ -36,7 +36,7 @@ void KBDetectorSystem::AddParameterContainer(TString fname) {
   SetDetectorPar();
 }
 
-void KBDetectorSystem::Print(Option_t *option) const
+void KBDetectorSystem::Print(Option_t *) const
 {
   TIter next(this);
   KBDetector *detector;

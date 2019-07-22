@@ -40,11 +40,7 @@ class KBWPointCluster : public KBWPoint
     Double_t  MeanError(Int_t i, Int_t j) { return fCov[i][j]/fW; }
 
 #ifdef ACTIVATE_EVE
-    virtual bool DrawByDefault();
-    virtual bool IsEveSet();
     virtual TEveElement *CreateEveElement();
-    virtual void SetEveElement(TEveElement *element);
-    virtual void AddToEveSet(TEveElement *eveSet);
 #endif
 
   protected:

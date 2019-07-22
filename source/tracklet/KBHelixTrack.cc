@@ -152,7 +152,7 @@ void KBHelixTrack::SetEveElement(TEveElement *element, Double_t scale)
   }
 }
 
-void KBHelixTrack::AddToEveSet(TEveElement *, Double_t scale)
+void KBHelixTrack::AddToEveSet(TEveElement *, Double_t)
 {
 }
 #endif

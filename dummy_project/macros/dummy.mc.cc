@@ -4,7 +4,6 @@
 #include "QGSP_BERT.hh"
 #include "G4StepLimiterPhysics.hh"
 #include "KBG4RunManager.hh"
-#include "KBMCDataManager.hh"
 #include "DUMMYDetectorConstruction.hh"
 #include "KBPrimaryGeneratorAction.hh"
 #include "KBEventAction.hh"
@@ -23,9 +22,12 @@
  *
  * - The physics list may be replaced by user list.
  * - The PrimaryGeneratorAction, EventAction, TrackingAction, KBSteppingAction
- *   may be replaced by user actions but the data handling has to be done again.
- *   Refere to KBMCDataManager for this case.
- *   (http://nuclear.korea.ac.kr/~lamps/kebi/classKBMCDataManager.html)
+ *   are automatically added to run manager if KBG4RunaManager is used
+ *   unless such user class is added to run manager.
+ *   They may be replaced by user actions but the data handling has to be done again.
+ *   This is not recommanded since it is same as writting geant4 from the scratch,
+ *   but if one intend to do it, refere to KBG4RunManager
+ *   (http://nuclear.korea.ac.kr/~lamps/kebi/classKBG4RunManager.html).
  *
  * - The parameter file is essential for running simulation ex) dummy.par
  * - In the parameter file, 5 parameters can be used for simulation.
@@ -53,10 +55,6 @@ int main(int argc, char** argv)
   runManager -> SetUserInitialization(physicsList);
   runManager -> SetParameterContainer(argv[1]);
   runManager -> SetUserInitialization(new DUMMYDetectorConstruction());
-  runManager -> SetUserAction(new KBPrimaryGeneratorAction());
-  runManager -> SetUserAction(new KBEventAction());
-  runManager -> SetUserAction(new KBTrackingAction());
-  runManager -> SetUserAction(new KBSteppingAction());
   runManager -> Initialize();
   runManager -> Run(argc, argv);
 
