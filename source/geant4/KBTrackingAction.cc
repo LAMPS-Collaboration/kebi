@@ -1,6 +1,4 @@
 #include "KBTrackingAction.hh"
-#include "KBG4RunManager.hh"
-#include "KBMCDataManager.hh"
 
 #include "G4Event.hh"
 #include "G4RunManager.hh"
@@ -9,9 +7,15 @@
 #include "G4VProcess.hh"
 
 KBTrackingAction::KBTrackingAction()
+: G4UserTrackingAction()
 {
-  KBG4RunManager *man = (KBG4RunManager *) G4RunManager::GetRunManager();
-  fProcessTable = man -> GetProcessTable();
+  fRunManager = (KBG4RunManager *) KBG4RunManager::GetRunManager();
+}
+
+KBTrackingAction::KBTrackingAction(KBG4RunManager *man)
+: G4UserTrackingAction(), fRunManager(man)
+{
+  fProcessTable = fRunManager -> GetProcessTable();
 }
 
 void KBTrackingAction::PreUserTrackingAction(const G4Track* track)
@@ -26,5 +30,5 @@ void KBTrackingAction::PreUserTrackingAction(const G4Track* track)
     processName = process -> GetProcessName();
   G4int processID = fProcessTable -> GetParInt(processName);
 
-  KBMCDataManager::Instance() -> AddMCTrack(track -> GetTrackID(), track -> GetParentID(), track -> GetDefinition() -> GetPDGEncoding(), momentum.x(), momentum.y(), momentum.z(), volumeID, position.x(), position.y(), position.z(), processID);
+  fRunManager -> AddMCTrack(track -> GetTrackID(), track -> GetParentID(), track -> GetDefinition() -> GetPDGEncoding(), momentum.x(), momentum.y(), momentum.z(), volumeID, position.x(), position.y(), position.z(), processID);
 }
