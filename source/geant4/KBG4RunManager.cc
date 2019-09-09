@@ -162,7 +162,7 @@ void KBG4RunManager::SetOutputFile(TString name)
       fStepArrayList -> Add(stepArray);
 
       TString edepSumName = Form("EdepSum%d", copyNo);
-      Int_t fIdxOfCopyNo[copyNo] = fNumActiveVolumes;
+      fIdxOfCopyNo[copyNo] = fNumActiveVolumes;
       fTree -> Branch(edepSumName, &fEdepSumArray[fNumActiveVolumes]);
       ++fNumActiveVolumes;
 
@@ -304,7 +304,7 @@ void KBG4RunManager::NextEvent()
       stepArray -> Clear("C");
   }
 
-  memset(fEdepSumArray, 0, sizeof(Double_t)*fNumSensitiveDetectors);
+  memset(fEdepSumArray, 0, sizeof(Double_t)*fNumActiveVolumes);
 }
 
 void KBG4RunManager::WriteToFile(TObject *obj)
