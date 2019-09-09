@@ -110,9 +110,9 @@ TVector3 KBGeoHelix::HelicoidMap(TVector3 pos, Double_t alpha) const
 {
   Double_t tlenH = TravelLengthAtAlpha(fH);
   Double_t tlenT = TravelLengthAtAlpha(fT);
-  Double_t tLen0 = tlenH;
+  Double_t tlen0 = tlenH;
   if (tlenH > tlenT)
-    tLen0 = tlenT;
+    tlen0 = tlenT;
 
   KBVector3 posr(pos, fA);
   KBVector3 poca(PositionAtAlpha(alpha), fA);
@@ -122,5 +122,5 @@ TVector3 KBGeoHelix::HelicoidMap(TVector3 pos, Double_t alpha) const
   Double_t dr = sqrt(di*di + dj*dj) - fR;
   Double_t dk = posr.K() - poca.K();
 
-  return TVector3(dr, dk/CosDip(), dk*TMath::Sin(DipAngle()) + TravelLengthAtAlpha(alpha) - tLen0);
+  return TVector3(dr, dk/CosDip(), dk*TMath::Sin(DipAngle()) + TravelLengthAtAlpha(alpha) - tlen0);
 }

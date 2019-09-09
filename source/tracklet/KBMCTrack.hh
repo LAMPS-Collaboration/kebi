@@ -86,6 +86,9 @@ class KBMCTrack : public KBTracklet
     virtual void AddToEveSet(TEveElement *, Double_t scale=1);
 #endif
 
+    virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+    virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, bool (*fisout)(TVector3 pos), Double_t scale=1);
+
   protected:
     vector<Double_t> fPX;
     vector<Double_t> fPY;

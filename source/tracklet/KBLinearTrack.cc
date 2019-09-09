@@ -19,6 +19,72 @@ KBLinearTrack::KBLinearTrack(TVector3 pos1, TVector3 pos2)
 {
 }
 
+void KBLinearTrack::SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2)
+{
+  fX1 = x1;
+  fY1 = y1;
+  fZ1 = z1;
+  fX2 = x2;
+  fY2 = y2;
+  fZ2 = z2;
+
+  auto numHits = fHitList.GetNumHits();
+
+  if (numHits > 2)
+  {
+    TVector3 pos_min;
+    TVector3 pos_max;
+
+    Double_t length_min = DBL_MAX;
+    Double_t length_max = -DBL_MAX;
+
+    fWidth = 0;
+    fHeight = 0;
+
+    KBHit *hit;
+
+    for (auto iHit=0; iHit<numHits; ++iHit)
+    {
+      hit = fHitList.GetHit(iHit);
+      auto pos = hit -> GetPosition();
+      auto length = Length(pos);
+
+      if (length < length_min) { length_min = length; pos_min = pos; }
+      if (length > length_max) { length_max = length; pos_max = pos; }
+
+      auto poca = ClosestPointOnLine(pos);
+      auto dist = (poca - pos);
+
+      auto distw = sqrt(dist.X() * dist.X() + dist.Z() * dist.Z());
+      auto disth = dist.Y();
+
+      if (fPerpDirectionInPlane.Mag() == 0 && dist.Mag() > disth)
+        fPerpDirectionInPlane = dist.Unit();
+
+      fWidth += (distw*distw);
+      fHeight += (disth*disth);
+    }
+
+    fWidth = sqrt(fWidth)/numHits;
+    fHeight = sqrt(fHeight)/numHits;
+
+    pos_min = ClosestPointOnLine(pos_min);
+    pos_max = ClosestPointOnLine(pos_max);
+
+    fX1 = pos_min.X();
+    fY1 = pos_min.Y();
+    fZ1 = pos_min.Z();
+    fX2 = pos_max.X();
+    fY2 = pos_max.Y();
+    fZ2 = pos_max.Z();
+  }
+}
+
+void KBLinearTrack::SetLine(TVector3 pos1, TVector3 pos2)
+{
+  SetLine(pos1.X(),pos1.Y(),pos1.Z(),pos2.X(),pos2.Y(),pos2.Z());
+}
+
 void KBLinearTrack::SetTrack(TVector3 pos1, TVector3 pos2)
 {
   KBGeoLine::SetLine(pos1, pos2);
@@ -106,3 +172,42 @@ Double_t KBLinearTrack::LengthAt(TVector3 point) const
 
 void KBLinearTrack::SetQuality(Double_t val) { fQuality = val; }
 Double_t KBLinearTrack::GetQuality() { return fQuality; }
+
+TGraph *KBLinearTrack::TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t)
+{
+  auto graph = new TGraph();
+
+  KBVector3 posi(fX1,fY1,fZ1);
+  KBVector3 posf(fX2,fY2,fZ2);
+
+  graph -> SetPoint(0,posi.At(axis1), posi.At(axis2));
+  graph -> SetPoint(1,posf.At(axis1), posf.At(axis2));
+
+  return graph;
+}
+
+TGraph *KBLinearTrack::CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale)
+{
+  auto graph = new TGraph();
+
+  KBVector3 posi(fX1,fY1,fZ1);
+  KBVector3 posf(fX2,fY2,fZ2);
+
+  auto xi = posi.At(axis1);
+  auto yi = posi.At(axis2);
+  auto xf = posf.At(axis1);
+  auto yf = posf.At(axis2);
+
+  auto perp = fPerpDirectionInPlane;
+  perp = perp.Unit();
+  auto dw = scale*fWidth*KBVector3(perp);
+
+  graph -> SetPoint(graph->GetN(), xi+dw.At(axis1), yi+dw.At(axis2));
+  graph -> SetPoint(graph->GetN(), xi-dw.At(axis1), yi-dw.At(axis2));
+  graph -> SetPoint(graph->GetN(), xf-dw.At(axis1), yf-dw.At(axis2));
+  graph -> SetPoint(graph->GetN(), xf+dw.At(axis1), yf+dw.At(axis2));
+  graph -> SetPoint(graph->GetN(), xi+dw.At(axis1), yi+dw.At(axis2));
+
+  return graph;
+}
+

@@ -317,6 +317,9 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     virtual TVector3 ExtrapolateByLength(Double_t l) const;  ///< Extrapolate by length (tail:0), returns extrapolated position
     virtual Double_t LengthAt(TVector3 point) const;         ///< Length at POCA from point, where tail=0, head=TrackLength
 
+
+    TGraph *CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+
   ClassDef(KBHelixTrack, 1)
 };
 

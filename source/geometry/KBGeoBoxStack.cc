@@ -141,11 +141,11 @@ TH2Poly *KBGeoBoxStack::DrawStackHistPoly(TString name, TString title, kbaxis_t 
     a2 = fStackAxis;
     if (KBVector3::IsNegative(a1%a2)) { auto ar = a1; a1 = a2; a2 = ar; }
   }
-  kbaxis_t a3 = ++(a1%a2);
+  //kbaxis_t a3 = ++(a1%a2);
 
   auto hist = new TH2Poly();
   for (auto idx = 0; idx < fNumStacks; ++idx) {
-    auto box2D = GetBox(idx).GetFace(a3);
+    auto box2D = GetBox(idx).GetFace(a1,a2);
     auto cnn = KBVector3(box2D.GetCorner(-1,-1));
     auto cnp = KBVector3(box2D.GetCorner(1,1));
     hist -> AddBin(cnn.At(a1),cnn.At(a2),cnp.At(a1),cnp.At(a2));

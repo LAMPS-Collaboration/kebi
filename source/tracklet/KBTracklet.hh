@@ -69,8 +69,10 @@ class KBTracklet : public KBMCTagged
 #endif
 
     virtual bool DoDrawOnDetectorPlane();
-    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
-    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos));
+    virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+    virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, bool (*fisout)(TVector3 pos), Double_t scale=1);
+
+    virtual TGraph *CrossSectionOnPlane(kbaxis_t, kbaxis_t, Double_t) { return (TGraph *) nullptr; }
 
   ClassDef(KBTracklet, 3)
 };

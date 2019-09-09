@@ -36,8 +36,8 @@ class KBExtrapolatedTrack : public KBTracklet
 
     virtual Double_t LengthAt(TVector3) const { return 0.; } // TODO
 
-    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2);
-    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos));
+    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, Double_t scale=1);
+    virtual TGraph *TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos), Double_t scale=1);
 
 
 

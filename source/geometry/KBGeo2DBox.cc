@@ -102,9 +102,9 @@ KBGeoLine KBGeo2DBox::GetEdge(Int_t xpm, Int_t ypm) const
 TGraph *KBGeo2DBox::DrawGraph()
 {
   auto graph = new TGraph();
-  for (auto i : {0,1,2,4,0}) {
+  for (auto i : {0,1,2,3,0}) {
     TVector3 cn = GetCorner(i);
-    graph -> SetPoint(i,cn.X(),cn.Y());
+    graph -> SetPoint(graph -> GetN(),cn.X(),cn.Y());
   }
 
   return graph;

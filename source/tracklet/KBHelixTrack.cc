@@ -912,3 +912,40 @@ Double_t KBHelixTrack::LengthAt(TVector3 point) const
   auto alpha = AlphaAtPosition(point);
   return ExtrapolateToAlpha(alpha);
 }
+
+TGraph *KBHelixTrack::CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scalerms)
+{
+  auto graph = new TGraph();
+  auto scale = 1.;
+
+  KBVector3 center(fA,fI,fJ,0);
+  center = KBVector3(center.GetXYZ(), KBVector3::kZ);
+
+  //Double_t rms = scalerms*fRMSR;
+  Double_t rms = scalerms;
+
+  for (Double_t r = 0.; r < 1.001; r += 0.02) {
+    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
+    //cout << rms << endl;
+    auto perp = KBVector3(TVector3(pos-center).Unit(), KBVector3::kZ);
+    pos = scale * (pos + rms * perp);
+    //cout << "  " << pos.Z() << " " << pos.X() << endl;
+    //cout << "  " << perp.Z() << " " << perp.X() << endl;
+    //cout << "  " << pos.Z() << " " << pos.X() << endl;
+    graph -> SetPoint(graph->GetN(), pos.At(axis1), pos.At(axis2));
+  }
+
+  for (Double_t r = 1.; r >= 0; r -= 0.02) {
+    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
+    auto perp = KBVector3(TVector3(pos-center).Unit(), KBVector3::kZ);
+    pos = scale * (pos - rms * perp);
+    graph -> SetPoint(graph->GetN(), pos.At(axis1), pos.At(axis2));
+  }
+
+  auto pos = KBVector3(ExtrapolateByRatio(0),KBVector3::kZ);
+  auto perp = KBVector3(TVector3(pos-center).Unit(), KBVector3::kZ);
+  pos = scale * (pos + rms * perp);
+  graph -> SetPoint(graph->GetN(), pos.At(axis1), pos.At(axis2));
+
+  return graph;
+}

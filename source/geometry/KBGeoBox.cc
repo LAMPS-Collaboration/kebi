@@ -1,3 +1,4 @@
+#include "KBGlobal.hh"
 #include "KBGeoBox.hh"
 #include <iomanip>
 #include <cmath>
@@ -24,18 +25,18 @@ void KBGeoBox::Print(Option_t *) const
   kb_out << "  Center      : " << fX << " " << fY << " " << fZ << std::endl;
   kb_out << "  Displacement: " << fdX << " " << fdY << " " << fdZ << std::endl;
   kb_out << std::left << std::endl;;
-  kb_out << "             (7)-----------(0) +y=" << fY+fdY << std::endl;
+  kb_out << "             (7)-----------(0) +y=" << fY+.5*fdY << std::endl;
   kb_out << "             /|            /|" << std::endl;
   kb_out << "            / |           / |" << std::endl;
   kb_out << "           /  |          /  |" << std::endl;
   kb_out << "         (6)-----------(1)  |" << std::endl;
-  kb_out << "          |   |         |   |  -y=" << fY-fdY << std::endl;
-  kb_out << " Y   Z    |  (4)--------|--(3) +z=" << fZ+fdZ << std::endl;
+  kb_out << "          |   |         |   |  -y=" << fY-.5*fdY << std::endl;
+  kb_out << " Y   Z    |  (4)--------|--(3) +z=" << fZ+.5*fdZ << std::endl;
   kb_out << " ^  7     |  /          |  /" << std::endl;
   kb_out << " | /      | /           | /" << std::endl;
   kb_out << " |/       |/            |/" << std::endl;
-  kb_out << " *--->X  (5)-----------(2) -z=" << fZ - fdZ << std::endl;
-  kb_out << "         -x=" << std::setw(11) << fX-fdX << "+x=" << fX+fdX << std::endl;
+  kb_out << " *--->X  (5)-----------(2) -z=" << fZ - .5*fdZ << std::endl;
+  kb_out << "         -x=" << std::setw(11) << fX-.5*fdX << "+x=" << fX+.5*fdX << std::endl;
   kb_out << std::right;
 }
 
@@ -119,30 +120,29 @@ KBGeoLine KBGeoBox::GetEdge(Int_t xpm, Int_t ypm, Int_t zpm) const
        if (xpm == 0) return KBGeoLine(GetCorner(-1,ypm,zpm),GetCorner(1,ypm,zpm));
   else if (ypm == 0) return KBGeoLine(GetCorner(xpm,-1,zpm),GetCorner(xpm,1,zpm));
   else if (zpm == 0) return KBGeoLine(GetCorner(xpm,ypm,-1),GetCorner(xpm,ypm,1));
-  else KBGeoLine();
+
+  return KBGeoLine();
 }
 
-KBGeo2DBox KBGeoBox::GetFace(Int_t idx) const
+KBGeo2DBox KBGeoBox::GetFace(kbaxis_t xaxis, kbaxis_t yaxis) const
 {
+  kbaxis_t face_axis = xaxis % yaxis;
+  Int_t idx = face_axis - 1;
+
   // idx :         0   1   2   3   4   5
-  // face:        +x  -x  +y  -y  -z  +z
-  Int_t cidx1[] = {0,  4,  0,  2,  1,  3};
-  Int_t cidx2[] = {2,  6,  6,  4,  5,  7};
+  // face:        +x  -x  +y  -y  +z  -z
+  Int_t cidx1[] = {0,  4,  0,  2,  3,  1};
+  Int_t cidx2[] = {2,  6,  6,  4,  7,  5};
 
-  auto cn1 = GetCorner(cidx1[idx]);
-  auto cn2 = GetCorner(cidx2[idx]);
+  auto cn1 = KBVector3(GetCorner(cidx1[idx]));
+  auto cn2 = KBVector3(GetCorner(cidx2[idx]));
 
-  return KBGeo2DBox(cn1.X(),cn2.X(),cn1.Y(),cn2.Y());
-}
-
-KBGeo2DBox KBGeoBox::GetFace(kbaxis_t axis) const
-{
-  return GetFace(Int_t(axis)-1);
+  return KBGeo2DBox(cn1.At(xaxis),cn2.At(xaxis),cn1.At(yaxis),cn2.At(yaxis));
 }
 
 TGraph *KBGeoBox::Draw2DBox(KBVector3::Axis axis1, KBVector3::Axis axis2)
 {
-  return GetFace(axis1*axis2).DrawGraph();
+  return GetFace(axis1,axis2).DrawGraph();
 }
 
 bool KBGeoBox::IsInside(TVector3 pos)

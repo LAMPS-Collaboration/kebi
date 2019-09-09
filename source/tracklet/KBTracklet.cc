@@ -147,7 +147,7 @@ bool KBTracklet::DoDrawOnDetectorPlane()
   return true;
 }
 
-TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2)
+TGraph *KBTracklet::TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale)
 {
   if (fTrajectoryOnPlane == nullptr) {
     fTrajectoryOnPlane = new TGraph();
@@ -157,14 +157,14 @@ TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axi
   fTrajectoryOnPlane -> Set(0);
 
   for (Double_t r = 0.; r < 1.001; r += 0.02) {
-    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
+    auto pos = scale * KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
     fTrajectoryOnPlane -> SetPoint(fTrajectoryOnPlane->GetN(), pos.At(axis1), pos.At(axis2));
   }
 
   return fTrajectoryOnPlane;
 }
 
-TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos))
+TGraph *KBTracklet::TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, bool (*fisout)(TVector3 pos), Double_t scale)
 {
   if (fTrajectoryOnPlane == nullptr) {
     fTrajectoryOnPlane = new TGraph();
@@ -175,7 +175,7 @@ TGraph *KBTracklet::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axi
 
   bool isout;
   for (Double_t r = 0.; r < 100.; r += 0.05) {
-    auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
+    auto pos = scale * KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
     isout = fisout(pos);
     if (isout)
       break;

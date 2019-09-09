@@ -195,7 +195,7 @@ TVector3 KBExtrapolatedTrack::ExtrapolateByLength(Double_t length) const
   return point;
 }
 
-TGraph *KBExtrapolatedTrack::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2)
+TGraph *KBExtrapolatedTrack::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, Double_t)
 {
   if (fTrajectoryOnPlane == nullptr) {
     fTrajectoryOnPlane = new TGraph();
@@ -215,7 +215,7 @@ TGraph *KBExtrapolatedTrack::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3:
   return fTrajectoryOnPlane;
 }
 
-TGraph *KBExtrapolatedTrack::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos))
+TGraph *KBExtrapolatedTrack::TrajectoryOnPlane(KBVector3::Axis axis1, KBVector3::Axis axis2, bool (*fisout)(TVector3 pos), Double_t)
 {
   if (fTrajectoryOnPlane == nullptr) {
     fTrajectoryOnPlane = new TGraph();

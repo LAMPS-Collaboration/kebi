@@ -38,8 +38,9 @@ class KBGeoBox : public KBGeoRotated
     KBGeoLine GetEdge(Int_t idxCorner1, Int_t idxCorner2) const;
     KBGeoLine GetEdge(Int_t xpm, Int_t ypm, Int_t zpm) const; ///< pm of edge axis is 0 while the other two should be 1(high) or -1(low)
 
-    KBGeo2DBox GetFace(Int_t idx) const;
-    KBGeo2DBox GetFace(kbaxis_t axis) const;
+    KBGeo2DBox GetFace(kbaxis_t xaxis, kbaxis_t yaxis) const;
+    //KBGeo2DBox GetFace(Int_t idx) const;
+    //KBGeo2DBox GetFace(kbaxis_t axis) const;
 
     TGraph *Draw2DBox(kbaxis_t axis1 = KBVector3::kX, kbaxis_t axis2 = KBVector3::kY);
 

@@ -15,6 +15,9 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
     void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
 
+    virtual void SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, Double_t y2, Double_t z2);
+    virtual void SetLine(TVector3 pos1, TVector3 pos2);
+
     virtual bool Fit();
 
     void SetQuality(Double_t val);
@@ -35,8 +38,16 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
 
     virtual Double_t LengthAt(TVector3 point) const;
 
+
+    virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+    virtual TGraph *CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+
   protected:
     Double_t fQuality;
+
+    Double_t fWidth = 0;
+    Double_t fHeight = 0;
+    TVector3 fPerpDirectionInPlane;
 
   ClassDef(KBLinearTrack, 1)
 };

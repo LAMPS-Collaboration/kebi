@@ -72,33 +72,26 @@ Double_t KBGeoLine::Length() const { return std::sqrt((fX1-fX2)*(fX1-fX2) + (fY1
 
 void KBGeoLine::ClosestPointOnLine(Double_t x, Double_t y, Double_t z, Double_t &x0, Double_t &y0, Double_t &z0) const
 {
-  Double_t xv = fX2 - fX1;
-  Double_t yv = fY2 - fY1;
-  Double_t zv = fZ2 - fZ1;
+  auto poca = ClosestPointOnLine(TVector3(x,y,z));
 
-  Double_t norm = 1./std::sqrt(xv*xv + yv*yv + zv*zv);
-
-  xv = norm*xv;
-  yv = norm*yv;
-  zv = norm*zv;
-
-  Double_t xp = x - fX1;
-  Double_t yp = y - fY1;
-  Double_t zp = z - fZ1;
-
-  Double_t l = xv*xp + yv*yp + zv*zp;
-
-  x0 = fX1 + l*xv;
-  y0 = fY1 + l*yv;
-  z0 = fZ1 + l*zv;
+  x0 = poca.X();
+  y0 = poca.Y();
+  z0 = poca.Z();
 }
 
 TVector3 KBGeoLine::ClosestPointOnLine(TVector3 pos) const
 {
-  Double_t x0 = 0, y0 = 0, z0 = 0;
-  ClosestPointOnLine(pos.X(), pos.Y(), pos.Z(), x0, y0, z0);
+  TVector3 direction = Direction();
+  direction = direction.Unit();
 
-  return TVector3(x0, y0, z0);
+  TVector3 point1(fX1, fY1, fZ1);
+
+  TVector3 x1ToPos = pos - point1;
+  Double_t l = direction.Dot(x1ToPos);
+
+  TVector3 poca = point1 + l*direction;
+
+  return poca;
 }
 
 Double_t KBGeoLine::DistanceToLine(Double_t x, Double_t y, Double_t z) const
