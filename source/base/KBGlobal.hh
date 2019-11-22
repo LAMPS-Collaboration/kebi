@@ -18,6 +18,10 @@
 #define kr_warning(LRANK) KBLog(this->ClassName(),__FUNCTION__,LRANK,3)
 #define kr_error(LRANK)   KBLog(this->ClassName(),__FUNCTION__,LRANK,4)
 
+#define cout_info      KBLog(0,2)
+#define cout_warning   KBLog(0,3)
+#define cout_error     KBLog(0,4)
+
 class KBLog
 {
   public:
