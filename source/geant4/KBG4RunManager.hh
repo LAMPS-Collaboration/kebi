@@ -30,7 +30,14 @@ class KBG4RunManager : public G4RunManager, public KBGear
     virtual ~KBG4RunManager();
 
     virtual void Initialize();
+    virtual void InitializeGeometry();
+    virtual void InitializePhysics();
     void Run(G4int argc=0, char **argv=nullptr, const G4String &type="");
+
+    void BeamOn(G4int numEvents, const char *macroFile=0, G4int numSelect=-1);
+    void BeamOnAll();
+
+    void SetSuppressInitMessage(bool val);
 
     void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume, TString assemblyName="");
     void SetVolume(G4VPhysicalVolume *physicalVolume);
@@ -48,6 +55,8 @@ class KBG4RunManager : public G4RunManager, public KBGear
 
     void AddMCStep(Int_t dID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e);
 
+    void SetNumEvents(Int_t numEvents);
+
     void NextEvent();
     void WriteToFile(TObject *obj);
     void EndOfRun();
@@ -55,6 +64,8 @@ class KBG4RunManager : public G4RunManager, public KBGear
   private:
     void SetGeneratorFile(TString value);
     void SetOutputFile(TString value);
+
+    bool fSuppressInitMessage = false;
 
     TFile* fFile;
     TTree* fTree;
@@ -84,6 +95,8 @@ class KBG4RunManager : public G4RunManager, public KBGear
 
     Int_t fTrackID = 0;
     KBMCTrack* fCurrentTrack = nullptr;
+
+    Int_t fNumEvents;
 };
 
 #endif

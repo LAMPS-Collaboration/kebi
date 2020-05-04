@@ -10,6 +10,7 @@ KBTrackingAction::KBTrackingAction()
 : G4UserTrackingAction()
 {
   fRunManager = (KBG4RunManager *) KBG4RunManager::GetRunManager();
+  fProcessTable = fRunManager -> GetProcessTable();
 }
 
 KBTrackingAction::KBTrackingAction(KBG4RunManager *man)

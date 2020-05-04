@@ -56,4 +56,5 @@ void KBPrimaryGeneratorAction::SetEventGenerator(const char *fileName)
 {
   fEventGenerator = new KBMCEventGenerator(fileName);
   fReadMomentumOrEnergy = fEventGenerator -> ReadMomentumOrEnergy();
+  ((KBG4RunManager *) KBG4RunManager::GetRunManager()) -> SetNumEvents(fEventGenerator -> GetNumEvents());
 }

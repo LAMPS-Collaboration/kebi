@@ -20,7 +20,7 @@ KBMCEventGenerator::KBMCEventGenerator(TString fileName)
 
   fInputFile >> fNumEvents;
 
-  g4_info << fileName << " containing " << fNumEvents << " initialized with " << me << endl;
+  g4_info << fileName << " containing " << fNumEvents << " events, initialized with " << me << endl;
 }
 
 KBMCEventGenerator::~KBMCEventGenerator()

@@ -6,8 +6,11 @@
 #include "globals.hh"
 #include "G4ProcessTable.hh"
 #include "G4GDMLParser.hh"
+#include "G4strstreambuf.hh"
+
 #include "TSystem.h"
 
+#include "KBG4RunMessenger.hh"
 #include "KBPrimaryGeneratorAction.hh"
 #include "KBEventAction.hh"
 #include "KBTrackingAction.hh"
@@ -16,6 +19,8 @@
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
 {
+  new KBG4RunMessenger(this);
+
   fVolumes = new KBParameterContainer();
   fVolumes -> SetName("Volumes");
 
@@ -82,6 +87,36 @@ void KBG4RunManager::Initialize()
   }
 }
 
+void KBG4RunManager::InitializeGeometry()
+{
+  g4_warning << "InitializeGeometry" << endl;
+  if (fSuppressInitMessage) {
+    G4strstreambuf* suppressMessage = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+    // Suppress print outs in between here ------------->
+    G4RunManager::InitializeGeometry();
+    // <------------- to here
+    G4cout.rdbuf(suppressMessage);
+  }
+  else
+    G4RunManager::InitializeGeometry();
+  g4_warning << "InitializeGeometry" << endl;
+}
+
+void KBG4RunManager::InitializePhysics()
+{
+  g4_warning << "InitializePhysics" << endl;
+  if (fSuppressInitMessage) {
+    G4strstreambuf* suppressMessage = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+    // Suppress print outs in between here ------------->
+    G4RunManager::InitializePhysics();
+    // <------------- to here
+    G4cout.rdbuf(suppressMessage);
+  }
+  else
+    G4RunManager::InitializePhysics();
+  g4_warning << "InitializePhysics" << endl;
+}
+
 void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
 {
   G4UImanager* uiManager = G4UImanager::GetUIpointer();
@@ -113,11 +148,46 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
   EndOfRun();
 }
 
+void KBG4RunManager::BeamOnAll()
+{
+  BeamOn(fNumEvents);
+}
+
+void KBG4RunManager::BeamOn(G4int numEvents, const char *macroFile, G4int numSelect)
+{
+  if(numEvents<=0) { fakeRun = true; }
+  else { fakeRun = false; }
+  G4bool cond = ConfirmBeamOnCondition();
+  if(cond)
+  {
+    numberOfEventToBeProcessed = numEvents;
+    numberOfEventProcessed = 0;
+    ConstructScoringWorlds();
+
+    if (fSuppressInitMessage) {
+      G4strstreambuf* suppressSSB = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+      // Suppress print outs in between here ------------->
+      RunInitialization();
+      // <------------- to here
+      G4cout.rdbuf(suppressSSB);
+    }
+    else
+      RunInitialization();
+
+    DoEventLoop(numEvents,macroFile,numSelect);
+    RunTermination();
+  }
+  fakeRun = false;
+}
+
+void KBG4RunManager::SetSuppressInitMessage(bool val) { fSuppressInitMessage = val; }
+
 void KBG4RunManager::SetGeneratorFile(TString value)
 {
   auto pga = (KBPrimaryGeneratorAction *) userPrimaryGeneratorAction;
   fPar -> ReplaceEnvironmentVariable(value);
   pga -> SetEventGenerator(value.Data());
+  //fNumEvents set from pga
 }
 
 void KBG4RunManager::SetOutputFile(TString name)
@@ -165,8 +235,6 @@ void KBG4RunManager::SetOutputFile(TString name)
       fIdxOfCopyNo[copyNo] = fNumActiveVolumes;
       fTree -> Branch(edepSumName, &fEdepSumArray[fNumActiveVolumes]);
       ++fNumActiveVolumes;
-
-      fTree -> Branch(stepArray -> GetName(), &stepArray);
     }
   }
 }
@@ -289,6 +357,11 @@ void KBG4RunManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_
     KBMCStep *step = (KBMCStep *) stepArray -> ConstructedAt(stepArray -> GetEntriesFast());
     step -> SetMCStep(fTrackID, x, y, z, t, e);
   }
+}
+
+void KBG4RunManager::SetNumEvents(Int_t numEvents)
+{
+  fNumEvents = numEvents;
 }
 
 void KBG4RunManager::NextEvent()
