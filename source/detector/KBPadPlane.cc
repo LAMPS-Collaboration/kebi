@@ -114,13 +114,17 @@ void KBPadPlane::FillDataToHist(Option_t *option)
   if (optionString == "hit") {
     while ((pad = (KBPad *) iterPads.Next())) {
       if (pad -> GetNumHits() == 0) continue;
+
       auto charge = 0.;
       for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
         auto hit = pad -> GetHit(iHit);
-        if (charge < hit -> GetCharge())
-          charge = hit -> GetCharge();
+        if (charge < hit -> GetCharge()) {
+          if (hit -> GetSortValue() > 0)
+            charge += hit -> GetCharge();
+        }
       }
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),charge);
+
     }
   } else if (optionString == "out") {
     while ((pad = (KBPad *) iterPads.Next())) {
@@ -162,6 +166,17 @@ void KBPadPlane::Clear(Option_t *)
 
 Int_t KBPadPlane::FindChannelID(Double_t i, Double_t j) { return FindPadID(i,j); }
 
+void KBPadPlane::ResetEvent()
+{
+  KBPad *pad;
+  TIter iterPads(fChannelArray);
+  while ((pad = (KBPad *) iterPads.Next())) {
+    pad -> LetGo();
+  }
+
+  fFreePadIdx = 0;
+}
+
 void KBPadPlane::ResetHitMap()
 {
   KBPad *pad;
@@ -189,6 +204,56 @@ KBTpcHit *KBPadPlane::PullOutNextFreeHit()
   return hit;
 }
 
+void KBPadPlane::PullOutNeighborHits(KBHitArray *hits, KBHitArray *neighborHits)
+{
+  auto numHits = hits -> GetEntries();
+  for (auto iHit=0; iHit<numHits; ++iHit){
+    auto hit = (KBTpcHit *) hits -> GetHit(iHit);
+    auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
+    auto neighbors = pad -> GetNeighborPadArray();
+    for (auto neighbor : *neighbors) {
+      neighbor -> PullOutHits(neighborHits);
+    }
+  }
+}
+
+void KBPadPlane::PullOutNeighborHits(Double_t x, Double_t y, Int_t range, KBHitArray *neighborHits)
+{
+  vector<KBPad *> neighborsUsed;
+  vector<KBPad *> neighborsTemp;
+  vector<KBPad *> neighborsNew;
+
+  Int_t id = FindPadID(x,y);
+  if (id < 0)
+    return;
+
+  auto pad = (KBPad *) fChannelArray -> At(id);
+
+  neighborsTemp.push_back(pad);
+  pad -> Grab();
+
+  while (range >= 0) {
+    neighborsNew.clear();
+    GrabNeighborPads(&neighborsTemp, &neighborsNew);
+
+    for (auto neighbor : neighborsTemp)
+      neighborsUsed.push_back(neighbor);
+    neighborsTemp.clear();
+
+    for (auto neighbor : neighborsNew) {
+      neighbor -> PullOutHits(neighborHits);
+      neighborsTemp.push_back(neighbor);
+    }
+    range--;
+  }
+
+  for (auto neighbor : neighborsUsed)
+    neighbor -> LetGo();
+
+  for (auto neighbor : neighborsNew)
+    neighbor -> LetGo();
+}
+
 void KBPadPlane::PullOutNeighborHits(vector<KBTpcHit*> *hits, vector<KBTpcHit*> *neighborHits)
 {
   for (auto hit : *hits) {
@@ -201,11 +266,16 @@ void KBPadPlane::PullOutNeighborHits(vector<KBTpcHit*> *hits, vector<KBTpcHit*> 
 
 void KBPadPlane::PullOutNeighborHits(TVector2 p, Int_t range, vector<KBTpcHit*> *neighborHits)
 {
+  PullOutNeighborHits(p.X(), p.Y(), range, neighborHits);
+}
+
+void KBPadPlane::PullOutNeighborHits(Double_t x, Double_t y, Int_t range, vector<KBTpcHit*> *neighborHits)
+{
   vector<KBPad *> neighborsUsed;
   vector<KBPad *> neighborsTemp;
   vector<KBPad *> neighborsNew;
 
-  Int_t id = FindPadID(p.X(), p.Y());
+  Int_t id = FindPadID(x,y);
   if (id < 0)
     return;
 
@@ -311,12 +381,34 @@ bool KBPadPlane::PadNeighborChecker()
   KBPad *pad0 = 0;
   KBPad *pad1 = 0;
 
+  vector<Int_t> ids0Neighbors;
+  vector<Int_t> ids1Neighbors;
+  vector<Int_t> ids2Neighbors;
+  vector<Int_t> ids3Neighbors;
+  vector<Int_t> ids4Neighbors;
+  vector<Int_t> ids5Neighbors;
+  vector<Int_t> ids6Neighbors;
+  vector<Int_t> ids7Neighbors;
+  vector<Int_t> ids8Neighbors;
+  vector<Int_t> ids9Neighbors;
+
   KBPad *pad;
   TIter iterPads(fChannelArray);
   while ((pad = (KBPad *) iterPads.Next())) {
     auto pos = pad -> GetPosition();
     auto padID = pad -> GetPadID();
     auto neighbors = pad -> GetNeighborPadArray();
+    auto numNeighbors = neighbors -> size();
+         if (numNeighbors == 0) ids0Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 1) ids1Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 2) ids2Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 3) ids3Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 4) ids4Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 5) ids5Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 6) ids6Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 7) ids7Neighbors.push_back(pad -> GetPadID());
+    else if (numNeighbors == 8) ids8Neighbors.push_back(pad -> GetPadID());
+    else                        ids9Neighbors.push_back(pad -> GetPadID());
     for (auto nb : *neighbors) {
       auto padIDnb = nb -> GetPadID();
       auto posnb = nb -> GetPosition();
@@ -346,6 +438,23 @@ bool KBPadPlane::PadNeighborChecker()
           << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
   kb_info << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y()
           << "|" << pad1-> GetSection() << "," << pad1 -> GetRow() << "," << pad1 -> GetLayer() << ")" << endl;
+
+
+  kb_info << "No. of pads with 0 neighbors = " << ids0Neighbors.size() << endl;
+  for (auto id : ids0Neighbors) {
+    cout << id << ", ";
+  }
+  cout << endl;
+
+  kb_info << "No. of pads with 1 neighbors = " << ids1Neighbors.size() << endl;
+  kb_info << "No. of pads with 2 neighbors = " << ids2Neighbors.size() << endl;
+  kb_info << "No. of pads with 3 neighbors = " << ids3Neighbors.size() << endl;
+  kb_info << "No. of pads with 4 neighbors = " << ids4Neighbors.size() << endl;
+  kb_info << "No. of pads with 5 neighbors = " << ids5Neighbors.size() << endl;
+  kb_info << "No. of pads with 6 neighbors = " << ids6Neighbors.size() << endl;
+  kb_info << "No. of pads with 7 neighbors = " << ids7Neighbors.size() << endl;
+  kb_info << "No. of pads with 8 neighbors = " << ids8Neighbors.size() << endl;
+  kb_info << "No. of pads with > neighbors = " << ids9Neighbors.size() << endl;
 
   return true;
 }
