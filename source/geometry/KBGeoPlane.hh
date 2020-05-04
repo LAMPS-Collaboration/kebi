@@ -16,8 +16,6 @@ class KBGeoPlane : public KBGeometry
     KBGeoPlane(Double_t a, Double_t b, Double_t c, Double_t d);
     virtual ~KBGeoPlane() {}
 
-    virtual TVector3 GetCenter() const;
-
     void SetPlane(TVector3 pos, TVector3 nnn);
     void SetPlane(Double_t x, Double_t y, Double_t z, Double_t xn, Double_t yn, Double_t zn);
     void SetPlane(Double_t a, Double_t b, Double_t c, Double_t d);

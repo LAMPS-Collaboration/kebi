@@ -22,8 +22,6 @@ KBGeoPlane::KBGeoPlane(Double_t a, Double_t b, Double_t c, Double_t d)
   SetPlane(a,b,c,d);
 }
 
-TVector3 KBGeoPlane::GetCenter() const { return TVector3(0,0,GetZ(0,0)); }
-
 void KBGeoPlane::SetPlane(TVector3 pos, TVector3 nnn)
 {
   nnn = nnn.Unit();

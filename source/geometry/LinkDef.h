@@ -9,6 +9,7 @@
 #pragma link C++ class KBGeoCircle+;
 #pragma link C++ class KBGeoSphere+;
 #pragma link C++ class KBGeoPlane+;
+#pragma link C++ class KBGeoPlaneWithCenter+;
 #pragma link C++ class KBGeoLine+;
 #pragma link C++ class KBGeoBox+;
 #pragma link C++ class KBGeoBoxStack+;
