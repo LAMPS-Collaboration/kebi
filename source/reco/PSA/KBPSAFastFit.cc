@@ -44,7 +44,8 @@ KBPSAFastFit::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
     if (tbStartOfPulse > fTbStartCut - 1) // if the pulse distribution is too short
       break;
 
-    if (FitPulse(adc, tbStartOfPulse, tbPointer, /*get->*/tbHit, amplitude, squareSum, ndf) == false)
+    bool saturated = false;
+    if (FitPulse(adc, tbStartOfPulse, tbPointer, /*get->*/tbHit, amplitude, squareSum, ndf, saturated) == false)
       continue;
 
     // Pulse is found!
@@ -55,7 +56,10 @@ KBPSAFastFit::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
 
       tbHitPre = tbHit;
       amplitudePre = amplitude;
-      tbPointer = Int_t(tbHit) + 9;
+      if (saturated)
+        tbPointer = Int_t(tbHit) + 15;
+      else
+        tbPointer = Int_t(tbHit) + 9;
     }
   }
 }
@@ -112,15 +116,18 @@ KBPSAFastFit::FitPulse(Double_t *adc,
                        Double_t &tbHit, 
                        Double_t &amplitude,
                        Double_t &squareSum,
-                          Int_t &ndf)
+                          Int_t &ndf,
+                         Bool_t &saturated)
 {
   Double_t adcPeak = adc[tbPeak];
+  saturated = false;
 
   // if peak value is larger than fDynamicRange, the pulse is saturated
   if (adcPeak > fDynamicRange)
   {
     ndf = tbPeak - tbStartOfPulse;
     if (ndf > fNDFTbs) ndf = fNDFTbs;
+    saturated = true;
   }
 
   Double_t alpha   = fAlpha   / (adcPeak * adcPeak); // Weight of time-bucket step

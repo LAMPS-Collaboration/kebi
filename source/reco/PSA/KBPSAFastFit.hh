@@ -39,7 +39,8 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
      */
     Bool_t FitPulse(Double_t *adc, Int_t tbStart, Int_t tbPeak,
                     Double_t &tbHit, Double_t &amplitude, 
-                    Double_t &squareSum, Int_t &ndf);
+                    Double_t &squareSum, Int_t &ndf,
+                    Bool_t &saturated);
 
     /** 2.1
      * Perform least square fitting with the fixed parameter tbStart and ndf.

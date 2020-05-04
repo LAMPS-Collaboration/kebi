@@ -32,7 +32,7 @@ bool KBPSATask::Init()
     fPadPlane[iPlane] = fTpc -> GetPadPlane(iPlane);
 
   fHitArray = new TClonesArray("KBTpcHit", 5000);
-  run -> RegisterBranch("Hit", fHitArray, true);
+  run -> RegisterBranch("Hit", fHitArray, fPersistency);
 
   if (fPSA == nullptr)
     fPSA = new KBPSA();
@@ -96,7 +96,7 @@ void KBPSATask::Exec(Option_t*)
           atMC = iMC;
         }
       }
-      if (dist < 10) //XXX
+      if (dist < 100) //XXX
         hit -> SetMCTag(idArray -> at(atMC), dist*fTbTime*fDriftVelocity, 1);
 
       idx++;
