@@ -9,7 +9,7 @@ set(BUILD_DOXYGEN_DOC OFF CACHE INTERNAL "")  # Build Doxygen API with HTML
 set(KEBI_PROJECT_LIST
   # ADD KEBI PROJECT DIRECOTRIES BELOW
   #===================================
-  Project_EXAMPLE
+  LAMPS-HighEnergy
   #===================================
   # ADD KEBI PROJECT DIRECOTRIES ABOVE
   CACHE INTERNAL ""
