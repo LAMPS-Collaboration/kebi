@@ -3,6 +3,7 @@
 
 #include "KBChannel.hh"
 #include "KBTpcHit.hh"
+#include "KBHitArray.hh"
 
 #include "TObject.h"
 #include "TH1D.h"
@@ -99,6 +100,7 @@ class KBPad : public KBChannel
     void ClearHits();
     KBTpcHit *PullOutNextFreeHit();
     void PullOutHits(vector<KBTpcHit *> *hits);
+    void PullOutHits(KBHitArray *hist);
 
     bool IsGrabed() const;
     void Grab();

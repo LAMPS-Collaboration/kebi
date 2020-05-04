@@ -1,23 +1,92 @@
-#include "KBHitList.hh"
-#include "KBHit.hh"
-#include "KBGeoSphere.hh"
-#include "KBGeoLine.hh"
 #include "TH2D.h"
 #include "TMarker.h"
 
-ClassImp(KBHitList)
+#include "KBHitArray.hh"
+#include "KBHit.hh"
+#include "KBTpcHit.hh"
+#include "KBGeoSphere.hh"
+#include "KBGeoLine.hh"
 
-KBHitList::KBHitList()
+ClassImp(KBHitArray);
+
+KBHitArray::KBHitArray(Int_t size)
+:TObjArray()
 {
   Clear();
 }
 
-void KBHitList::Clear(Option_t *option)
+KBHitArray::~KBHitArray()
 {
-  TObject::Clear(option);
+}
 
-  fHitArray.clear();
-  fHitIDArray.clear();
+KBHit *KBHitArray::GetHit(Int_t idx) const
+{
+  return (KBHit *) At(idx);
+}
+
+KBHit *KBHitArray::GetLastHit() const
+{
+  return (KBHit *) At(GetEntriesFast()-1);
+}
+
+void KBHitArray::SortByX(bool sortEarlierIfSmaller)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetSortByX(sortEarlierIfSmaller);
+  Sort();
+}
+
+void KBHitArray::SortByY(bool sortEarlierIfSmaller)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetSortByY(sortEarlierIfSmaller);
+  Sort();
+}
+
+void KBHitArray::SortByZ(bool sortEarlierIfSmaller)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetSortByZ(sortEarlierIfSmaller);
+  Sort();
+}
+
+void KBHitArray::SortByCharge(bool sortEarlierIfSmaller)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetSortByCharge(sortEarlierIfSmaller);
+  Sort();
+}
+
+void KBHitArray::SortByDistanceTo(TVector3 point, bool sortEarlierIfCloser)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetSortByDistanceTo(point, sortEarlierIfCloser);
+  Sort();
+}
+
+void KBHitArray::SortByLayer(bool sortEarlierIfSmaller)
+{
+  TIter next(this);
+  KBTpcHit *hit;
+  while ((hit = (KBTpcHit *) next()))
+    hit -> SetSortByLayer(sortEarlierIfSmaller);
+  Sort();
+}
+
+
+void KBHitArray::Clear(Option_t *option)
+{
+  TObjArray::Clear();
 
   fN = 0;
   fW = 0;
@@ -36,7 +105,7 @@ void KBHitList::Clear(Option_t *option)
     fODRFitter -> Reset();
 }
 
-void KBHitList::Print(Option_t *option) const
+void KBHitArray::Print(Option_t *option) const
 {
   TString opts = TString(option);
 
@@ -48,6 +117,7 @@ void KBHitList::Print(Option_t *option) const
   kr_info(0) << "       |" << setw(15) << fEXY << setw(15) << fEYY << setw(15) << fEYZ << "|" << endl;
   kr_info(0) << "       |" << setw(15) << fEZX << setw(15) << fEYZ << setw(15) << fEZZ << "|" << endl;
 
+  /*
   if (opts.Index(">")>=0) {
     TString title;
     if (opts.Index("t")>=0) title += "Hit-IDs: ";
@@ -61,37 +131,60 @@ void KBHitList::Print(Option_t *option) const
         kr_info(1)<< setw(4) << hitID;
     kb_out << endl;
   }
-}
-
-void KBHitList::PrintHitIDs(Int_t rank) const
-{
-  if (fHitIDArray.size() != 0) {
-    kr_info(rank) << "Hit-IDs(" << fN << "): ";
-    for (auto hitID : fHitIDArray)
-      kb_out << hitID << " ";
+  */
+  if (opts.Index(">")>=0) {
+    TIter next(this);
+    KBHit *hit;
+    while ((hit = (KBHit *) next()))
+      kr_info(1) << hit -> GetHitID() << " ";
     kb_out << endl;
   }
 }
 
-void KBHitList::PrintHits(Int_t rank) const
-{
-  if (fHitArray.size() != 0)
-    for (auto hit : fHitArray)
-      hit -> Print(Form("%dts",rank));
-}
-
-void KBHitList::Copy(TObject &obj) const
+void KBHitArray::Copy(TObject &obj) const
 {
   TObject::Copy(obj);
-  auto list = (KBHitList &) obj;
+  auto list = (KBHitArray &) obj;
+  list.Clear("C");
 
-  list.Clear();
-  for (auto hit : fHitArray)
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
     list.AddHit(hit);
 }
 
+void KBHitArray::MoveHitsTo(KBHitArray *hitArray)
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hitArray -> AddHit(hit);
+  Clear();
+}
 
-KBGeoLine KBHitList::FitLine()
+void KBHitArray::PrintHitIDs(Int_t rank) const
+{
+  if (fN == 0)
+    return;
+
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    kr_info(1) << hit -> GetHitID() << " ";
+  kb_out << endl;
+}
+
+void KBHitArray::PrintHits(Int_t rank) const
+{
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    //hit -> Print(Form("%dts",rank)); TODO
+    hit -> Print("ts");
+}
+
+
+KBGeoLine KBHitArray::FitLine()
 {
   if (fODRFitter == nullptr)
     fODRFitter = KBODRFitter::GetFitter();
@@ -117,7 +210,7 @@ KBGeoLine KBHitList::FitLine()
   return line;
 }
 
-KBGeoPlane KBHitList::FitPlane()
+KBGeoPlane KBHitArray::FitPlane()
 {
   if (fODRFitter == nullptr)
     fODRFitter = KBODRFitter::GetFitter();
@@ -130,20 +223,26 @@ KBGeoPlane KBHitList::FitPlane()
 
   fODRFitter -> Reset();
   fODRFitter -> SetCentroid(fEX,fEY,fEZ);
-  fODRFitter -> SetMatrixA(GetAXX(),GetAYY(),GetAZZ(),GetAXY(),GetAYZ(),GetAZX());
-  fODRFitter -> SetWeightSum(fW);
-  fODRFitter -> SetNumPoints(fN);
+  //fODRFitter -> SetMatrixA(GetAXX(),GetAYY(),GetAZZ(),GetAXY(),GetAYZ(),GetAZX());
+  //fODRFitter -> SetWeightSum(fW);
+  //fODRFitter -> SetNumPoints(fN);
+
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    fODRFitter -> AddPoint(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
+
   if (fODRFitter -> Solve() == false)
     return plane;
 
-  fODRFitter -> ChooseEigenValue(2);
+  fODRFitter -> ChooseEigenValue(2); //TODO
   plane.SetPlane(TVector3(fEX,fEY,fEZ),fODRFitter -> GetNormal());
   plane.SetRMS(fODRFitter -> GetRMSPlane());
 
   return plane;
 }
 
-KBGeoCircle KBHitList::FitCircle(kbaxis ref)
+KBGeoCircle KBHitArray::FitCircle(kbaxis ref)
 {
   if (fODRFitter == nullptr)
     fODRFitter = KBODRFitter::GetFitter();
@@ -167,7 +266,9 @@ KBGeoCircle KBHitList::FitCircle(kbaxis ref)
   Double_t jProjectionMean = 0;
   Double_t kProjectionMean = 0;
 
-  for (auto hit : fHitArray)
+  TIter nextHit(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) nextHit()))
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -192,7 +293,8 @@ KBGeoCircle KBHitList::FitCircle(kbaxis ref)
   fODRFitter -> SetCentroid(iProjectionMean, jProjectionMean, kProjectionMean);
   auto meanProjection = KBVector3(ref, iProjectionMean, jProjectionMean, kProjectionMean);
 
-  for (auto hit : fHitArray)
+  nextHit.Begin();
+  while ((hit = (KBHit *) nextHit()))
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -244,7 +346,7 @@ KBGeoCircle KBHitList::FitCircle(kbaxis ref)
   return fitCircle;
 }
 
-TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
+TCanvas *KBHitArray::DrawFitCircle(kbaxis ref)
 {
   auto cvs0 = new TCanvas("side t","Riemann circle fit side-t",600,600);
   auto cvs1 = new TCanvas("side v","Riemann circle fit side-v",600,600);
@@ -272,7 +374,9 @@ TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
   Double_t jProjectionMean = 0;
   Double_t kProjectionMean = 0;
 
-  for (auto hit : fHitArray)
+  TIter nextHit(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) nextHit()))
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -297,7 +401,8 @@ TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
   fODRFitter -> SetCentroid(iProjectionMean, jProjectionMean, kProjectionMean);
   auto meanProjection = KBVector3(ref, iProjectionMean, jProjectionMean, kProjectionMean);
 
-  for (auto hit : fHitArray)
+  nextHit.Begin();
+  while ((hit = (KBHit *) nextHit()))
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -376,7 +481,8 @@ TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
        markOriginal -> SetMarkerColor(kGray+1);
        markOriginal -> SetMarkerSize(0.4);
 
-  for (auto hit : fHitArray)
+  nextHit.Begin();
+  while ((hit = (KBHit *) nextHit()))
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -404,7 +510,7 @@ TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
   markOriginal -> SetMarkerStyle(41);
   markOriginal -> SetMarkerSize(1.2);
 
-  for (auto hit : {fHitArray[0], fHitArray.back()})
+  for (auto hit : {GetHit(0), GetLastHit()})
   {
     KBVector3 pos(hit -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
@@ -510,7 +616,7 @@ TCanvas *KBHitList::DrawFitCircle(kbaxis ref)
   return cvs0;
 }
 
-KBGeoHelix KBHitList::FitHelix(kbaxis ref)
+KBGeoHelix KBHitArray::FitHelix(kbaxis ref)
 {
   auto circle = FitCircle(ref);
 
@@ -522,14 +628,14 @@ KBGeoHelix KBHitList::FitHelix(kbaxis ref)
   if (fN < 5)
     return helix;
 
-  if (ref==KBVector3::kX) sort(fHitArray.begin(), fHitArray.end(), KBHitSortX());
-  if (ref==KBVector3::kY) sort(fHitArray.begin(), fHitArray.end(), KBHitSortY());
-  if (ref==KBVector3::kZ) sort(fHitArray.begin(), fHitArray.end(), KBHitSortZ());
+  SortByX(true);
+  SortByY(true);
+  SortByZ(true);
 
   auto helixI = circle.GetX();
   auto helixJ = circle.GetY();
 
-  auto pos0 = fHitArray[0] -> GetPosition(ref);
+  auto pos0 = GetHit(0) -> GetPosition(ref);
   auto i = pos0.I() - helixI;
   auto j = pos0.J() - helixJ;
   auto axisI = TVector2( i,j).Unit();
@@ -547,7 +653,9 @@ KBGeoHelix KBHitList::FitHelix(kbaxis ref)
 
   auto halfOfPi = .5*TMath::Pi();
 
-  for (auto hit : fHitArray)
+  TIter nextHit(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) nextHit()))
   {
     auto w = hit -> GetCharge();
     auto p = hit -> GetPosition(ref);
@@ -586,11 +694,21 @@ KBGeoHelix KBHitList::FitHelix(kbaxis ref)
   if (std::isinf(slope))
     return helix;
 
+  helix.SetI(helixI);
+  helix.SetJ(helixJ);
+  helix.SetR(circle.GetR());
+  helix.SetH(alphaMax);
+  helix.SetT(alphaMin);
+  helix.SetS(slope);
+  helix.SetK(offset);
+  helix.SetA(ref);
+
   Double_t sr = 0; // = sum of distance from hit to track in radial axis
   Double_t st = 0; // = sum of distance from hit to track in axial axis
   Double_t ss = 0; // = sum of distance from hit to track
 
-  for (auto hit : fHitArray)
+  nextHit.Begin();
+  while ((hit = (KBHit *) nextHit()))
   {
     auto w = hit -> GetCharge();
     TVector3 mp = helix.HelicoidMap(hit->GetPosition(),hit->GetAlpha());
@@ -602,18 +720,6 @@ KBGeoHelix KBHitList::FitHelix(kbaxis ref)
     ss += w * (xx + yy);
   }
 
-  helixI = circle.GetX();
-  helixJ = circle.GetY();
-
-  helix.SetI(helixI);
-  helix.SetJ(helixJ);
-  helix.SetR(circle.GetR());
-  helix.SetH(alphaMax);
-  helix.SetT(alphaMin);
-  helix.SetS(slope);
-  helix.SetK(offset);
-  helix.SetA(ref);
-
   helix.SetRMS (sqrt(ss/(fW*(1-3/fN))));
   helix.SetRMSR(sqrt(sr/(fW*(1-3/fN))));
   helix.SetRMST(sqrt(st/(fW*(1-3/fN))));
@@ -621,20 +727,19 @@ KBGeoHelix KBHitList::FitHelix(kbaxis ref)
   return helix;
 }
 
-void KBHitList::AddHit(KBHit* hit)
+void KBHitArray::AddHit(KBHit* hit)
 {
-  fHitArray.push_back(hit);
-  fHitIDArray.push_back(hit->GetHitID());
+  Add(hit);
 
-  Add(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
+  AddXYZW(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
 }
 
-void KBHitList::Add(TVector3 pos, Double_t w)
+void KBHitArray::AddXYZW(TVector3 pos, Double_t w)
 {
-  Add(pos.X(),pos.Y(),pos.Z(),w);
+  AddXYZW(pos.X(),pos.Y(),pos.Z(),w);
 }
 
-void KBHitList::Add(Double_t x, Double_t y, Double_t z, Double_t w)
+void KBHitArray::AddXYZW(Double_t x, Double_t y, Double_t z, Double_t w)
 {
   Double_t wsum = fW + w;
 
@@ -652,13 +757,22 @@ void KBHitList::Add(Double_t x, Double_t y, Double_t z, Double_t w)
   ++fN;
 }
 
-bool KBHitList::RemoveHit(KBHit* hit)
+bool KBHitArray::RemoveHit(Int_t iHit)
 {
-  Int_t numHits = fHitArray.size();
+  auto hit = GetHit(iHit);
+  RemoveAt(iHit);
+  return Subtract(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
+}
+
+bool KBHitArray::RemoveHit(KBHit* hit)
+{
+  auto id = hit -> GetHitID(); 
+  Int_t numHits = GetEntriesFast();
   for (auto iHit = 0; iHit < numHits; iHit++) {
-    if (fHitArray[iHit] == hit) {
-      fHitArray.erase(fHitArray.begin()+iHit);
-      fHitIDArray.erase(fHitIDArray.begin()+iHit);
+    auto hit0 = GetHit(iHit);
+    auto id0 = hit0 -> GetHitID();
+    if (id0 == id) {
+      RemoveAt(iHit);
       return Subtract(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
     }
   }
@@ -666,12 +780,21 @@ bool KBHitList::RemoveHit(KBHit* hit)
   return false;
 }
 
-bool KBHitList::Subtract(TVector3 pos, Double_t w)
+void KBHitArray::RemoveLastHit()
+{
+  auto iHit = GetEntriesFast()-1;
+  auto hit = GetHit(iHit);
+  RemoveAt(iHit);
+  Subtract(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
+}
+
+
+bool KBHitArray::Subtract(TVector3 pos, Double_t w)
 {
   return Subtract(pos.X(),pos.Y(),pos.Z(),w);
 }
 
-bool KBHitList::Subtract(Double_t x, Double_t y, Double_t z, Double_t w)
+bool KBHitArray::Subtract(Double_t x, Double_t y, Double_t z, Double_t w)
 {
   Double_t wsum = fW - w;
 
@@ -691,49 +814,59 @@ bool KBHitList::Subtract(Double_t x, Double_t y, Double_t z, Double_t w)
   return true;
 }
 
-vector<KBHit*> *KBHitList::GetHitArray() { return &fHitArray; }
-vector<Int_t> *KBHitList::GetHitIDArray() { return &fHitIDArray; }
-
-Int_t KBHitList::GetNumHits() const { return fN; };
-KBHit *KBHitList::GetHit(Int_t idx) const { return fHitArray.at(idx); }
-Int_t KBHitList::GetHitID(Int_t idx) const { return fHitIDArray.at(idx); }
+Int_t KBHitArray::GetNumHits() const { return fN; };
 
 
-Double_t KBHitList::GetW()  const { return fW; }
-Double_t KBHitList::GetChargeSum()  const { return fW; }
+Double_t KBHitArray::GetW()  const { return fW; }
+Double_t KBHitArray::GetChargeSum()  const { return fW; }
 
-Double_t KBHitList::GetMeanX() const { return fEX; }
-Double_t KBHitList::GetMeanY() const { return fEY; }
-Double_t KBHitList::GetMeanZ() const { return fEZ; }
+Double_t KBHitArray::GetMeanX() const { return fEX; }
+Double_t KBHitArray::GetMeanY() const { return fEY; }
+Double_t KBHitArray::GetMeanZ() const { return fEZ; }
 
-Double_t KBHitList::GetMeanXX() const { return fEXX; }
-Double_t KBHitList::GetMeanYY() const { return fEYY; }
-Double_t KBHitList::GetMeanZZ() const { return fEZZ; }
-Double_t KBHitList::GetMeanXY() const { return fEXY; }
-Double_t KBHitList::GetMeanYZ() const { return fEYZ; }
-Double_t KBHitList::GetMeanZX() const { return fEZX; }
+Double_t KBHitArray::GetMeanXX() const { return fEXX; }
+Double_t KBHitArray::GetMeanYY() const { return fEYY; }
+Double_t KBHitArray::GetMeanZZ() const { return fEZZ; }
+Double_t KBHitArray::GetMeanXY() const { return fEXY; }
+Double_t KBHitArray::GetMeanYZ() const { return fEYZ; }
+Double_t KBHitArray::GetMeanZX() const { return fEZX; }
 
-Double_t KBHitList::GetVarianceX()  const { return fEXX - fEX * fEX; }
-Double_t KBHitList::GetVarianceY()  const { return fEYY - fEY * fEY; }
-Double_t KBHitList::GetVarianceZ()  const { return fEZZ - fEZ * fEZ; }
+Double_t KBHitArray::GetVarianceX()  const { return fEXX - fEX * fEX; }
+Double_t KBHitArray::GetVarianceY()  const { return fEYY - fEY * fEY; }
+Double_t KBHitArray::GetVarianceZ()  const { return fEZZ - fEZ * fEZ; }
 
-Double_t KBHitList::GetAXX() const { return fW * (fEXX - fEX * fEX); }
-Double_t KBHitList::GetAYY() const { return fW * (fEYY - fEY * fEY); }
-Double_t KBHitList::GetAZZ() const { return fW * (fEZZ - fEZ * fEZ); }
-Double_t KBHitList::GetAXY() const { return fW * (fEXY - fEX * fEY); }
-Double_t KBHitList::GetAYZ() const { return fW * (fEYZ - fEY * fEZ); }
-Double_t KBHitList::GetAZX() const { return fW * (fEZX - fEZ * fEX); }
+Double_t KBHitArray::GetAXX() const { return fW * (fEXX - fEX * fEX); }
+Double_t KBHitArray::GetAYY() const { return fW * (fEYY - fEY * fEY); }
+Double_t KBHitArray::GetAZZ() const { return fW * (fEZZ - fEZ * fEZ); }
+Double_t KBHitArray::GetAXY() const { return fW * (fEXY - fEX * fEY); }
+Double_t KBHitArray::GetAYZ() const { return fW * (fEYZ - fEY * fEZ); }
+Double_t KBHitArray::GetAZX() const { return fW * (fEZX - fEZ * fEX); }
 
-TVector3 KBHitList::GetMean()          const { return TVector3(fEX,fEY,fEZ); }
-TVector3 KBHitList::GetVariance()      const { return TVector3(fEXX-fEX*fEX,fEYY-fEY*fEY,fEZZ-fEZ*fEZ); }
-TVector3 KBHitList::GetCovariance()    const { return TVector3(fEXY-fEX*fEY,fEYZ-fEY*fEZ,fEZX-fEZ*fEX); }
-TVector3 KBHitList::GetStdDev()        const { return TVector3(TMath::Sqrt(fEXY-fEX*fEY),TMath::Sqrt(fEYZ-fEY*fEZ),TMath::Sqrt(fEZX-fEZ*fEX)); }
-TVector3 KBHitList::GetSquaredMean()   const { return TVector3(fEXX,fEYY,fEZZ); }
-TVector3 KBHitList::GetCoSquaredMean() const { return TVector3(fEXY,fEYZ,fEZX); }
+TVector3 KBHitArray::GetMean()          const { return TVector3(fEX,fEY,fEZ); }
+TVector3 KBHitArray::GetVariance()      const { return TVector3(fEXX-fEX*fEX,fEYY-fEY*fEY,fEZZ-fEZ*fEZ); }
+TVector3 KBHitArray::GetCovariance()    const { return TVector3(fEXY-fEX*fEY,fEYZ-fEY*fEZ,fEZX-fEZ*fEX); }
+TVector3 KBHitArray::GetStdDev()        const { return TVector3(TMath::Sqrt(fEXY-fEX*fEY),TMath::Sqrt(fEYZ-fEY*fEZ),TMath::Sqrt(fEZX-fEZ*fEX)); }
+TVector3 KBHitArray::GetSquaredMean()   const { return TVector3(fEXX,fEYY,fEZZ); }
+TVector3 KBHitArray::GetCoSquaredMean() const { return TVector3(fEXY,fEYZ,fEZX); }
 
-KBVector3 KBHitList::GetMean(kbaxis ref)          const { return KBVector3(fEX,fEY,fEZ,ref); }
-KBVector3 KBHitList::GetVariance(kbaxis ref)      const { return KBVector3(fEXX-fEX*fEX,fEYY-fEY*fEY,fEZZ-fEZ*fEZ,ref); }
-KBVector3 KBHitList::GetCovariance(kbaxis ref)    const { return KBVector3(fEXY-fEX*fEY,fEYZ-fEY*fEZ,fEZX-fEZ*fEX,ref); }
-KBVector3 KBHitList::GetStdDev(kbaxis ref)        const { return KBVector3(TMath::Sqrt(fEXY-fEX*fEY),TMath::Sqrt(fEYZ-fEY*fEZ),TMath::Sqrt(fEZX-fEZ*fEX),ref); }
-KBVector3 KBHitList::GetSquaredMean(kbaxis ref)   const { return KBVector3(fEXX,fEYY,fEZZ,ref); }
-KBVector3 KBHitList::GetCoSquaredMean(kbaxis ref) const { return KBVector3(fEXY,fEYZ,fEZX,ref); }
+KBVector3 KBHitArray::GetMean(kbaxis ref)          const { return KBVector3(fEX,fEY,fEZ,ref); }
+KBVector3 KBHitArray::GetVariance(kbaxis ref)      const { return KBVector3(fEXX-fEX*fEX,fEYY-fEY*fEY,fEZZ-fEZ*fEZ,ref); }
+KBVector3 KBHitArray::GetCovariance(kbaxis ref)    const { return KBVector3(fEXY-fEX*fEY,fEYZ-fEY*fEZ,fEZX-fEZ*fEX,ref); }
+KBVector3 KBHitArray::GetStdDev(kbaxis ref)        const { return KBVector3(TMath::Sqrt(fEXY-fEX*fEY),TMath::Sqrt(fEYZ-fEY*fEZ),TMath::Sqrt(fEZX-fEZ*fEX),ref); }
+KBVector3 KBHitArray::GetSquaredMean(kbaxis ref)   const { return KBVector3(fEXX,fEYY,fEZZ,ref); }
+KBVector3 KBHitArray::GetCoSquaredMean(kbaxis ref) const { return KBVector3(fEXY,fEYZ,fEZX,ref); }
+
+TGraphErrors *KBHitArray::DrawGraph(kbaxis axis1, kbaxis axis2)
+{
+  auto graph = new TGraphErrors();
+  graph -> SetMarkerStyle(20);
+
+  TIter next(this);
+  KBHit *hit;
+  while ((hit = (KBHit *) next())) {
+    KBVector3 pos(hit->GetPosition());
+    graph -> SetPoint(graph->GetN(),pos.At(axis1),pos.At(axis2));
+  }
+
+  return graph;
+}

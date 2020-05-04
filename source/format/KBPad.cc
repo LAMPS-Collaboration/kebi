@@ -119,18 +119,22 @@ Int_t KBPad::Compare(const TObject *obj) const
 {
   auto padCompare = (KBPad *) obj;
 
-       if (padCompare -> GetLayer() < fLayer) return -1;
-  else if (padCompare -> GetLayer() > fLayer) return 1;
+  int sortEarlier = 1;
+  int sortLatter = -1;
+  int noChange = 0;
+
+       if (padCompare -> GetLayer() < fLayer) return sortLatter;
+  else if (padCompare -> GetLayer() > fLayer) return sortEarlier;
   else //same layer
   {
-         if (padCompare -> GetSection() > fSection) return -1;
-    else if (padCompare -> GetSection() < fSection) return 1;
+         if (padCompare -> GetSection() > fSection) return sortLatter;
+    else if (padCompare -> GetSection() < fSection) return sortEarlier;
     else // same layer, same section
     {
-           if (padCompare -> GetRow() > fRow) return -1;
-      else if (padCompare -> GetRow() < fRow) return 1;
+           if (padCompare -> GetRow() > fRow) return sortLatter;
+      else if (padCompare -> GetRow() < fRow) return sortEarlier;
       else // same pad
-        return 0;
+        return noChange;
     }
   }
 }
@@ -299,6 +303,17 @@ KBTpcHit *KBPad::PullOutNextFreeHit()
   }
 
   return nullptr;
+}
+
+void KBPad::PullOutHits(KBHitArray *hits)
+{
+  Int_t n = fHitArray.size();
+  if (n == 0)
+    return;
+
+  for (auto i = 0; i < n; i++)
+    hits -> AddHit(fHitArray[i]);
+  fHitArray.clear();
 }
 
 void KBPad::PullOutHits(vector<KBTpcHit *> *hits)

@@ -1,4 +1,5 @@
 #include "KBHit.hh"
+#include "KBTracklet.hh"
 #include "KBPulseGenerator.hh"
 #ifdef ACTIVATE_EVE
 #include "TEvePointSet.h"
@@ -18,7 +19,7 @@ void KBHit::Clear(Option_t *option)
 
   fTrackCandArray.clear();
 
-  fHitList.Clear(option);
+  fHitArray.Clear("C");
 }
 
 void KBHit::Print(Option_t *option) const
@@ -48,7 +49,7 @@ void KBHit::Print(Option_t *option) const
       << setw(12) << fW << endl;
 
   if (opts.Index(">")>=0)
-    fHitList.PrintHits(1);
+    fHitArray.PrintHits(1);
 }
 
 void KBHit::Copy(TObject &obj) const
@@ -59,21 +60,87 @@ void KBHit::Copy(TObject &obj) const
   hit.SetHitID(fHitID);
   hit.SetTrackID(fTrackID);
 
-  auto numHits = fHitList.GetNumHits();
-  for (auto i = 0; i < numHits; ++i)
-    hit.AddHit(fHitList.GetHit(i));
+  /* TODO
+   auto numHits = fHitArray.GetNumHits();
+   for (auto i = 0; i < numHits; ++i)
+   hit.AddHit(fHitArray.GetHit(i));
+   */
+}
+
+void KBHit::CopyFrom(KBHit *hit)
+{
+  fMCError   = hit -> GetMCError  ();
+  fMCID      = hit -> GetMCID     ();
+  fMCPurity  = hit -> GetMCPurity ();
+  fX         = hit -> GetX        ();
+  fY         = hit -> GetY        ();
+  fZ         = hit -> GetZ        ();
+  fW         = hit -> GetCharge   ();
+  fAlpha     = hit -> GetAlpha    ();
+  fHitID     = hit -> GetHitID    ();
+  fSortValue = hit -> GetSortValue();
+  fTrackID   = hit -> GetTrackID  ();
+}
+
+void KBHit::SetSortValue(Double_t val) { fSortValue = val; }
+Double_t KBHit::GetSortValue() const { return fSortValue; }
+
+void KBHit::SetSortByX(bool sortEarlierIfSmaller) {
+  if (sortEarlierIfSmaller) fSortValue =  fX;
+  else                      fSortValue = -fX;
+}
+
+void KBHit::SetSortByY(bool sortEarlierIfSmaller) {
+  if (sortEarlierIfSmaller) fSortValue =  fY;
+  else                      fSortValue = -fY;
+}
+
+void KBHit::SetSortByZ(bool sortEarlierIfSmaller) {
+  if (sortEarlierIfSmaller) fSortValue =  fZ;
+  else                      fSortValue = -fZ;
+}
+
+void KBHit::SetSortByCharge(bool sortEarlierIfSmaller)
+{
+  if (sortEarlierIfSmaller) fSortValue =  fW;
+  else                      fSortValue = -fW;
+}
+
+void KBHit::SetSortByDistanceTo(TVector3 point, bool sortEarlierIfCloser)
+{
+  auto dist = (point - GetPosition()).Mag();
+  if (sortEarlierIfCloser) fSortValue =  dist;
+  else                     fSortValue = -dist;
+}
+
+Bool_t KBHit::IsSortable() const { return true; }
+
+Int_t KBHit::Compare(const TObject *obj) const
+{
+  auto hitCompare = (KBHit *) obj;
+
+  int sortEarlier = 1;
+  int sortLatter = -1;
+  int sortSame = 0;
+
+  if (fSortValue < hitCompare -> GetSortValue()) return sortEarlier;
+  else if (fSortValue > hitCompare -> GetSortValue()) return sortLatter;
+
+  return sortSame;
 }
 
 void KBHit::PropagateMC()
 {
-  if (!IsCluster())
+  if (fHitArray.GetNumHits()==0)
     return;
 
-  auto hitArray = fHitList.GetHitArray();
   vector<Int_t> mcIDs;
   vector<Int_t> counts;
 
-  for (auto component : *hitArray) {
+  TIter next(&fHitArray);
+  KBHit *component;
+  while ((component = (KBHit *) next()))
+  {
     auto mcIDCoponent = component -> GetMCID();
 
     Int_t numMCIDs = mcIDs.size();
@@ -111,12 +178,13 @@ void KBHit::PropagateMC()
     auto mcIDFinal = mcIDs[iID];
 
     auto errorFinal = 0.;
-    for (auto component : *hitArray)
+    next.Begin();
+    while ((component = (KBHit *) next()))
       if (component -> GetMCID() == mcIDFinal)
         errorFinal += component -> GetMCError();
 
     errorFinal = errorFinal/counts[iID];
-    Double_t purity = Double_t(counts[iID])/hitArray->size();
+    Double_t purity = Double_t(counts[iID])/fHitArray.GetNumHits();
     SetMCTag(mcIDFinal, errorFinal, purity);
   }
   else
@@ -129,7 +197,8 @@ void KBHit::PropagateMC()
       auto mcIDCand = mcIDs[iID];
 
       auto errorCand = 0.;
-      for (auto component : *hitArray)
+      next.Begin();
+      while ((component = (KBHit *) next()))
         if (component -> GetMCID() == mcIDCand)
           errorCand += component -> GetMCError();
       errorCand = errorCand/counts[iID];
@@ -137,14 +206,12 @@ void KBHit::PropagateMC()
       if (errorCand < errorFinal) {
         mcIDFinal = mcIDCand;
         errorFinal = errorCand;
-        purity = Double_t(counts[iID])/hitArray->size();
+        purity = Double_t(counts[iID])/fHitArray.GetNumHits();
       }
     }
     SetMCTag(mcIDFinal, errorFinal, purity);
   }
 }
-
-Bool_t KBHit::IsCluster() { return fHitList.GetNumHits() == 0 ? false : true; }
 
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
@@ -156,20 +223,20 @@ void KBHit::SetCharge(Double_t charge) { fW = charge; }
 
 void KBHit::AddHit(KBHit *hit)
 {
-  fHitList.AddHit(hit);
-  fX = fHitList.GetMeanX();
-  fY = fHitList.GetMeanY();
-  fZ = fHitList.GetMeanZ();
-  fW = fHitList.GetW();
+  fHitArray.AddHit(hit);
+  fX = fHitArray.GetMeanX();
+  fY = fHitArray.GetMeanY();
+  fZ = fHitArray.GetMeanZ();
+  fW = fHitArray.GetW();
 }
 
 void KBHit::RemoveHit(KBHit *hit)
 {
-  fHitList.RemoveHit(hit);
-  fX = fHitList.GetMeanX();
-  fY = fHitList.GetMeanY();
-  fZ = fHitList.GetMeanZ();
-  fW = fHitList.GetW();
+  fHitArray.RemoveHit(hit);
+  fX = fHitArray.GetMeanX();
+  fY = fHitArray.GetMeanY();
+  fZ = fHitArray.GetMeanZ();
+  fW = fHitArray.GetW();
 }
 
    Int_t KBHit::GetHitID()   const { return fHitID; }
@@ -181,19 +248,19 @@ Double_t KBHit::GetZ()       const { return fZ; }
 Double_t KBHit::GetCharge()  const { return fW; }
 
 
-TVector3 KBHit::GetMean()          const { return fHitList.GetMean();          }
-TVector3 KBHit::GetVariance()      const { return fHitList.GetVariance();      }
-TVector3 KBHit::GetCovariance()    const { return fHitList.GetCovariance();    }
-TVector3 KBHit::GetStdDev()        const { return fHitList.GetStdDev();        }
-TVector3 KBHit::GetSquaredMean()   const { return fHitList.GetSquaredMean();   }
-TVector3 KBHit::GetCoSquaredMean() const { return fHitList.GetCoSquaredMean(); }
+TVector3 KBHit::GetMean()          const { return fHitArray.GetMean();          }
+TVector3 KBHit::GetVariance()      const { return fHitArray.GetVariance();      }
+TVector3 KBHit::GetCovariance()    const { return fHitArray.GetCovariance();    }
+TVector3 KBHit::GetStdDev()        const { return fHitArray.GetStdDev();        }
+TVector3 KBHit::GetSquaredMean()   const { return fHitArray.GetSquaredMean();   }
+TVector3 KBHit::GetCoSquaredMean() const { return fHitArray.GetCoSquaredMean(); }
 
-KBVector3 KBHit::GetMean(kbaxis ref)          const { return fHitList.GetMean(ref);          }
-KBVector3 KBHit::GetVariance(kbaxis ref)      const { return fHitList.GetVariance(ref);      }
-KBVector3 KBHit::GetCovariance(kbaxis ref)    const { return fHitList.GetCovariance(ref);    }
-KBVector3 KBHit::GetStdDev(kbaxis ref)        const { return fHitList.GetStdDev(ref);        }
-KBVector3 KBHit::GetSquaredMean(kbaxis ref)   const { return fHitList.GetSquaredMean(ref);   }
-KBVector3 KBHit::GetCoSquaredMean(kbaxis ref) const { return fHitList.GetCoSquaredMean(ref); }
+KBVector3 KBHit::GetMean(kbaxis ref)          const { return fHitArray.GetMean(ref);          }
+KBVector3 KBHit::GetVariance(kbaxis ref)      const { return fHitArray.GetVariance(ref);      }
+KBVector3 KBHit::GetCovariance(kbaxis ref)    const { return fHitArray.GetCovariance(ref);    }
+KBVector3 KBHit::GetStdDev(kbaxis ref)        const { return fHitArray.GetStdDev(ref);        }
+KBVector3 KBHit::GetSquaredMean(kbaxis ref)   const { return fHitArray.GetSquaredMean(ref);   }
+KBVector3 KBHit::GetCoSquaredMean(kbaxis ref) const { return fHitArray.GetCoSquaredMean(ref); }
 
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }
@@ -220,10 +287,11 @@ TEveElement *KBHit::CreateEveElement()
 {
   auto pointSet = new TEvePointSet("Hit");
   pointSet -> SetMarkerColor(kAzure-8);
-  pointSet -> SetMarkerSize(0.4);
+  pointSet -> SetMarkerStyle(20);
+  pointSet -> SetMarkerSize(0.5);
   //pointSet -> SetMarkerColor(kBlack);
   //pointSet -> SetMarkerSize(1.0);
-  pointSet -> SetMarkerStyle(38);
+  //pointSet -> SetMarkerStyle(38);
 
   return pointSet;
 }

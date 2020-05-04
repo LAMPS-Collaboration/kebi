@@ -31,6 +31,9 @@ class KBTpcHit : public KBHit
     virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
 
+    virtual void PrintTpcHit() const;
+    void CopyFrom(KBTpcHit const *hit);
+
     virtual TF1 *GetPulseFunction(Option_t *option = "");
 
     void SetPadID(Int_t id);
@@ -44,6 +47,8 @@ class KBTpcHit : public KBHit
     Int_t GetRow() const;
     Int_t GetLayer() const;
     Double_t GetTb() const;
+
+    void SetSortByLayer(bool sortEarlierIfSmaller);
 
 #ifdef ACTIVATE_EVE
     virtual TEveElement *CreateEveElement();

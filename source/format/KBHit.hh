@@ -3,7 +3,7 @@
 
 #include "KBWPoint.hh"
 #include "KBContainer.hh"
-#include "KBHitList.hh"
+#include "KBHitArray.hh"
 
 #ifdef ACTIVATE_EVE
 #include "TEveElement.h"
@@ -16,17 +16,23 @@
 #include <vector>
 using namespace std;
 
+typedef KBVector3::Axis kbaxis;
+
+class KBTracklet;
+
 class KBHit : public KBWPoint
 {
   protected:
     Int_t fHitID = -1;
     Int_t fTrackID = -1;
 
-    Double_t fAlpha;
+    Double_t fAlpha; // TODO the polar angle
 
-    KBHitList fHitList;
+    KBHitArray fHitArray; //!
 
     vector<Int_t> fTrackCandArray;  //!
+
+    Double_t fSortValue = 0; // sort earlier if smaller, latter if larger
 
   public :
     KBHit() { Clear(); }
@@ -36,10 +42,18 @@ class KBHit : public KBWPoint
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
+    void CopyFrom(KBHit *hit);
+
+    void SetSortValue(Double_t val);
+    void SetSortByX(bool sortEarlierIfSmaller);
+    void SetSortByY(bool sortEarlierIfSmaller);
+    void SetSortByZ(bool sortEarlierIfSmaller);
+    void SetSortByCharge(bool sortEarlierIfSmaller);
+    void SetSortByDistanceTo(TVector3 point, bool sortEarlierIfCloser);
+    virtual Bool_t IsSortable() const;
+    virtual Int_t Compare(const TObject *obj) const;
 
     virtual void PropagateMC();
-
-    Bool_t IsCluster();
 
     void SetHitID(Int_t id);
     void SetTrackID(Int_t id);
@@ -52,7 +66,11 @@ class KBHit : public KBWPoint
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);
 
-    KBHitList *GetHitList() { return &fHitList; }
+    Double_t GetSortValue() const;
+
+    KBHitArray *GetHitArray() { return &fHitArray; }
+
+       Int_t GetNumHits() const;
 
        Int_t GetHitID()   const;
        Int_t GetTrackID() const;

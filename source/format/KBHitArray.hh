@@ -1,8 +1,10 @@
-#ifndef KBHITLIST_HH
-#define KBHITLIST_HH
+#ifndef KBHITCLONESARRAY_HH
+#define KBHITCLONESARRAY_HH
 
+#include "TObjArray.h"
 #include "TObject.h"
 #include "TCanvas.h"
+#include "TGraphErrors.h"
 
 #include <vector>
 #include <iomanip>
@@ -13,20 +15,17 @@ using namespace std;
 #include "KBGeoPlane.hh"
 #include "KBGeoCircle.hh"
 #include "KBGeoHelix.hh"
-
-class KBHit;
+#include "KBVector3.hh"
 
 typedef KBVector3::Axis kbaxis;
 
-class KBHitList : public KBContainer
+class KBHit;
+
+class KBHitArray : public TObjArray
 {
   private:
-    vector<KBHit*> fHitArray; //!
-    vector<Int_t> fHitIDArray;
-
        Int_t fN = 0;  ///< Number of hits
     Double_t fW = 0;  ///< Sum of charge
-
     Double_t fEX  = 0;  ///< \<x>   Mean value of x
     Double_t fEY  = 0;  ///< \<y>   Mean value of y
     Double_t fEZ  = 0;  ///< \<z>   Mean value of z
@@ -40,12 +39,24 @@ class KBHitList : public KBContainer
     KBODRFitter *fODRFitter = nullptr; //!
 
   public:
-    KBHitList();
-    virtual ~KBHitList() {}
+    KBHitArray(Int_t size = 1000);
+    virtual ~KBHitArray();
 
-    virtual void Clear(Option_t *option = "");
+    KBHit *GetHit(Int_t idx) const;
+    KBHit *GetLastHit() const;
+
+    void SortByX(bool sortEarlierIfSmaller=true);
+    void SortByY(bool sortEarlierIfSmaller=true);
+    void SortByZ(bool sortEarlierIfSmaller=true);
+    void SortByCharge(bool sortEarlierIfSmaller=true);
+    void SortByDistanceTo(TVector3 point, bool sortEarlierIfCloser=true);
+    void SortByLayer(bool sortEarlierIfSmaller=true);
+
+    virtual void Clear(Option_t *option = "C");
     virtual void Print(Option_t *option = "at") const;
     virtual void Copy (TObject &object) const;
+
+    void MoveHitsTo(KBHitArray *hitArray);
 
     void PrintHitIDs(Int_t rank) const;
     void PrintHits(Int_t rank) const;
@@ -59,21 +70,23 @@ class KBHitList : public KBContainer
 
     void AddHit(KBHit *hit);
     /// Fit is not possible if point is added through this method
-    void Add(TVector3 pos, Double_t w=0);
+    void AddXYZW(TVector3 pos, Double_t w=0);
     /// Fit is not possible if point is added through this method
-    void Add(Double_t x, Double_t y, Double_t z, Double_t w=0);
+    void AddXYZW(Double_t x, Double_t y, Double_t z, Double_t w=0);
 
     bool RemoveHit(KBHit *hit);
+    bool RemoveHit(Int_t iHit);
+    virtual void RemoveLastHit();
+
     /// Fit is not possible if point is removed through this method
     bool Subtract(TVector3 pos, Double_t w=0);
     /// Fit is not possible if point is removed through this method
     bool Subtract(Double_t x, Double_t y, Double_t z, Double_t w=0);
 
-    vector<KBHit*> *GetHitArray();
+    KBHitArray *GetHitArray();
     vector<Int_t> *GetHitIDArray();
 
     Int_t GetNumHits() const;
-    KBHit *GetHit(Int_t idx) const;
     Int_t GetHitID(Int_t idx) const;
 
     Double_t GetW() const;
@@ -115,7 +128,10 @@ class KBHitList : public KBContainer
     KBVector3 GetSquaredMean(kbaxis)   const;
     KBVector3 GetCoSquaredMean(kbaxis) const;
 
-    ClassDef(KBHitList, 2)
+    TGraphErrors *DrawGraph(kbaxis,kbaxis);
+
+
+  ClassDef(KBHitArray, 0);
 };
 
 #endif
