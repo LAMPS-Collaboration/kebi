@@ -44,9 +44,9 @@ bool KBTask::InitTasks()
   KBTask* task;
 
   while ( (task = dynamic_cast<KBTask*>(iter())) ) {
-    cout << "  " << "Initializing " << task -> GetName() << "." << endl;
+    kb_info << "  " << "Initializing " << task -> GetName() << "." << endl;
     if (task -> Init() == false) {
-      cout << "  Initialization failed!" << endl;
+      kb_warning << "  Initialization failed!" << endl;
       return false;
     }
   }
@@ -77,9 +77,9 @@ bool KBTask::EndOfRunTasks()
   KBTask* task;
 
   while ( (task = dynamic_cast<KBTask*>(iter())) ) {
-    cout << "  " << "EndOfRun " << task -> GetName() << "." << endl;
+    kb_info << "  " << "EndOfRun " << task -> GetName() << "." << endl;
     if (task -> EndOfRun() == false) {
-      cout << "  EndOfRun failed!" << endl;
+      kb_warning << "  EndOfRun failed!" << endl;
       return false;
     }
   }

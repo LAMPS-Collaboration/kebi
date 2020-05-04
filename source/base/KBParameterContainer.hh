@@ -67,12 +67,17 @@ class KBParameterContainer : public TObjArray
     Bool_t SetPar(TString name, Double_t val, Bool_t overwrite = false);     ///< Set Double_t type parameter with given name
     Bool_t SetPar(TString name, TString val, Bool_t overwrite = false);      ///< Set TString  type parameter with given name
     Bool_t SetPar(TString name, const char* val, Bool_t overwrite = false);  ///< Set TString  type parameter with given name
+    Bool_t SetParColor(TString name, TString valColor, Bool_t overwrite = false);
 
     Bool_t   GetParBool(TString name);   ///< Get Bool_t   type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     Int_t    GetParInt(TString name);    ///< Get Int_t    type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     Double_t GetParDouble(TString name); ///< Get Double_t type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     TString  GetParString(TString name); ///< Get TString  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
     KBVector3::Axis  GetParAxis(TString name);   ///< Get KBVector3::Axis  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+
+    Int_t GetParWidth(TString name) { return GetParInt(name); }
+    Int_t GetParColor(TString name) { return GetParInt(name); }
+    Double_t GetParSize(TString name) { return GetParDouble(name); }
 
     Bool_t CheckPar(TString name);
 

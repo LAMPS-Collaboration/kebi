@@ -29,7 +29,8 @@ void KBParameterContainer::SetDebugMode(Bool_t val) { fDebugMode = val; }
 
 void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
 {
-  if (filename && strstr(filename,".par"))
+  //if (filename && strstr(filename,".par"))
+  if (filename && strstr(filename,".conf"))
   {
     kr_info(0) << "Writting " << filename << " as parameter file." << endl;
     ofstream out(filename);
@@ -90,7 +91,7 @@ void KBParameterContainer::SaveAs(const char *filename, Option_t *option) const
           out << " # YOU MUST MODIFY THIS PARAMETER VALUE";
         out << endl;
       }
-      else if (className == "TParameter<Bool_t>") {
+      else if (className == "TParameter<bool>") {
         TParameter<Bool_t> *par = (TParameter<Bool_t> *) obj;
         TString key = par -> GetName();
         Bool_t newpar = false;
@@ -180,7 +181,7 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
       ReplaceEnvironmentVariable(val);
       AddFile(val, parName);
     }
-    else if (parType == "b" || parType == "bool" || parType == "Bool_t") {
+    else if (parType == "b" || parType == "bool" || parType == "bool_t") {
       TString sval;
       ss >> sval;
       sval.ToLower();
@@ -189,12 +190,18 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
         val = true;
       SetPar(parName, val, overwrite);
     }
-    else if (parType == "i" || parType == "int" || parType == "int_t") {
+    else if (parType == "i" || parType == "int" || parType == "int_t" || parType == "w" || parType == "width" || parType == "width_t")
+    {
       Int_t val;
       ss >> val;
       SetPar(parName, val, overwrite);
     }
-    else if (parType == "d" || parType == "double" || parType == "double_t") {
+    else if (parType == "c" || parType == "color" || parType == "color_t") {
+      TString val;
+      ss >> val;
+      SetParColor(parName, val, overwrite);
+    }
+    else if (parType == "d" || parType == "double" || parType == "double_t" || parType == "size" || parType == "size_t" ) {
       Double_t val;
       ss >> val;
       SetPar(parName, val, overwrite);
@@ -297,7 +304,7 @@ void KBParameterContainer::Print(Option_t *option) const
       Double_t value = par -> GetVal();
       kr_info(0) << left << "  " << setw(25) << key << "  d  " << value << endl;
     }
-    else if (className == "TParameter<Bool_t>") {
+    else if (className == "TParameter<bool>") {
       TParameter<Bool_t> *par = (TParameter<Bool_t> *) obj;
       TString key = par -> GetName();
       TString value = par -> GetVal() == true ? "true" : "false";
@@ -364,6 +371,52 @@ Bool_t KBParameterContainer::SetPar(TString name, TString val, Bool_t overwrite)
   }
 
   Add(new TNamed(name, val));
+  return true;
+}
+
+Bool_t KBParameterContainer::SetParColor(TString name, TString valColor, Bool_t overwrite)
+{
+  if (FindObject(name) != nullptr) {
+    if (overwrite)
+      this -> Remove(FindObject(name));
+    else {
+      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+      return false;
+    }
+  }
+
+  Int_t val = 0;
+  if (valColor.IsDec()) {
+    val = valColor.Atoi();
+  }
+  else if (valColor.Index("k")==0) {
+    valColor.ReplaceAll("kWhite"  ,"0");
+    valColor.ReplaceAll("kBlack"  ,"1");
+    valColor.ReplaceAll("kGray"   ,"920");
+    valColor.ReplaceAll("kRed"    ,"632");
+    valColor.ReplaceAll("kGreen"  ,"416");
+    valColor.ReplaceAll("kBlue"   ,"600");
+    valColor.ReplaceAll("kYellow" ,"400");
+    valColor.ReplaceAll("kMagenta","616");
+    valColor.ReplaceAll("kCyan"   ,"432");
+    valColor.ReplaceAll("kOrange" ,"800");
+    valColor.ReplaceAll("kSpring" ,"820");
+    valColor.ReplaceAll("kTeal"   ,"840");
+    valColor.ReplaceAll("kAzure"  ,"860");
+    valColor.ReplaceAll("kViolet" ,"880");
+    valColor.ReplaceAll("kPink"   ,"900");
+
+    auto valArray = valColor.Tokenize("+");
+    int val1 = (((TObjString *) valArray->At(0)) -> GetString()).Atoi();
+    int val2 = 0;
+    if (valArray->GetEntriesFast() > 1)
+      val2 = (((TObjString *) valArray->At(1)) -> GetString()).Atoi();
+    val = val1 + val2;
+  }
+  else
+    return false;
+
+  Add(new TParameter<Int_t>(name, val));
   return true;
 }
 

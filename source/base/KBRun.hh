@@ -127,7 +127,7 @@ class KBRun : public KBTask
     bool Event(Long64_t eventID);
     bool NextEvent();
 
-    void Run(); ///< Run all events
+    void Run(Long64_t endEventID = -1); ///< Run all events
 
     void RunSingle(Long64_t eventID); ///< Run single event given eventID
     void RunInRange(Long64_t startID, Long64_t endID); ///< Run in range from startID to endID
@@ -136,11 +136,11 @@ class KBRun : public KBTask
     void SignalEndOfRun();
     void SignalInterrupt();
 
-    /// Run eventdisplay of given eventID.
+    /// Run eventdisplay of given eveEventID.
     /// option is used to activate following displays:
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
-    void RunEve(Long64_t eventID, TString option="ep");
+    void RunEve(Long64_t eveEventID=0, TString option="ep");
     void SelectEveBranches(TString option);
     void SetEveScale(Double_t scale);
     Color_t GetColor();
@@ -149,6 +149,8 @@ class KBRun : public KBTask
     void AddEveElementToEvent(KBContainer *eveObj, bool permanent = true);
     void AddEveElementToEvent(TEveElement *element, bool permanent = true);
 #endif
+
+    void WriteCvsDetectorPlanes(TString format = "pdf");
 
     static void ClickSelectedPadPlane();
     void DrawPadByPosition(Double_t x, Double_t y);
@@ -160,7 +162,7 @@ class KBRun : public KBTask
     void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
-    TString ConfigureDataPath(TString name, bool search = false);
+    TString ConfigureDataPath(TString &name, bool search = false);
     TString ConfigureEnv(TString name);
 
     bool CheckFileExistence(TString fileName, bool print = false);
@@ -187,6 +189,7 @@ class KBRun : public KBTask
 
     TString fDataPath = "";
 
+    TString fInputVersion = "";
     TString fInputFileName = "";
     TString fInputTreeName = "";
     TFile *fInputFile = nullptr;
@@ -198,6 +201,7 @@ class KBRun : public KBTask
     vector<TString> fInputFileNameArray;
     vector<TString> fFriendFileNameArray;
 
+    TString fOutputVersion = "";
     TString fOutputFileName = "";
     TString fTag = "";
     Int_t fSplit = -1;
@@ -208,8 +212,9 @@ class KBRun : public KBTask
     TObjArray *fPersistentBranchArray = nullptr;
     TObjArray *fTemporaryBranchArray = nullptr;
 
-    Int_t fNBranches = 0;
+    Int_t fNumBranches = 0;
     TObject **fBranchPtr;
+    std::vector<TString> fBranchNames;
     std::map<TString, TObject*> fBranchPtrMap;
 
     Long64_t fNumEntries = 0;
@@ -230,7 +235,13 @@ class KBRun : public KBTask
 
     KBDetectorSystem *fDetectorSystem = nullptr;
 
+    std::vector<TString> fListOfGitBranches;
+    std::vector<int> fListOfNumTagsInGitBranches;
+    std::vector<TString> fListOfGitHashTags;
+    std::vector<TString> fListOfVersionMarks;
+
 #ifdef ACTIVATE_EVE
+    TObjArray *fEveEventManagerArray = nullptr;
     TEveEventManager *fEveEventManager = nullptr;
     std::vector<TEveElement *> fEveElementList;
     std::vector<TEveElement *> fPermanentEveElementList;
