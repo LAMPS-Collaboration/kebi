@@ -7,11 +7,13 @@ ClassImp(KBTracklet)
 
 void KBTracklet::PropagateMC()
 {
-  auto hitArray = fHitList.GetHitArray();
   vector<Int_t> mcIDs;
   vector<Int_t> counts;
 
-  for (auto component : *hitArray) {
+  TIter next(&fHitArray);
+  KBHit *component;
+  while ((component = (KBHit *) next()))
+  {
     auto mcIDCoponent = component -> GetMCID();
 
     Int_t numMCIDs = mcIDs.size();
@@ -49,12 +51,13 @@ void KBTracklet::PropagateMC()
     auto mcIDFinal = mcIDs[iID];
 
     auto errorFinal = 0.;
-    for (auto component : *hitArray)
+    next.Begin();
+    while ((component = (KBHit *) next()))
       if (component -> GetMCID() == mcIDFinal)
         errorFinal += component -> GetMCError();
 
     errorFinal = errorFinal/counts[iID];
-    Double_t purity = Double_t(counts[iID])/hitArray->size();
+    Double_t purity = Double_t(counts[iID])/fHitArray.GetNumHits();
     SetMCTag(mcIDFinal, errorFinal, purity);
   }
   else
@@ -67,7 +70,8 @@ void KBTracklet::PropagateMC()
       auto mcIDCand = mcIDs[iID];
 
       auto errorCand = 0.;
-      for (auto component : *hitArray)
+      next.Begin();
+      while ((component = (KBHit *) next()))
         if (component -> GetMCID() == mcIDCand)
           errorCand += component -> GetMCError();
       errorCand = errorCand/counts[iID];
@@ -75,7 +79,7 @@ void KBTracklet::PropagateMC()
       if (errorCand < errorFinal) {
         mcIDFinal = mcIDCand;
         errorFinal = errorCand;
-        purity = Double_t(counts[iID])/hitArray->size();
+        purity = Double_t(counts[iID])/fHitArray.GetNumHits();
       }
     }
     SetMCTag(mcIDFinal, errorFinal, purity);
@@ -90,17 +94,17 @@ void KBTracklet::Clear(Option_t *option)
   fParentID = -1;
   fPDG = -1;
 
-  fHitList.Clear(option);  //!
+  fHitArray.Clear();  //!
 }
 
 void KBTracklet::AddHit(KBHit *hit)
 {
-  fHitList.AddHit(hit);
+  fHitArray.AddHit(hit);
 }
 
 void KBTracklet::RemoveHit(KBHit *hit)
 {
-  fHitList.RemoveHit(hit);
+  fHitArray.RemoveHit(hit);
 }
 
 #ifdef ACTIVATE_EVE

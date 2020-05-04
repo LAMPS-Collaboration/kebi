@@ -1,4 +1,5 @@
 #include "KBHelixTrack.hh"
+#include "KBGeoPlaneWithCenter.hh"
 
 #include <iostream>
 #include <iomanip>
@@ -6,7 +7,10 @@ using namespace std;
 
 #ifdef ACTIVATE_EVE
 #include "TEveLine.h"
+#include "TEveArrow.h"
 #endif
+
+//#define DEBUG_EVE
 
 ClassImp(KBHelixTrack)
 
@@ -41,7 +45,9 @@ void KBHelixTrack::Clear(Option_t *)
 
   fIsPositiveChargeParticle = true;
 
-  fHitList.Clear();
+  fHitArray.Clear();
+  fHitIDArray.clear();
+
   fdEdxArray.clear();
 }
 
@@ -57,40 +63,52 @@ void KBHelixTrack::Print(Option_t *option) const
 
     kr_info(0) << GetFitStatusString() << "-" << trackID << "(" << parentID << ")"
             << " | p=" << Momentum().Mag() << "[MeV]" << endl;
-    return;
   }
+  else {
+    TString center = "("+TString::Itoa(fI,10)+", "+TString::Itoa(fJ,10)+")";
 
-  TString center = "("+TString::Itoa(fI,10)+", "+TString::Itoa(fJ,10)+")";
+    if (fA == KBVector3::kX) center = TString("(y,z): ")+center;
+    else if (fA == KBVector3::kY) center = TString("(z,x): ")+center;
+    else if (fA == KBVector3::kZ) center = TString("(x,y): ")+center;
 
-       if (fA == KBVector3::kX) center = TString("(y,z): ")+center;
-  else if (fA == KBVector3::kY) center = TString("(z,x): ")+center;
-  else if (fA == KBVector3::kZ) center = TString("(x,y): ")+center;
+    kb_out << left;
+    kr_info(0) << setw(13) << "Track ID"     << " : " << fTrackID << endl;
+    kr_info(0) << setw(13) << "Parent ID"    << " : " << fParentID << endl;
+    kr_info(0) << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
+    kr_info(0) << setw(13) << "# of Hits"    << " : " << fHitArray.GetNumHits() << endl;
 
-  kb_out << left;
-  kr_info(0) << setw(13) << "Track ID"     << " : " << fTrackID << endl;
-  kr_info(0) << setw(13) << "Parent ID"    << " : " << fParentID << endl;
-  kr_info(0) << setw(13) << "Fit Status"   << " : " << GetFitStatusString() << endl;
-  kr_info(0) << setw(13) << "# of Hits"    << " : " << fHitList.GetNumHits() << endl;
+    if (fFitStatus == KBHelixTrack::kHelix || fFitStatus == KBHelixTrack::kGenfitTrack)
+    {
+      kr_info(0) << setw(13) << "Center Axis"  << " : " << fA << endl;
+      kr_info(0) << setw(13) << "Helix Center" << " : " << center << " [mm]" << endl;
+      kr_info(0) << setw(13) << "Helix Radius" << " : " << fR << " [mm]" << endl;
+      kr_info(0) << setw(13) << "Dip Angle"    << " : " << DipAngle() << endl;
+      kr_info(0) << setw(13) << "Fit RMS-w/h"  << " : " << fRMSR << " / " << fRMST << " [mm]" << endl;
+      kr_info(0) << setw(13) << "Charge"       << " : " << fHitArray.GetW() << " [ADC]" << endl;;
+      kr_info(0) << setw(13) << "Track Length" << " : " << TrackLength() << " [mm]" << endl;;
+      kr_info(0) << setw(13) << "Momentum"     << " : " << Momentum().Mag() << " [MeV]" << endl;;
 
-  if (fFitStatus != KBHelixTrack::kHelix && fFitStatus != KBHelixTrack::kGenfitTrack)
-    return;
-
-  kr_info(0) << setw(13) << "Center Axis"  << " : " << fA << endl;
-  kr_info(0) << setw(13) << "Helix Center" << " : " << center << " [mm]" << endl;
-  kr_info(0) << setw(13) << "Helix Radius" << " : " << fR << " [mm]" << endl;
-  kr_info(0) << setw(13) << "Dip Angle"    << " : " << DipAngle() << endl;
-  kr_info(0) << setw(13) << "Fit RMS-w/h"  << " : " << fRMSR << " / " << fRMST << " [mm]" << endl;
-  kr_info(0) << setw(13) << "Charge"       << " : " << fHitList.GetW() << " [ADC]" << endl;;
-  kr_info(0) << setw(13) << "Track Length" << " : " << TrackLength() << " [mm]" << endl;;
-  kr_info(0) << setw(13) << "Momentum"     << " : " << Momentum().Mag() << " [MeV]" << endl;;
-
-  if (fFitStatus == KBHelixTrack::kGenfitTrack) {
-    kr_info(0) << setw(13) << "GF-Momentum"  << " : " << fGenfitMomentum << " [MeV]" << endl;;
-    kr_info(0) << setw(13) << "dEdx (70 %)"  << " : " << GetdEdxWithCut(0, 0.7) << " [ADC/mm]" << endl;;
+      if (fFitStatus == KBHelixTrack::kGenfitTrack) {
+        kr_info(0) << setw(13) << "GF-Momentum"  << " : " << fGenfitMomentum << " [MeV]" << endl;;
+        kr_info(0) << setw(13) << "dEdx (70 %)"  << " : " << GetdEdxWithCut(0, 0.7) << " [ADC/mm]" << endl;;
+      }
+    }
+    else if (fFitStatus == KBHelixTrack::kPlane) {
+      KBVector3 normal = GetPlaneNormal();
+      kr_info(0) << "normal: (" << normal.X() << ", " << normal.Y() << ", " << normal.Z() << ")" << endl;
+      KBVector3 mean = fHitArray.GetMean(fA);
+      kr_info(0) << "mean: (" << mean.X() << ", " << mean.Y() << ", " << mean.Z() << ")" << endl;
+    }
+    if (fFitStatus == KBHelixTrack::kLine) {
+      KBVector3 direction = GetLineDirection();
+      kr_info(0) << "direction: (" << direction.X() << ", " << direction.Y() << ", " << direction.Z() << ")" << endl;
+      KBVector3 mean = fHitArray.GetMean(fA);
+      kr_info(0) << "mean: (" << mean.X() << ", " << mean.Y() << ", " << mean.Z() << ")" << endl;
+    }
   }
 
   if (opts.Index(">")>=0)
-    fHitList.PrintHits(1);
+    fHitArray.PrintHits(1);
 }
 
 void KBHelixTrack::Copy(TObject &obj) const
@@ -107,10 +125,20 @@ void KBHelixTrack::Copy(TObject &obj) const
   track.SetGenfitID(fGenfitID);
   track.SetGenfitMomentum(fGenfitMomentum);
 
-  auto numHits = fHitList.GetNumHits();
+  auto numHits = fHitArray.GetNumHits();
   for (auto i=0; i<numHits; ++i)
-    track.AddHit(fHitList.GetHit(i));
+    track.AddHit(fHitArray.GetHit(i));
 }
+
+/*
+const char *KBHelixTrack::GetName() const
+{
+  if (fFitStatus == KBHelixTrack::kPlane)
+    return "Plane";
+
+  return TObject::GetName();
+}
+*/
 
 #ifdef ACTIVATE_EVE
 bool KBHelixTrack::DrawByDefault() { return true; }
@@ -126,29 +154,75 @@ TEveElement *KBHelixTrack::CreateEveElement()
 void KBHelixTrack::SetEveElement(TEveElement *element, Double_t scale)
 {
   auto line = (TEveLine *) element;
-  line -> SetElementName("HelixTrack");
-  line -> Reset();
+  if (fFitStatus == KBHelixTrack::kPlane) {
+    line -> Reset();
+    line -> SetElementName(Form("HelixTrackPlane%d",fTrackID));
+    TVector3 vecN = GetPlaneNormal();
+    TVector3 mean = fHitArray.GetMean(fA);
+    KBGeoPlaneWithCenter plane(mean,vecN);
+    TVector3 vecU = plane.GetVectorU();
 
-  line -> SetElementName(Form("HelixTrack%d",fTrackID));
-
-  if (fParentID > -1)
-    line -> SetLineColor(kPink);
-  else
-    line -> SetLineColor(kGray);
-
-  Double_t dalpha = TMath::Abs(fH-fT)/200.;
-  Double_t t, h;
-  if (fT < fH) {
-    t = fT;
-    h = fH;
-  } else {
-    h = fT;
-    t = fH;
+    TVector3 vecR = vecU;
+    Double_t rrr = 1.5*(fHitArray.GetVariance()).Mag();
+    //Double_t hhh = fRMS;
+    Double_t dalpha = TMath::Pi()/100.;
+    for (Double_t alpha = 0; alpha < 2*TMath::Pi(); alpha += dalpha) {
+      vecR.Rotate(dalpha,vecN);
+      TVector3 pos = rrr*vecR+mean;
+      line -> SetNextPoint(pos.X(),pos.Y(),pos.Z());
+#ifdef DEBUG_EVE
+    kb_debug << "pos:     " << pos.X() << ", " << pos.Y() << ", " << pos.Z() << endl;
+#endif
+    }
+    line -> SetNextPoint(mean.X(), mean.Y(), mean.Z());
+#ifdef DEBUG_EVE
+    kb_debug << "mean:     " << mean.X() << ", " << mean.Y() << ", " << mean.Z() << endl;
+#endif
+    TVector3 pos = mean + rrr*vecN;
+    line -> SetNextPoint(pos.X(),pos.Y(),pos.Z());
+#ifdef DEBUG_EVE
+    kb_debug << "point:     " << pos.X() << ", " << pos.Y() << ", " << pos.Z() << endl;
+#endif
   }
+  else if (fFitStatus == KBHelixTrack::kLine) {
+    line -> Reset();
+    line -> SetElementName(Form("HelixTrackLine%d",fTrackID));
 
-  for (Double_t alpha = t; alpha < h; alpha += dalpha) {
-    auto pos = scale*PositionAtAlpha(alpha);
-    line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
+    Double_t rrr = 1.5*(fHitArray.GetVariance()).Mag();
+    TVector3 direction = GetLineDirection();
+    TVector3 mean = fHitArray.GetMean(fA);
+    auto pointing = mean+rrr*direction;
+
+    line -> SetNextPoint(mean.X(),mean.Y(),mean.Z());
+    line -> SetNextPoint(pointing.X(),pointing.Y(),pointing.Z());
+#ifdef DEBUG_EVE
+    kb_debug << "mean:     " << mean.X() << ", " << mean.Y() << ", " << mean.Z() << endl;
+    kb_debug << "pointing: " << pointing.X() << ", " << pointing.Y() << ", " << pointing.Z() << endl;
+#endif
+  }
+  else if (fFitStatus == KBHelixTrack::kHelix) {
+    line -> Reset();
+    line -> SetElementName(Form("HelixTrack%d",fTrackID));
+
+    if (fParentID > -1)
+      line -> SetLineColor(kPink);
+    else
+      line -> SetLineColor(kGray);
+
+    Double_t dalpha = TMath::Abs(fH-fT)/200.;
+    Double_t t, h;
+    if (fT < fH) {
+      t = fT;
+      h = fH;
+    } else {
+      h = fT;
+      t = fH;
+    }
+
+    for (Double_t alpha = t; alpha < h; alpha += dalpha) {
+      auto pos = scale*PositionAtAlpha(alpha);
+      line -> SetNextPoint(pos.X(), pos.Y(), pos.Z());
+    }
   }
 }
 
@@ -159,7 +233,7 @@ void KBHelixTrack::AddToEveSet(TEveElement *, Double_t)
 
 bool KBHelixTrack::Fit()
 {
-  auto helix = fHitList.FitHelix(fA);
+  auto helix = fHitArray.FitHelix(fA);
   if (helix.GetRMS() < 0)
     return false;
 
@@ -176,7 +250,7 @@ bool KBHelixTrack::Fit()
 
 bool KBHelixTrack::FitPlane()
 {
-  auto plane = fHitList.FitPlane();
+  auto plane = fHitArray.FitPlane();
   if (plane.GetRMS() > 0) {
     SetIsPlane();
     SetPlaneNormal(plane.GetNormal());
@@ -184,7 +258,7 @@ bool KBHelixTrack::FitPlane()
     return true;
   }
 
-  auto line = fHitList.FitLine();
+  auto line = fHitArray.FitLine();
   if (line.GetRMS() > 0) {
     SetIsLine();
     SetLineDirection(line.Direction());
@@ -197,41 +271,54 @@ bool KBHelixTrack::FitPlane()
 
 void KBHelixTrack::AddHit(KBHit *hit)
 {
-  fHitList.AddHit(hit);
+  fHitArray.AddHit(hit);
+  fHitIDArray.push_back(hit->GetHitID());
 }
 
 void KBHelixTrack::RemoveHit(KBHit *hit)
 {
-  fHitList.RemoveHit(hit);
+  auto id = hit -> GetHitID();
+  fHitArray.RemoveHit(hit);
+  auto numHits = fHitIDArray.size();
+  for (auto iHit=0; iHit<numHits; ++iHit) {
+    if (fHitIDArray[iHit]==id) {
+      fHitIDArray.erase(fHitIDArray.begin()+iHit);
+      break;
+    }
+  }
 }
 
+/*
 void KBHelixTrack::DeleteHits()
 {
-  auto hits = fHitList.GetHitArray();
+  auto hits = fHitArray.GetHitArray();
   for (auto hit : *hits)
     delete hit;
 
-  fHitList.Clear();
+  fHitArray.Clear();
 }
+*/
 
 void KBHelixTrack::SortHits(bool increasing)
 {
-  auto hits = fHitList.GetHitArray();
-  if (increasing) {
-    auto sorting = KBHitSortByIncreasingLength(this);
-    sort(hits->begin(), hits->end(), sorting);
-  } else {
-    auto sorting = KBHitSortByDecreasingLength(this);
-    sort(hits->begin(), hits->end(), sorting);
-  }
+  TIter next(&fHitArray);
+  KBHit *hit;
+  if (increasing)
+    while ((hit = (KBHit *) next()))
+      hit -> SetSortValue(Map(hit->GetPosition()).Z());
+  else
+    while ((hit = (KBHit *) next()))
+      hit -> SetSortValue(-(Map(hit->GetPosition()).Z()));
+  fHitArray.Sort();
 }
 
 void KBHelixTrack::SortHitsByTimeOrder() { SortHits(fIsPositiveChargeParticle); }
 
 void KBHelixTrack::FinalizeHits()
 {
-  auto hits = fHitList.GetHitArray();
-  for (auto hit : *hits)
+  TIter next(&fHitArray);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
     hit -> SetTrackID(fTrackID);
 
   PropagateMC();
@@ -277,7 +364,7 @@ void KBHelixTrack::SetLineDirection(TVector3 dir) { fI = dir.X(); fJ = dir.Y(); 
 KBVector3 KBHelixTrack::GetLineDirection()   const { return KBVector3(fA, fI, fJ, fR); }
 KBVector3 KBHelixTrack::PerpLine(TVector3 p) const
 {
-  KBVector3 mean = fHitList.GetMean(fA);
+  KBVector3 mean = fHitArray.GetMean(fA);
   KBVector3 dir = GetLineDirection();
 
   KBVector3 pMinusMean = KBVector3(p,fA) - mean;
@@ -302,7 +389,7 @@ KBVector3 KBHelixTrack::GetPlaneNormal()      const { return KBVector3(fA, fI, f
 KBVector3 KBHelixTrack::PerpPlane(TVector3 p) const
 {
   KBVector3 normal = GetPlaneNormal();
-  KBVector3 mean = fHitList.GetMean(fA);
+  KBVector3 mean = fHitArray.GetMean(fA);
   Double_t perp = abs(normal * KBVector3(p, fA) - normal * mean) / sqrt(normal * normal);
   return perp * normal;
 }
@@ -315,13 +402,13 @@ void KBHelixTrack::SetAlphaHead(Double_t alpha)           { fH = alpha; }
 void KBHelixTrack::SetAlphaTail(Double_t alpha)           { fT = alpha; }
 void KBHelixTrack::SetReferenceAxis(KBVector3::Axis ref)  { fA = ref; }
 
-TVector3 KBHelixTrack::GetMean()         const { return fHitList.GetMean(); }
+TVector3 KBHelixTrack::GetMean()         const { return fHitArray.GetMean(); }
 Double_t KBHelixTrack::GetHelixCenterI() const { return fI; }
 Double_t KBHelixTrack::GetHelixCenterJ() const { return fJ; }
 Double_t KBHelixTrack::GetHelixRadius()  const { return fR; }
 Double_t KBHelixTrack::GetKInitial()     const { return fK; }
 Double_t KBHelixTrack::GetAlphaSlope()   const { return fS; }
-Double_t KBHelixTrack::GetChargeSum()    const { return fHitList.GetW(); }
+Double_t KBHelixTrack::GetChargeSum()    const { return fHitArray.GetW(); }
 KBVector3::Axis KBHelixTrack::GetReferenceAxis() const { return fA; }
 
 void KBHelixTrack::SetIsPositiveChargeParticle(Bool_t val)  { fIsPositiveChargeParticle = val; }
@@ -369,12 +456,11 @@ void KBHelixTrack::DetermineParticleCharge(TVector3 vertex)
 /*
  * HITS
  */
-Int_t KBHelixTrack::GetNumHits() const { return fHitList.GetNumHits(); }
-KBHit *KBHelixTrack::GetHit(Int_t idx) const { return fHitList.GetHit(idx); }
-std::vector<KBHit *> *KBHelixTrack::GetHitArray() { return fHitList.GetHitArray(); }
-Int_t KBHelixTrack::GetNumHitIDs() const { return fHitList.GetNumHits(); }
-Int_t KBHelixTrack::GetHitID(Int_t idx) const { return fHitList.GetHitID(idx); }
-std::vector<Int_t> *KBHelixTrack::GetHitIDArray() { return fHitList.GetHitIDArray(); }
+Int_t KBHelixTrack::GetNumHits() const { return fHitIDArray.size(); }
+KBHit *KBHelixTrack::GetHit(Int_t idx) const { return fHitArray.GetHit(idx); }
+Int_t KBHelixTrack::GetHitID(Int_t idx) const { return fHitIDArray[idx]; }
+KBHitArray *KBHelixTrack::GetHitArray() { return &fHitArray; }
+std::vector<Int_t> *KBHelixTrack::GetHitIDArray() { return &fHitIDArray; }
 
 /*
  * dE/dx
@@ -841,8 +927,7 @@ KBHelixTrack::ExtrapolateByMap(TVector3 p, TVector3 &q, TVector3 &m) const
 Double_t 
 KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 {
-  auto hits = fHitList.GetHitArray();
-  Int_t numHits = hits->size();
+  Int_t numHits = fHitArray.GetNumHits();
   if (numHits < 2) 
     return -1;
 
@@ -850,11 +935,11 @@ KBHelixTrack::Continuity(Double_t &totalLength, Double_t &continuousLength)
 
   Double_t total = 0;
   Double_t continuous = 0;
-  TVector3 before = Map(hits->at(0)->GetPosition());
+  TVector3 before = Map(fHitArray.GetHit(0)->GetPosition());
 
   for (auto iHit = 1; iHit < numHits; iHit++) 
   {
-    TVector3 current = Map(hits->at(iHit)->GetPosition());
+    TVector3 current = Map(fHitArray.GetHit(iHit)->GetPosition());
     auto length = std::abs(current.Z()-before.Z());
 
     total += length;
@@ -921,17 +1006,12 @@ TGraph *KBHelixTrack::CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double
   KBVector3 center(fA,fI,fJ,0);
   center = KBVector3(center.GetXYZ(), KBVector3::kZ);
 
-  //Double_t rms = scalerms*fRMSR;
   Double_t rms = scalerms;
 
   for (Double_t r = 0.; r < 1.001; r += 0.02) {
     auto pos = KBVector3(ExtrapolateByRatio(r),KBVector3::kZ);
-    //cout << rms << endl;
     auto perp = KBVector3(TVector3(pos-center).Unit(), KBVector3::kZ);
     pos = scale * (pos + rms * perp);
-    //cout << "  " << pos.Z() << " " << pos.X() << endl;
-    //cout << "  " << perp.Z() << " " << perp.X() << endl;
-    //cout << "  " << pos.Z() << " " << pos.X() << endl;
     graph -> SetPoint(graph->GetN(), pos.At(axis1), pos.At(axis2));
   }
 

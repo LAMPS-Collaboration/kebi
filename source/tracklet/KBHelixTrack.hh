@@ -22,7 +22,14 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     KBHelixTrack(Int_t id);
     virtual ~KBHelixTrack() {};
 
-    enum KBFitStatus { kBad, kLine, kPlane, kHelix, kGenfitTrack };
+    enum KBFitStatus : int {
+      kNone = -1,
+      kBad = 0,
+      kLine = 1,
+      kPlane = 2,
+      kHelix = 3,
+      kGenfitTrack = 4
+    };
 
   private:
     Int_t    fGenfitID;        ///< GENFIT Track ID
@@ -44,10 +51,14 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
 
     std::vector<Double_t> fdEdxArray;  ///< dE/dx array;
 
+    //KBHitArray fHitArray; //!
+    vector<Int_t> fHitIDArray;
+
   public:
     virtual void Clear(Option_t *option = "");
     virtual void Print(Option_t *option="") const;
     virtual void Copy (TObject &object) const;
+    //virtual const char *GetName() const;
 
 #ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
@@ -62,11 +73,12 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
 
     void AddHit(KBHit *hit);
     void RemoveHit(KBHit *hit);
-    void DeleteHits();
+    //void DeleteHits();
     void SortHits(bool increasing = true);
     void SortHitsByTimeOrder();
 
     void FinalizeHits();
+    void FinalizeClusters();
 
     void SetFitStatus(KBFitStatus value);
     void SetIsBad();
@@ -137,10 +149,8 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
      */
     Int_t GetNumHits() const;
     KBHit *GetHit(Int_t idx) const;
-    std::vector<KBHit *> *GetHitArray();
-
-    Int_t GetNumHitIDs() const;
     Int_t GetHitID(Int_t idx) const;
+    KBHitArray *GetHitArray();
     std::vector<Int_t> *GetHitIDArray();
 
     /*

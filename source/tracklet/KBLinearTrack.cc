@@ -28,7 +28,7 @@ void KBLinearTrack::SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, 
   fY2 = y2;
   fZ2 = z2;
 
-  auto numHits = fHitList.GetNumHits();
+  auto numHits = fHitArray.GetNumHits();
 
   if (numHits > 2)
   {
@@ -45,7 +45,7 @@ void KBLinearTrack::SetLine(Double_t x1, Double_t y1, Double_t z1, Double_t x2, 
 
     for (auto iHit=0; iHit<numHits; ++iHit)
     {
-      hit = fHitList.GetHit(iHit);
+      hit = fHitArray.GetHit(iHit);
       auto pos = hit -> GetPosition();
       auto length = Length(pos);
 
@@ -110,7 +110,7 @@ void KBLinearTrack::Print(Option_t *option) const
 
 bool KBLinearTrack::Fit()
 {
-  auto line = fHitList.FitLine();
+  auto line = fHitArray.FitLine();
   if (line.GetRMS() < 0)
     return false;
 

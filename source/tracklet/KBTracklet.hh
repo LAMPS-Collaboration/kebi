@@ -5,7 +5,7 @@
 
 #include "KBMCTagged.hh"
 
-#include "KBHitList.hh"
+#include "KBHitArray.hh"
 #include "KBHit.hh"
 #include "KBVector3.hh"
 
@@ -18,7 +18,7 @@ class KBTracklet : public KBMCTagged
     Int_t fParentID = -1;  ///< Vertex ID
     Int_t fPDG = -1;
 
-    KBHitList fHitList;
+    KBHitArray fHitArray; //!
 
     TGraph *fTrajectoryOnPlane = nullptr; //!
 
@@ -39,7 +39,7 @@ class KBTracklet : public KBMCTagged
     void SetPDG(Int_t val) { fPDG = val; }
     Int_t GetPDG() const { return fPDG; }
 
-    KBHitList *GetHitList() { return &fHitList; }
+    KBHitArray *GetHitArray() { return &fHitArray; }
 
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);
