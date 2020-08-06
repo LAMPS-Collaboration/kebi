@@ -34,11 +34,11 @@ void GenSingleParticle(){
 
 		for (int iPart=0; iPart<nParticlePerEvent; iPart++){
 			float p = pMin + (pMax - pMin)*gRandom->Rndm();
-			float phi = gRandom->Rndm()*TMath::TwoPi();
+			float phi = gRandom->Rndm()*TMath::TwoPi() - TMath::Pi();
 			float theta = thetaMin + (thetaMax - thetaMin)*gRandom->Rndm();
 
 			TVector3 vec;
-			vec.SetMagThetaPhi(p, phi, theta);
+			vec.SetMagThetaPhi(p, theta, phi);
 
 			int pid = (gRandom->Rndm()>0.5) ? ParticleID : -1*ParticleID;
 
