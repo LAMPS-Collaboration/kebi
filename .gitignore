@@ -6,13 +6,15 @@ submit*sh*out
 #geometry file
 *.gdml
 
-#S2ROOT build
+#KEBI build
 build
+tools
 *.swp
 *.o
 
-#S2ROOT simulation/analysis data
+#KEBI simulation/analysis data
 data
+input
 *.root
 *.graw
 
@@ -23,10 +25,10 @@ data
 *.g4sim
 
 #log files created from build/run
-log/*
 *.log
 
 #cmake configuration log files
+log/*
 !log/*.in
 
 #documetation directory(doxygen)
