@@ -85,10 +85,7 @@ find_package(Eigen3  REQUIRED)
 find_package(Rave    REQUIRED)
 find_package(GENFIT2 REQUIRED)
 
-message(STATUS ${LD_LIBRARY_PATH})
-
 include_directories(${EIGEN3_INCLUDE_DIR})
-include_directories(${RAVE_INCLUDE_DIR})
 include_directories(${GENFIT2_INCLUDE_DIR})
 
 set(LINK_DIRECTORIES
