@@ -1,5 +1,5 @@
 # CMakeLists.txt KEBI project.
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(KEBI)
 
 #---Configuration
@@ -7,7 +7,9 @@ set(ACTIVATE_EVE      OFF CACHE INTERNAL "") # Activate Root Eve package
 set(CREATE_GIT_LOG    OFF CACHE INTERNAL "") # Create Git log
 set(BUILD_GEANT4_SIM  OFF CACHE INTERNAL "") # Build Geant4 simulation
 set(BUILD_DOXYGEN_DOC OFF CACHE INTERNAL "") # Build Doxygen documentation with HTML
+
 set(KEBI_PROJECT_LIST     CACHE INTERNAL "") # List of KEBI projects to build
+set(KEBI_PATH ${CMAKE_SOURCE_DIR})
 
 #---Configuration
 include(configure.cmake)
@@ -16,6 +18,7 @@ if(ACTIVATE_EVE)
   add_definitions(-DACTIVATE_EVE)
 endif(ACTIVATE_EVE)
 
+message(STATUS "System Name            : " ${CMAKE_SYSTEM_NAME})
 message(STATUS "Activate Eve package   : " ${ACTIVATE_EVE})
 message(STATUS "Create Git log         : " ${CREATE_GIT_LOG})
 message(STATUS "Build Geant4 simulation: " ${BUILD_GEANT4_SIM})
@@ -55,6 +58,8 @@ foreach(_kbproject ${KEBI_PROJECT_LIST})
   add_subdirectory(${_kbproject})
 endforeach(_kbproject)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+
 #=====================================================================================
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 #   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
@@ -70,6 +75,26 @@ else(ACTIVATE_EVE)
 endif(ACTIVATE_EVE)
 
 include(${ROOT_USE_FILE})
+
+set(TOOLS_LIBRARIES_LIST ${ROOT_LIBRARIES} CACHE INTERNAL "")
+
+find_package(Boost   REQUIRED)
+Set(LD_LIBRARY_PATH ${LD_LIBRARY_PATH} ${Boost_LIBRARY_DIR})
+
+find_package(Eigen3  REQUIRED)
+find_package(Rave    REQUIRED)
+find_package(GENFIT2 REQUIRED)
+
+include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${GENFIT2_INCLUDE_DIR})
+
+set(LINK_DIRECTORIES
+  ${ROOT_LIBRARY_DIR}
+  ${RAVE_LIBRARY_DIR}
+  ${GENFIT2_LIBRARY_DIR}
+)
+
+link_directories(${LINK_DIRECTORIES})
 
 if(BUILD_GEANT4_SIM)
   find_package(Geant4 REQUIRED ui_all vis_all)
@@ -111,7 +136,7 @@ foreach(_name ${KEBI_SOURCE_NAME_LIST})
 endforeach(_name)
 
 add_library(KEBI SHARED ${KEBI_LIB_LIST})
-target_link_libraries(KEBI ${ROOT_LIBRARIES})
+target_link_libraries(KEBI ${TOOLS_LIBRARIES_LIST})
 
 if(BUILD_GEANT4_SIM)
   foreach(_directory ${KEBI_GEANT4_DIRECTORY_LIST})
@@ -142,7 +167,6 @@ if(BUILD_GEANT4_SIM)
   endforeach(_g4sim)
 endif(BUILD_GEANT4_SIM)
 
-set(KEBI_PATH ${CMAKE_SOURCE_DIR})
 configure_file(${KEBI_PATH}/log/KBLog.cmake.in ${KEBI_PATH}/log/KBLog.cmake @ONLY)
 add_custom_target(KEBI_LOG ALL
                   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/log/KBLog.cmake
