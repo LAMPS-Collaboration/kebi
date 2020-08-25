@@ -4,8 +4,8 @@ set +x
 ##########################################################
 # Version Settings
 ##########################################################
-BOOST_VERSION="boost_1_61_0"
-BOOST_DOWNLOAD_URL="http://sourceforge.net/projects/boost/files/boost/1.61.0/${BOOST_VERSION}.tar.bz2"
+BOOST_VERSION="boost_1_74_0"
+BOOST_DOWNLOAD_URL="http://sourceforge.net/projects/boost/files/boost/1.74.0/${BOOST_VERSION}.tar.bz2"
 BOOST_REBUILD=false
 
 CLHEP_VERSION="2.3.4.6"
