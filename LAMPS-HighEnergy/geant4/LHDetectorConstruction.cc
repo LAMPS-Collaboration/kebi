@@ -33,9 +33,9 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
   auto par = runManager -> GetParameterContainer();
 
-  G4double tpcInnerRadius = par -> GetParDouble("rMinTPC");
-  G4double tpcOuterRadius = par -> GetParDouble("rMaxTPC");
-  G4double tpcLength = par -> GetParDouble("tpcLength");
+	G4double tpcInnerRadius = par -> GetParDouble("TPCrMin");
+	G4double tpcOuterRadius = par -> GetParDouble("TPCrMax");
+	G4double tpcLength = par -> GetParDouble("TPCLength");
   G4double tpcZOffset = par -> GetParDouble("zOffset");
 
   G4double bfieldx = par -> GetParDouble("bfieldx");
@@ -58,8 +58,8 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   matMethaneGas -> AddElement(elementC, 1);
 
   TString gasPar = "p10";
-  if (par -> CheckPar("gasPar")) {
-    gasPar = par -> GetParString("gasPar");
+  if (par -> CheckPar("TPCgasPar")) {
+    gasPar = par -> GetParString("TPCgasPar");
     gasPar.ToLower();
          if (gasPar.Index("p10")>=0) gasPar = "p10";
     else if (gasPar.Index("p20")>=0) gasPar = "p20";
