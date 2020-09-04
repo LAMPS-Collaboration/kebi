@@ -61,7 +61,10 @@ void KBG4RunManager::Initialize()
   G4RunManager::Initialize();
 
   SetOutputFile(fPar->GetParString("G4OutputFile").Data());
-  SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+	if ( fPar->GetParInt("G4InputMode")==1 )
+	{
+		SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+	}
 
   auto procNames = G4ProcessTable::GetProcessTable() -> GetNameList();
   Int_t idx = 0;
@@ -141,6 +144,7 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
     g4_info << "Initializing Geant4 run with macro " << fileName << endl;
     uiManager -> ApplyCommand(command+fileName);
   }
+
 
   WriteToFile(fProcessTable);
   WriteToFile(fSensitiveDetectors);
