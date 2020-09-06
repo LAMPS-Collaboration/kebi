@@ -1,5 +1,4 @@
-set +x
-
+#/bin/bash -f
 
 ##########################################################
 # Version Settings
@@ -97,7 +96,7 @@ fi
 ##########################################################
 # CLHEP
 ##########################################################
-CLHEP_BASE_PATH="${TOOLS_PATH}/CLHep"
+CLHEP_BASE_PATH="${TOOLS_PATH}/CLHEP"
 CLHEP_TARFILE_FULL="${CLHEP_BASE_PATH}/clhep-${CLHEP_VERSION}.tgz"
 CLHEP_SOURCE_PATH="${CLHEP_BASE_PATH}/${CLHEP_VERSION}/CLHEP/"
 CLHEP_BUILD_PATH="${CLHEP_BASE_PATH}/${CLHEP_VERSION}/build/"
