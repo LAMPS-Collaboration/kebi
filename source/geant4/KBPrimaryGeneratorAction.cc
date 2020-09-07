@@ -5,6 +5,7 @@
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4PhysicalConstants.hh"
 #include <G4strstreambuf.hh>
 
 KBPrimaryGeneratorAction::KBPrimaryGeneratorAction()
@@ -50,11 +51,16 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 	auto par = runManager -> GetParameterContainer();
 
-	G4double vx, vy, vz, px, py, pz;
+	G4double vx, vy, vz;
 
-	vx = vy = vz = 0.0;
+	vz = -1.0*par->GetParDouble("worlddZ");
 
-	fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
+	G4double energy = par->GetParDouble("G4InputEnergy");
+
+	G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
+	fParticleGun->SetParticleEnergy(energy*MeV);
+	G4cout.rdbuf(oldBuffer);
 
 	G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
 	TString particleName = par->GetParString("G4InputParticle");
@@ -66,16 +72,13 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 
 	for (G4int ip=0; ip<NperEvent; ip++){
 
-    px = (G4UniformRand()-0.5)*500.0;
-    py = (G4UniformRand()-0.5)*500.0;
-    pz = (G4UniformRand())*100.0;
+		G4double r = (G4UniformRand())*15.0; 
+		G4double phi = (G4UniformRand()-0.5)*twopi;
 
-    G4ThreeVector momentum(px,py,pz);
+		vx = r*cos(phi);
+		vy = r*sin(phi);
 
-    fParticleGun->SetParticleMomentumDirection(momentum.unit());
-    G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
-    fParticleGun->SetParticleMomentum(momentum.mag()*MeV);
-    G4cout.rdbuf(oldBuffer);
+		fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
 
     fParticleGun->GeneratePrimaryVertex(anEvent);
 
