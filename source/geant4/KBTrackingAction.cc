@@ -31,5 +31,23 @@ void KBTrackingAction::PreUserTrackingAction(const G4Track* track)
     processName = process -> GetProcessName();
   G4int processID = fProcessTable -> GetParInt(processName);
 
-  fRunManager -> AddMCTrack(track -> GetTrackID(), track -> GetParentID(), track -> GetDefinition() -> GetPDGEncoding(), momentum.x(), momentum.y(), momentum.z(), volumeID, position.x(), position.y(), position.z(), processID);
+  fRunManager -> AddMCTrack(0, track -> GetTrackID(), track -> GetParentID(), track -> GetDefinition() -> GetPDGEncoding(), momentum.x(), momentum.y(), momentum.z(), volumeID, position.x(), position.y(), position.z(), processID);
+}
+
+void KBTrackingAction::PostUserTrackingAction(const G4Track* track)
+{
+	G4double energy = track -> GetKineticEnergy();
+	if ( energy<1e-10 ) return;
+
+  G4ThreeVector momentum = track -> GetMomentum();
+  G4ThreeVector position = track -> GetPosition();
+  G4int volumeID = track -> GetVolume() -> GetCopyNo();
+
+  const G4VProcess *process = track -> GetCreatorProcess();
+  G4String processName = "Primary";
+  if (process != nullptr)
+    processName = process -> GetProcessName();
+  G4int processID = fProcessTable -> GetParInt(processName);
+
+  fRunManager -> AddMCTrack(1, track -> GetTrackID(), track -> GetParentID(), track -> GetDefinition() -> GetPDGEncoding(), momentum.x(), momentum.y(), momentum.z(), volumeID, position.x(), position.y(), position.z(), processID);
 }
