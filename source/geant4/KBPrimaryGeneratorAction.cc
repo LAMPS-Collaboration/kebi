@@ -72,11 +72,16 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 
 	for (G4int ip=0; ip<NperEvent; ip++){
 
+		//10 cm by 10 cm (square)
+		vx = (G4UniformRand()-0.5)*100;
+		vy = (G4UniformRand()-0.5)*100;
+		/*
 		G4double r = (G4UniformRand())*15.0; 
 		G4double phi = (G4UniformRand()-0.5)*twopi;
 
 		vx = r*cos(phi);
 		vy = r*sin(phi);
+		*/
 
 		fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
 
