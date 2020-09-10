@@ -56,6 +56,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	matCH2->AddElement(elementC,1);
 
 	G4Material *matAl = nist->FindOrBuildMaterial("G4_Al");
+	G4Material *matCu = nist->FindOrBuildMaterial("G4_Cu");
 	G4Material *matFe = nist->FindOrBuildMaterial("G4_Fe");
 	G4Material *matSC = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
  
@@ -100,96 +101,154 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 
 
 	//Collimator
-	G4double Collimatorx = par -> GetParDouble("Collimatorx");
-	G4double Collimatory = par -> GetParDouble("Collimatory");
-	G4double Collimatorz = par -> GetParDouble("Collimatorz");
-	G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset");
-
-	G4double Holex = par -> GetParDouble("Holex");
-	G4double Holey = par -> GetParDouble("Holey");
-
-	G4Box *solidCollimator = new G4Box("Collimator", Collimatorx/2.0, Collimatory/2.0, Collimatorz/2.0);
-	G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
-	G4SubtractionSolid *solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-	G4LogicalVolume *logicSubC = new G4LogicalVolume(solidSubC, matFe, "SubC");
+	if ( par -> GetParBool("CollimatorIn") )
 	{
-		G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
-		logicSubC -> SetVisAttributes(attSubC);
+		G4double Collimatorx = par -> GetParDouble("Collimatorx");
+		G4double Collimatory = par -> GetParDouble("Collimatory");
+		G4double Collimatorz = par -> GetParDouble("Collimatorz");
+		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset");
+
+		G4Box *solidCollimator = new G4Box("Collimator", Collimatorx/2.0, Collimatory/2.0, Collimatorz/2.0);
+		G4SubtractionSolid *solidSubC;
+		if ( par -> GetParInt("HoleOpt")==0 ){
+			G4double Holex = par -> GetParDouble("Holex");
+			G4double Holey = par -> GetParDouble("Holey");
+			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
+			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
+		}else if ( par -> GetParInt("HoleOpt")==1 ){
+			G4double Holedia = par -> GetParDouble("Holedia");
+			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Collimatorz/2.0, 0, 2*M_PI);
+			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
+		}else{
+			G4double Holex = par -> GetParDouble("Holex");
+			G4double Holey = par -> GetParDouble("Holey");
+			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
+			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
+		}
+
+		G4LogicalVolume *logicSubC;
+		if ( par -> GetParInt("CollimatorOpt")==0 ){
+			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
+		}else if ( par -> GetParInt("CollimatorOpt")==1 ){
+			logicSubC = new G4LogicalVolume(solidSubC, matCu, "SubC");
+		}else if ( par -> GetParInt("CollimatorOpt")==2 ){
+			logicSubC = new G4LogicalVolume(solidSubC, matFe, "SubC");
+		}else{
+			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
+		}
+
+		{
+			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			logicSubC -> SetVisAttributes(attSubC);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
 	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
 
 	//Start counter
-	G4Box *solidSC = new G4Box("SC", 200/2.0, 200/2.0, 0.2/2.0);
-	G4LogicalVolume *logicSC = new G4LogicalVolume(solidSC, matSC, "SC");
+	if ( par -> GetParBool("BeamMonitorIn") )
 	{
-		G4VisAttributes * attSC = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-		logicSC -> SetVisAttributes(attSC);
-	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,-150), logicSC, "SC", logicWorld, false, 0, true);
+		G4double Collimatorz = par -> GetParDouble("Collimatorz");
+		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset");
 
-	G4Box *solidVeto = new G4Box("Veto", 200/2.0, 200/2.0, 0.2/2.0);
-	G4LogicalVolume *logicVeto = new G4LogicalVolume(solidVeto, matSC, "Veto");
-	{
-		G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-		logicVeto -> SetVisAttributes(attVeto);
+		G4Box *solidBM = new G4Box("BM", 200/2.0, 200/2.0, 2/2.0);
+		G4LogicalVolume *logicBM = new G4LogicalVolume(solidBM, matSC, "BM");
+		{
+			G4VisAttributes * attBM = new G4VisAttributes(G4Colour(G4Colour::White()));
+			logicBM -> SetVisAttributes(attBM);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset+Collimatorz), logicBM, "BM", logicWorld, false, 0, true);
 	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,-100), logicVeto, "Veto", logicWorld, false, 0, true);
+
+	//Start counter
+	if ( par -> GetParBool("StartCounterIn") )
+	{
+		G4Box *solidSC = new G4Box("SC", 200/2.0, 200/2.0, 2/2.0);
+		G4LogicalVolume *logicSC = new G4LogicalVolume(solidSC, matSC, "SC");
+		{
+			G4VisAttributes * attSC = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			logicSC -> SetVisAttributes(attSC);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,-150), logicSC, "SC", logicWorld, false, 0, true);
+	}
+
+	if ( par -> GetParBool("VetoIn") )
+	{
+		G4Box *solidVeto = new G4Box("Veto", 200/2.0, 200/2.0, 2/2.0);
+		G4LogicalVolume *logicVeto = new G4LogicalVolume(solidVeto, matSC, "Veto");
+		{
+			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			logicVeto -> SetVisAttributes(attVeto);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,-100), logicVeto, "Veto", logicWorld, false, 0, true);
+	}
 
 
 	//Target1
-	G4double Target1x = par -> GetParDouble("Target1x");
-	G4double Target1y = par -> GetParDouble("Target1y");
-	G4double Target1z = par -> GetParDouble("Target1z");
-	G4double Target1zOffset = par -> GetParDouble("Target1zOffset");
-
-	G4Box *solidTarget1 = new G4Box("Target1", Target1x/2.0, Target1y/2.0, Target1z/2.0);
-	G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
+	if ( par -> GetParBool("Target1In") )
 	{
-		G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
-		logicTarget1 -> SetVisAttributes(attTarget1);
+		G4double Target1x = par -> GetParDouble("Target1x");
+		G4double Target1y = par -> GetParDouble("Target1y");
+		G4double Target1z = par -> GetParDouble("Target1z");
+		G4double Target1zOffset = par -> GetParDouble("Target1zOffset");
+
+		G4Box *solidTarget1 = new G4Box("Target1", Target1x/2.0, Target1y/2.0, Target1z/2.0);
+		G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
+		{
+			G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
+			logicTarget1 -> SetVisAttributes(attTarget1);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 0, true);
 	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 0, true);
 
 	//Target2
-	G4double Target2x = par -> GetParDouble("Target2x");
-	G4double Target2y = par -> GetParDouble("Target2y");
-	G4double Target2z = par -> GetParDouble("Target2z");
-	G4double Target2zOffset = par -> GetParDouble("Target2zOffset");
-
-	G4Box *solidTarget2 = new G4Box("Target2", Target2x/2.0, Target2y/2.0, Target2z/2.0);
-	G4LogicalVolume *logicTarget2 = new G4LogicalVolume(solidTarget2, matCH2, "Traget1");
+	if ( par -> GetParBool("Target2In") )
 	{
-		G4VisAttributes * attTarget2 = new G4VisAttributes(G4Colour(G4Colour::Green()));
-		logicTarget2 -> SetVisAttributes(attTarget2);
+		G4double Target2x = par -> GetParDouble("Target2x");
+		G4double Target2y = par -> GetParDouble("Target2y");
+		G4double Target2z = par -> GetParDouble("Target2z");
+		G4double Target2zOffset = par -> GetParDouble("Target2zOffset");
+
+		G4Box *solidTarget2 = new G4Box("Target2", Target2x/2.0, Target2y/2.0, Target2z/2.0);
+		G4LogicalVolume *logicTarget2 = new G4LogicalVolume(solidTarget2, matCH2, "Traget1");
+		{
+			G4VisAttributes * attTarget2 = new G4VisAttributes(G4Colour(G4Colour::Green()));
+			logicTarget2 -> SetVisAttributes(attTarget2);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,Target2zOffset), logicTarget2, "Target2", logicWorld, false, 0, true);
 	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,Target2zOffset), logicTarget2, "Target2", logicWorld, false, 0, true);
 
 	//Target3
-	G4double Target3x = par -> GetParDouble("Target3x");
-	G4double Target3y = par -> GetParDouble("Target3y");
-	G4double Target3z = par -> GetParDouble("Target3z");
-	G4double Target3zOffset = par -> GetParDouble("Target3zOffset");
-
-	G4Box *solidTarget3 = new G4Box("Target3", Target3x/2.0, Target3y/2.0, Target3z/2.0);
-	G4LogicalVolume *logicTarget3 = new G4LogicalVolume(solidTarget3, matCH2, "Traget1");
+	if ( par -> GetParBool("Target3In") )
 	{
-		G4VisAttributes * attTarget3 = new G4VisAttributes(G4Colour(G4Colour::Green()));
-		logicTarget3 -> SetVisAttributes(attTarget3);
+		G4double Target3x = par -> GetParDouble("Target3x");
+		G4double Target3y = par -> GetParDouble("Target3y");
+		G4double Target3z = par -> GetParDouble("Target3z");
+		G4double Target3zOffset = par -> GetParDouble("Target3zOffset");
+
+		G4Box *solidTarget3 = new G4Box("Target3", Target3x/2.0, Target3y/2.0, Target3z/2.0);
+		G4LogicalVolume *logicTarget3 = new G4LogicalVolume(solidTarget3, matCH2, "Traget1");
+		{
+			G4VisAttributes * attTarget3 = new G4VisAttributes(G4Colour(G4Colour::Green()));
+			logicTarget3 -> SetVisAttributes(attTarget3);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,Target3zOffset), logicTarget3, "Target3", logicWorld, false, 0, true);
 	}
-	new G4PVPlacement(0, G4ThreeVector(0,0,Target3zOffset), logicTarget3, "Target3", logicWorld, false, 0, true);
 
 
 	//TPC
-  G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
-  G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matGas, "TPC");
-  {
-    G4VisAttributes * attTPC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
-    attTPC -> SetForceWireframe(true);
-    logicTPC -> SetVisAttributes(attTPC);
-  }
-  logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-  auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
-  runManager -> SetSensitiveDetector(pvp);
+	if ( par -> GetParBool("TPCIn") )
+	{
+		G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
+		G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matGas, "TPC");
+		{
+			G4VisAttributes * attTPC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
+			attTPC -> SetForceWireframe(true);
+			logicTPC -> SetVisAttributes(attTPC);
+		}
+		logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
 
 
 
