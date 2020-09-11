@@ -51,14 +51,16 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
   G4double densityArGas = 1.782e-3*g/cm3*STPTemperature/labTemperature;
   G4Material *matArGas = new G4Material("ArgonGas", 18, 39.948*g/mole, densityArGas, kStateGas, labTemperature);
 
-	G4Material *matCH2 = new G4Material("CH2", 0.91*g/cm3, 2);
-	matCH2->AddElement(elementH,2);
-	matCH2->AddElement(elementC,1);
+	//G4Material *matCH2 = new G4Material("CH2", 0.91*g/cm3, 2);
+	//matCH2->AddElement(elementH,2);
+	//matCH2->AddElement(elementC,1);
 
 	G4Material *matAl = nist->FindOrBuildMaterial("G4_Al");
 	G4Material *matCu = nist->FindOrBuildMaterial("G4_Cu");
 	G4Material *matFe = nist->FindOrBuildMaterial("G4_Fe");
 	G4Material *matSC = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+	G4Material *matCH2 = nist->FindOrBuildMaterial("G4_POLYETHYLENE");
+	G4Material *matAir = nist->FindOrBuildMaterial("G4_AIR");
  
   G4double densityMethane = 0.717e-3*g/cm3*STPTemperature/labTemperature;
   G4Material *matMethaneGas = new G4Material("matMethaneGas ", densityMethane, 2, kStateGas, labTemperature);
@@ -87,8 +89,6 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
     matGas -> AddMaterial(matArGas, 0.8*densityArGas/densityGas);
     matGas -> AddMaterial(matMethaneGas, 0.2*densityMethane/densityGas);
   }
-
-  G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
 
   G4double worlddX = par -> GetParDouble("worlddX");
   G4double worlddY = par -> GetParDouble("worlddY");
@@ -144,14 +144,14 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
 	}
 
-	//Start counter
+	//Beam Monitor
 	if ( par -> GetParBool("BeamMonitorIn") )
 	{
 		G4double Collimatorz = par -> GetParDouble("Collimatorz");
 		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset");
 
-		G4Box *solidBM = new G4Box("BM", 200/2.0, 200/2.0, 2/2.0);
-		G4LogicalVolume *logicBM = new G4LogicalVolume(solidBM, matSC, "BM");
+		G4Box *solidBM = new G4Box("BM", 200/2.0, 200/2.0, 2.0/2.0);
+		G4LogicalVolume *logicBM = new G4LogicalVolume(solidBM, matAir, "BM");
 		{
 			G4VisAttributes * attBM = new G4VisAttributes(G4Colour(G4Colour::White()));
 			logicBM -> SetVisAttributes(attBM);
