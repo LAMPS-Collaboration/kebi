@@ -61,6 +61,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	G4Material *matSC = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 	G4Material *matCH2 = nist->FindOrBuildMaterial("G4_POLYETHYLENE");
 	G4Material *matAir = nist->FindOrBuildMaterial("G4_AIR");
+	G4Material *matVac = nist->FindOrBuildMaterial("G4_Galactic");
  
   G4double densityMethane = 0.717e-3*g/cm3*STPTemperature/labTemperature;
   G4Material *matMethaneGas = new G4Material("matMethaneGas ", densityMethane, 2, kStateGas, labTemperature);
@@ -96,7 +97,14 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 
 	//world
   G4Box *solidWorld = new G4Box("World", worlddX, worlddY, worlddZ);
-  G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
+  G4LogicalVolume *logicWorld;
+	if ( par -> GetParInt("worldOpt")==0 ){
+		logicWorld = new G4LogicalVolume(solidWorld, matVac, "World");
+	}else if ( par -> GetParInt("worldOpt")==1 ){
+		logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
+	}else{
+		logicWorld = new G4LogicalVolume(solidWorld, matVac, "World");
+	}
   G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
 
