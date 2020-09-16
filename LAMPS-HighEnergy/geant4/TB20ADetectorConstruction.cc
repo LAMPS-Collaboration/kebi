@@ -152,11 +152,54 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
 	}
 
+	if ( par -> GetParBool("Collimator2In") )
+	{
+		G4double Collimatorx = par -> GetParDouble("Collimatorx");
+		G4double Collimatory = par -> GetParDouble("Collimatory");
+		G4double Collimatorz = par -> GetParDouble("Collimatorz");
+		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset") + par -> GetParDouble("Collimator2zGap") + Collimatorz;
+
+		G4Box *solidCollimator2 = new G4Box("Collimator2", Collimatorx/2.0, Collimatory/2.0, Collimatorz/2.0);
+		G4SubtractionSolid *solidSubC2;
+		if ( par -> GetParInt("HoleOpt")==0 ){
+			G4double Holex = par -> GetParDouble("Holex");
+			G4double Holey = par -> GetParDouble("Holey");
+			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
+			solidSubC2 = new G4SubtractionSolid("SubC", solidCollimator2, solidHole, 0, G4ThreeVector(0,0,0));
+		}else if ( par -> GetParInt("HoleOpt")==1 ){
+			G4double Holedia = par -> GetParDouble("Holedia");
+			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Collimatorz/2.0, 0, 2*M_PI);
+			solidSubC2 = new G4SubtractionSolid("SubC", solidCollimator2, solidHole, 0, G4ThreeVector(0,0,0));
+		}else{
+			G4double Holex = par -> GetParDouble("Holex");
+			G4double Holey = par -> GetParDouble("Holey");
+			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
+			solidSubC2 = new G4SubtractionSolid("SubC", solidCollimator2, solidHole, 0, G4ThreeVector(0,0,0));
+		}
+
+		G4LogicalVolume *logicSubC2;
+		if ( par -> GetParInt("CollimatorOpt")==0 ){
+			logicSubC2 = new G4LogicalVolume(solidSubC2, matAl, "SubC");
+		}else if ( par -> GetParInt("CollimatorOpt")==1 ){
+			logicSubC2 = new G4LogicalVolume(solidSubC2, matCu, "SubC");
+		}else if ( par -> GetParInt("CollimatorOpt")==2 ){
+			logicSubC2 = new G4LogicalVolume(solidSubC2, matFe, "SubC");
+		}else{
+			logicSubC2 = new G4LogicalVolume(solidSubC2, matAl, "SubC");
+		}
+
+		{
+			G4VisAttributes * attSubC2 = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			logicSubC2 -> SetVisAttributes(attSubC2);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC2, "SubC2", logicWorld, false, 0, true);
+	}
+
 	//Beam Monitor
 	if ( par -> GetParBool("BeamMonitorIn") )
 	{
 		G4double Collimatorz = par -> GetParDouble("Collimatorz");
-		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset");
+		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset") + par -> GetParDouble("Collimator2zGap") + Collimatorz;
 
 		G4Box *solidBM = new G4Box("BM", 200/2.0, 200/2.0, 2.0/2.0);
 		G4LogicalVolume *logicBM = new G4LogicalVolume(solidBM, matAir, "BM");
