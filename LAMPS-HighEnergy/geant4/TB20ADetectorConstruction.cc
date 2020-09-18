@@ -197,7 +197,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	}
 
 	//Shield
-	if ( par -> GetParBool("Collimator2In") )
+	if ( par -> GetParBool("ShieldIn") )
 	{
 		G4double Shieldx = par -> GetParDouble("Collimatorx");
 		G4double Shieldy = par -> GetParDouble("Collimatory");
