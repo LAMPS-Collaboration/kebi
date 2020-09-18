@@ -55,6 +55,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	//matCH2->AddElement(elementH,2);
 	//matCH2->AddElement(elementC,1);
 
+	G4Material *matB = nist->FindOrBuildMaterial("G4_B");
 	G4Material *matAl = nist->FindOrBuildMaterial("G4_Al");
 	G4Material *matCu = nist->FindOrBuildMaterial("G4_Cu");
 	G4Material *matFe = nist->FindOrBuildMaterial("G4_Fe");
@@ -195,11 +196,28 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC2, "SubC2", logicWorld, false, 0, true);
 	}
 
+	//Shield
+	if ( par -> GetParBool("Collimator2In") )
+	{
+		G4double Shieldx = par -> GetParDouble("Collimatorx");
+		G4double Shieldy = par -> GetParDouble("Collimatory");
+		G4double Shieldz = par -> GetParDouble("Shieldz");
+		G4double ShieldzOffset = par -> GetParDouble("CollimatorzOffset") + par -> GetParDouble("Collimator2zGap") + 1.5*(par -> GetParDouble("Collimatorz")) + 0.5*Shieldz;
+
+		G4Box *solidShield = new G4Box("Shield", Shieldx/2.0, Shieldy/2.0, Shieldz/2.0);
+		G4LogicalVolume *logicShield = new G4LogicalVolume(solidShield, matB, "Shield");
+		{
+			G4VisAttributes * attShield = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			logicShield -> SetVisAttributes(attShield);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset), logicShield, "Shield", logicWorld, false, 0, true);
+	}
+
 	//Beam Monitor
 	if ( par -> GetParBool("BeamMonitorIn") )
 	{
-		G4double Collimatorz = par -> GetParDouble("Collimatorz");
-		G4double CollimatorzOffset = par -> GetParDouble("CollimatorzOffset") + par -> GetParDouble("Collimator2zGap") + Collimatorz;
+		G4double Shieldz = par -> GetParDouble("Shieldz");
+		G4double ShieldzOffset = par -> GetParDouble("CollimatorzOffset") + par -> GetParDouble("Collimator2zGap") + 1.5*(par -> GetParDouble("Collimatorz")) + 0.5*Shieldz;
 
 		G4Box *solidBM = new G4Box("BM", 200/2.0, 200/2.0, 2.0/2.0);
 		G4LogicalVolume *logicBM = new G4LogicalVolume(solidBM, matAir, "BM");
@@ -207,7 +225,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			G4VisAttributes * attBM = new G4VisAttributes(G4Colour(G4Colour::White()));
 			logicBM -> SetVisAttributes(attBM);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset+Collimatorz), logicBM, "BM", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset+Shieldz), logicBM, "BM", logicWorld, false, 0, true);
 	}
 
 	//Start counter
