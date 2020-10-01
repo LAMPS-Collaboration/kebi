@@ -5,6 +5,12 @@
 #include "TArrow.h"
 #include <map>
 
+/**
+ * Utility class to handel global axis (x,y,z) and local axis (i,j,k) togeter.
+ * Local axis (i,j,k) is definded to have reference axis same as k-axis
+ * and i,j-axis defined by right-handed orientation in i,j,k order.
+ */
+
 class KBVector3 : public TVector3
 {
   public:
@@ -18,7 +24,7 @@ class KBVector3 : public TVector3
       kK   = 11, kMK  = 12
     };
 
-    friend std::ostream& operator<<(std::ostream& out, const Axis value) {
+    friend std::ostream& operator<<(std::ostream& out, const Axis axisIn) {
       static std::map<Axis, std::string> axisNames;
       if (axisNames.size() == 0) {
         axisNames[kNon] = "not-defined";
@@ -30,12 +36,12 @@ class KBVector3 : public TVector3
         axisNames[kMZ]  = "-z";
         axisNames[kI]   = "i";
         axisNames[kJ]   = "j";
-        axisNames[kK]   = "z";
+        axisNames[kK]   = "k";
         axisNames[kMI]  = "-i";
         axisNames[kMJ]  = "-j";
-        axisNames[kMK]  = "-z";
+        axisNames[kMK]  = "-k";
       }
-      return out << axisNames[value];
+      return out << axisNames[axisIn];
     }
 
     static Axis GetAxis(TString name) {
@@ -48,14 +54,14 @@ class KBVector3 : public TVector3
       else if (name == "-z") return kMZ;
       else if (name == "i")  return kI;
       else if (name == "j")  return kJ;
-      else if (name == "z")  return kK;
+      else if (name == "k")  return kK;
       else if (name == "-i") return kMI;
       else if (name == "-j") return kMJ;
-      else if (name == "-z") return kMK;
+      else if (name == "-k") return kMK;
       else                   return kNon;
     }
 
-    static TString AxisName(Axis value) {
+    static TString AxisName(Axis axisIn) {
       static std::map<Axis, std::string> axisNames;
       if (axisNames.size() == 0) {
         axisNames[kNon] = "not-defined";
@@ -67,22 +73,34 @@ class KBVector3 : public TVector3
         axisNames[kMZ]  = "-z";
         axisNames[kI]   = "i";
         axisNames[kJ]   = "j";
-        axisNames[kK]   = "z";
+        axisNames[kK]   = "k";
         axisNames[kMI]  = "-i";
         axisNames[kMJ]  = "-j";
-        axisNames[kMK]  = "-z";
+        axisNames[kMK]  = "-k";
       }
-      return TString(axisNames[value].c_str());
+      return TString(axisNames[axisIn].c_str());
     }
 
-    static bool IsPositive(Axis value) {
-      if (value%2==1)
+    static bool IsGlobalAxis(Axis axisIn) {
+      if (int(axisIn)>0 && int(axisIn)<7)
         return true;
       return false;
     }
 
-    static bool IsNegative(Axis value) {
-      if (value%2==0)
+    static bool IsLocalAxis(Axis axisIn) {
+      if (int(axisIn)>6)
+        return true;
+      return false;
+    }
+
+    static bool IsPositive(Axis axisIn) {
+      if (axisIn%2==1)
+        return true;
+      return false;
+    }
+
+    static bool IsNegative(Axis axisIn) {
+      if (axisIn%2==0)
         return true;
       return false;
     }
@@ -128,9 +146,11 @@ class KBVector3 : public TVector3
 
     void SetReferenceAxis(Axis referenceAxis);
     Axis GetReferenceAxis() const;
+    Axis GetGlobalAxis(Axis ka) const;
 
     Double_t At(Axis ka) const;
     void AddAt(Double_t value, Axis ka, bool ignoreNegative = false);
+    void SetAt(Double_t value, Axis ka, bool ignoreNegative = false);
 
     void SetIJKR(Double_t i, Double_t j, Double_t k, Axis referenceAxis);
     void SetIJK(Double_t i, Double_t j, Double_t k);
@@ -142,24 +162,26 @@ class KBVector3 : public TVector3
     Double_t J() const;
     Double_t K() const;
 
-    TVector3 GetXYZ();
-    TVector3 GetIJK();
+    TVector3 GetXYZ() const;
+    TVector3 GetIJK() const;
 
     TArrow *ArrowXY();
     TArrow *ArrowYZ();
     TArrow *ArrowZX();
 
-    virtual Bool_t IsSortable() const { return true; }
-    Int_t Compare(const TObject *obj) const;
+    void Rotate(Double_t angle, Axis ka=kNon);
 
-    void SetSortBy(Double_t sortby) { fSortBy = sortby; }
-    Double_t SortBy() { return fSortBy; }
+    //virtual Bool_t IsSortable() const { return true; }
+    //Int_t Compare(const TObject *obj) const;
 
-    Double_t Angle2(const KBVector3 &q, TVector3 ref) const;
+    //void SetSortBy(Double_t sortby) { fSortBy = sortby; }
+    //Double_t SortBy() { return fSortBy; }
+
+    //Double_t Angle2(const KBVector3 &q, TVector3 ref) const;
 
   private:
     Axis fReferenceAxis = kNon;
-    Double_t fSortBy = 0;
+    //Double_t fSortBy = 0;
 
   ClassDef(KBVector3, 1)
 };

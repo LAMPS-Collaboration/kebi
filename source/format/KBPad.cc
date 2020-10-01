@@ -33,11 +33,10 @@ void KBPad::Print(Option_t *option) const
 {
   TString opts = TString(option);
 
-  if (opts.Index("s")) {
+  if (opts.Index("s")>=0) {
     kr_info(0) << "id:" << fID << " s:" << fSection << " r:" << fRow << " l:" << fLayer << endl;
     return;
   }
-  //else if (opts.Index("a"))
 
   kr_info(0) << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
   if (fActive) kb_out << " is Active!" << endl;
@@ -46,9 +45,9 @@ void KBPad::Print(Option_t *option) const
   kr_info(0) << "AsAd(1)AGET(1)CH(2)   : " << Form("%d%d%02d",fAsAdID,fAGETID,fChannelID) << endl;
   kr_info(0) << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
   kr_info(0) << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
-  kr_info(0) << "Position              : (" << fI << ", " << fJ << ") " << endl;
+  kr_info(0) << "Position              : (" << fPosition.X() << ", " << fPosition.Y() << ", " << fPosition.Z() << ") ; " << fPosition.GetReferenceAxis() << endl;
 
-  if (opts.Index(">")) {
+  if (opts.Index(">")>=0) {
     Int_t numMCID = fMCIDArray.size();
     kr_info(1) << "List of MC-IDs (co. Tb [mm]),  : ";
     for (auto iMC = 0; iMC < numMCID; ++iMC)
@@ -147,8 +146,7 @@ void KBPad::SetPad(KBPad *padRef)
   fAGETID = padRef -> GetAGETID();
   fChannelID = padRef -> GetChannelID();
 
-  fI = padRef -> GetI();
-  fJ = padRef -> GetJ();
+  fPosition = padRef -> GetPosition();
 
   fSection = padRef -> GetSection();
   fRow = padRef -> GetRow();
@@ -199,25 +197,27 @@ Double_t KBPad::GetBaseLine() const { return fBaseLine; }
 void KBPad::SetNoiseAmplitude(Double_t gain) { fNoiseAmp = gain; }
 Double_t KBPad::GetNoiseAmplitude() const { return fNoiseAmp; }
 
-void KBPad::SetPosition(Double_t i, Double_t j) 
+void KBPad::SetPosition(KBVector3 pos) { fPosition = pos; }
+
+void KBPad::SetPosition(Double_t i, Double_t j)
 {
-  fI = i;
-  fJ = j;
+  fPosition.SetI(i);
+  fPosition.SetJ(j);
 }
 
-void KBPad::GetPosition(Double_t &i, Double_t &j) const 
+void KBPad::GetPosition(Double_t &i, Double_t &j) const
 {
-  i = fI;
-  j = fJ;
+  i = fPosition.I();
+  j = fPosition.J();
 }
 
-TVector2 KBPad::GetPosition() const
-{
-  return TVector2(fI, fJ);
-}
-
-Double_t KBPad::GetI() const { return fI; }
-Double_t KBPad::GetJ() const { return fJ; }
+KBVector3 KBPad::GetPosition() const { return fPosition; }
+Double_t KBPad::GetI() const { return fPosition.I(); }
+Double_t KBPad::GetJ() const { return fPosition.J(); }
+Double_t KBPad::GetK() const { return fPosition.K(); }
+Double_t KBPad::GetX() const { return fPosition.X(); }
+Double_t KBPad::GetY() const { return fPosition.Y(); }
+Double_t KBPad::GetZ() const { return fPosition.Z(); }
 
 void KBPad::AddPadCorner(Double_t i, Double_t j) { fPadCorners.push_back(TVector2(i,j)); }
 vector<TVector2> *KBPad::GetPadCorners() { return &fPadCorners; }
@@ -341,7 +341,7 @@ TH1D *KBPad::GetHist(Option_t *option)
 
 void KBPad::SetHist(TH1D *hist, Option_t *option)
 {
-  kr_info(0) << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw) || i(input)] && h(hit)" << endl;
+  //kr_info(0) << "option: p(ID) && a(ID2) && mc(MC) && [o(out) || r(raw) || i(input)] && h(hit)" << endl;
   hist -> Reset();
 
   TString opts(option);

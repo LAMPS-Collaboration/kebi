@@ -117,21 +117,6 @@ void KBHitArray::Print(Option_t *option) const
   kr_info(0) << "       |" << setw(15) << fEXY << setw(15) << fEYY << setw(15) << fEYZ << "|" << endl;
   kr_info(0) << "       |" << setw(15) << fEZX << setw(15) << fEYZ << setw(15) << fEZZ << "|" << endl;
 
-  /*
-  if (opts.Index(">")>=0) {
-    TString title;
-    if (opts.Index("t")>=0) title += "Hit-IDs: ";
-
-    kr_info(1) << title;
-    if (opts.Index("s")>=0)
-      for (auto hitID : fHitIDArray)
-        kr_info(1)<< hitID << " ";
-    else
-      for (auto hitID : fHitIDArray)
-        kr_info(1)<< setw(4) << hitID;
-    kb_out << endl;
-  }
-  */
   if (opts.Index(">")>=0) {
     TIter next(this);
     KBHit *hit;
@@ -197,14 +182,14 @@ KBGeoLine KBHitArray::FitLine()
 
   fODRFitter -> Reset();
   fODRFitter -> SetCentroid(fEX,fEY,fEZ);
-  fODRFitter -> SetMatrixA(GetAXX(),GetAYY(),GetAZZ(),GetAXY(),GetAYZ(),GetAZX());
+  fODRFitter -> SetMatrixA(GetAXX(),GetAXY(),GetAZX(),GetAYY(),GetAYZ(),GetAZZ());
   fODRFitter -> SetWeightSum(fW);
   fODRFitter -> SetNumPoints(fN);
   if (fODRFitter -> Solve() == false)
     return line;
 
   fODRFitter -> ChooseEigenValue(0);
-  line.SetLine(TVector3(fEX,fEY,fEZ),fODRFitter -> GetDirection());
+  line.SetLine(TVector3(fEX,fEY,fEZ), TVector3(fEX,fEY,fEZ)+fODRFitter->GetDirection());
   line.SetRMS(fODRFitter -> GetRMSLine());
 
   return line;
@@ -223,14 +208,14 @@ KBGeoPlane KBHitArray::FitPlane()
 
   fODRFitter -> Reset();
   fODRFitter -> SetCentroid(fEX,fEY,fEZ);
-  //fODRFitter -> SetMatrixA(GetAXX(),GetAYY(),GetAZZ(),GetAXY(),GetAYZ(),GetAZX());
-  //fODRFitter -> SetWeightSum(fW);
-  //fODRFitter -> SetNumPoints(fN);
+  fODRFitter -> SetMatrixA(GetAXX(),GetAXY(),GetAZX(),GetAYY(),GetAYZ(),GetAZZ());
+  fODRFitter -> SetWeightSum(fW);
+  fODRFitter -> SetNumPoints(fN);
 
-  TIter next(this);
-  KBHit *hit;
-  while ((hit = (KBHit *) next()))
-    fODRFitter -> AddPoint(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
+  //TIter next(this);
+  //KBHit *hit;
+  //while ((hit = (KBHit *) next()))
+  //  fODRFitter -> AddPoint(hit->GetX(), hit->GetY(), hit->GetZ(), hit->GetCharge());
 
   if (fODRFitter -> Solve() == false)
     return plane;
@@ -510,9 +495,9 @@ TCanvas *KBHitArray::DrawFitCircle(kbaxis ref)
   markOriginal -> SetMarkerStyle(41);
   markOriginal -> SetMarkerSize(1.2);
 
-  for (auto hit : {GetHit(0), GetLastHit()})
+  for (auto hit0 : {GetHit(0), GetLastHit()})
   {
-    KBVector3 pos(hit -> GetPosition(), ref);
+    KBVector3 pos(hit0 -> GetPosition(), ref);
     auto i0 = pos.I() - posRiemann.I();
     auto j0 = pos.J() - posRiemann.J();
 
