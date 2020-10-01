@@ -19,6 +19,7 @@ void KBTask::Add(TTask *task)
 
   auto kbtask = (KBTask *) task;
   kbtask -> SetRank(fRank+1);
+  kbtask -> SetPar(fPar);
 }
 
 bool KBTask::InitTask() 

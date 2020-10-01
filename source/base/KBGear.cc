@@ -1,5 +1,10 @@
 #include "KBGear.hh"
 
+void KBGear::CreateParameterContainer(bool debug) {
+  if (fPar == nullptr)
+    fPar = new KBParameterContainer(debug);
+}
+
 void KBGear::SetParameterContainer(KBParameterContainer *par) { fPar = par; }
 
 void KBGear::SetParameterContainer(TString fname)

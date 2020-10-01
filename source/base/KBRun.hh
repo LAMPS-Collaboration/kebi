@@ -104,7 +104,7 @@ class KBRun : public KBTask
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
     void AddDetector(KBDetector *detector); ///< Set detector
-    KBDetector *GetDetector(Int_t idx) const;
+    KBDetector *GetDetector(Int_t idx=0) const;
     KBDetectorSystem *GetDetectorSystem() const;
 
     void SetGeoManager(TGeoManager *gm);
@@ -255,7 +255,7 @@ class KBRun : public KBTask
     TCanvas *fCvsChannelBuffer = nullptr;
     TH1D *fHistChannelBuffer = nullptr;
     TGraph *fGraphChannelBoundary = nullptr;
-    TGraph *fGraphChannelBoundaryNb[20];
+    TGraph *fGraphChannelBoundaryNb[20] = {0};
 
     TString fRunLogFileName;
     std::ofstream fRunLogFileStream;

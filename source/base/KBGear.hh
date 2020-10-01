@@ -16,11 +16,13 @@ class KBGear
     KBGear() {};
     virtual ~KBGear() {};
 
-    virtual void SetParameterContainer(KBParameterContainer *par);
-    virtual void SetParameterContainer(TString fname);
+    void CreateParameterContainer(bool debug=false);
 
-    virtual void AddParameterContainer(KBParameterContainer *par);
-    virtual void AddParameterContainer(TString fname);
+    void SetParameterContainer(KBParameterContainer *par);
+    void SetParameterContainer(TString fname);
+
+    void AddParameterContainer(KBParameterContainer *par);
+    void AddParameterContainer(TString fname);
 
     void SetPar(KBParameterContainer *par) { SetParameterContainer(par); }
     void AddPar(KBParameterContainer *par) { AddParameterContainer(par); }

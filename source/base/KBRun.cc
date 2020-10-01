@@ -82,7 +82,8 @@ KBRun::KBRun()
       continue;
     else {
       fListOfGitHashTags.push_back(hashTag);
-      revListOfVersionMarks.push_back(TString(branchName+"."+(numTags+1)+"."+hashTag));
+      //revListOfVersionMarks.push_back(TString(branchName+"."+(numTags+1)+"."+hashTag));
+      revListOfVersionMarks.push_back(hashTag);
       numTags++;
     }
   }
@@ -100,6 +101,8 @@ KBRun::KBRun()
     }
     idx1 = idx2+1;
   }
+
+  CreateParameterContainer();
 }
 
 TString KBRun::GetKEBIVersion()       { return TString(KEBI_VERSION); }
@@ -141,7 +144,7 @@ void KBRun::Print(Option_t *option) const
   kb_out << endl;
   kb_out << "===========================================================================================" << endl;
   kb_info << "Run" << endl;
-  if (fPar != nullptr && option_print.Index("p") >= 0) {
+  if (option_print.Index("p") >= 0) {
     kb_out << "-------------------------------------------------------------------------------------------" << endl;
     fPar -> Print();
   }
@@ -228,10 +231,11 @@ TString KBRun::ConfigureDataPath(TString &name, bool search)
     for (auto bname : fListOfGitBranches) {
       if (branchName==bname) {
         foundBranch = true;
-        auto version1 = ((TObjString *) array->At(numEntries-4)) -> GetString();
-        auto version2 = ((TObjString *) array->At(numEntries-3)) -> GetString();
-        auto version3 = ((TObjString *) array->At(numEntries-2)) -> GetString();
-        softwareVersion = version1 + "." + version2 + "." + version3;
+        //auto version1 = ((TObjString *) array->At(numEntries-4)) -> GetString();
+        //auto version2 = ((TObjString *) array->At(numEntries-3)) -> GetString();
+        //auto version3 = ((TObjString *) array->At(numEntries-2)) -> GetString();
+        //softwareVersion = version1 + "." + version2 + "." + version3;
+        softwareVersion = ((TObjString *) array->At(numEntries-2)) -> GetString();
         break;
       }
     }
@@ -319,8 +323,10 @@ TString KBRun::ConfigureDataPath(TString &name, bool search)
       fullName = name;
 
     if (!hasVersion) {
-      fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION+".root");
-      softwareVersion = KEBI_VERSION;
+      //fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION+".root");
+      //softwareVersion = KEBI_VERSION;
+      fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION_SHORT+".root");
+      softwareVersion = KEBI_VERSION_SHORT;
     }
 
     name = fullName;
@@ -486,14 +492,15 @@ bool KBRun::Init()
     }
   }
 
-  if (fPar == nullptr) {
+  if (fPar->IsEmpty()) {
     if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr) {
-      fPar = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
+      auto par = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
+      AddParameterContainer(par);
       kb_info << "Parameter container found in " << fInputFileName << endl;
     }
     else {
-      kb_error << "FAILED to load parameter container." << endl;
-      return false;
+      kb_warning << "FAILED to load parameter container from the input file." << endl;
+      //return false;
     }
   }
 
@@ -663,8 +670,8 @@ void KBRun::CreateParameterFile(TString name)
 
   fPar -> SetDebugMode(true);
   Init();
-  if (name.Index(".par") < 0)
-    name = name + ".par";
+  if (name.Index(".conf") < 0)
+    name = name + ".conf";
   fPar -> SaveAs(name);
 
   if (fAutoTerminate) Terminate(this);
@@ -1010,7 +1017,7 @@ void KBRun::OpenEventDisplay()
     cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
     fCvsDetectorPlaneArray -> Add(cvs);
     cvs -> cd();
-    plane -> GetHist() -> Draw("colz");
+    //plane -> GetHist() -> Draw("colz");
   }
 
   gEve -> GetBrowser() -> HideBottomTab();
@@ -1060,12 +1067,12 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
   }
 
 
-  //if (fGraphChannelBoundaryNb[0] == nullptr) // TODO
-  for (Int_t iGraph = 0; iGraph < 20; ++iGraph) {
-    fGraphChannelBoundaryNb[iGraph] = new TGraph();
-    fGraphChannelBoundaryNb[iGraph] -> SetLineColor(kGreen);
-    fGraphChannelBoundaryNb[iGraph] -> SetLineWidth(2);
-  }
+  if (fGraphChannelBoundaryNb[0] == nullptr) // TODO
+    for (Int_t iGraph = 0; iGraph < 20; ++iGraph) {
+      fGraphChannelBoundaryNb[iGraph] = new TGraph();
+      fGraphChannelBoundaryNb[iGraph] -> SetLineColor(kGreen);
+      fGraphChannelBoundaryNb[iGraph] -> SetLineWidth(2);
+    }
 
   if (eveEventID>=0 && fCurrentEventID!=eveEventID)
     this -> GetEntry(eveEventID);
@@ -1483,10 +1490,13 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
       }
 
       auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
+      cvs -> Clear();
       cvs -> cd();
-      histPlane -> SetMaximum(5000);
-      histPlane -> SetMinimum(1);
-      histPlane -> Draw("colz");
+      //histPlane -> SetMaximum(5000);
+      histPlane -> SetMinimum(0.1);
+      histPlane -> DrawClone("colz");
+      histPlane -> Reset();
+      histPlane -> Draw("same");
       plane -> DrawFrame();
 
       KBVector3::Axis axis1 = plane -> GetAxis1();
