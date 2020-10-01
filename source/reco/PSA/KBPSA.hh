@@ -1,6 +1,7 @@
 #ifndef KBPSA_HH
 #define KBPSA_HH
 
+#include "KBTask.hh"
 #include "KBChannelHit.hh"
 #include "KBParameterContainer.hh"
 
@@ -8,17 +9,18 @@
 #include <iostream>
 using namespace std;
 
-class KBPSA
+class KBPSA : public KBTask
 {
   public:
     KBPSA() {}
     virtual ~KBPSA() {}
 
+    virtual bool Init();
+
     virtual void AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray);
+
     void SetTbRange(Int_t tbi, Int_t tbf);
     void SetThreshold(Double_t val);
-
-    void SetParameters(KBParameterContainer *par);
 
   protected:
     Int_t fTbStart = 0;

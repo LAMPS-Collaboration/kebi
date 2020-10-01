@@ -16,7 +16,7 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
     KBPSAFastFit(TString fileName);
     virtual ~KBPSAFastFit() {}
 
-    void Init();
+    virtual bool Init();
 
     /** 
      * Find hits from the pad, pass hits to hitArray

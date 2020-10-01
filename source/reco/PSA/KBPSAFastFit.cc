@@ -14,10 +14,12 @@ KBPSAFastFit::KBPSAFastFit(TString fileName)
   Init();
 }
 
-void KBPSAFastFit::Init()
+bool KBPSAFastFit::Init()
 {
+  KBPSA::Init();
   fTbStartCut = 512 - fNDFTbs - 1;
   fThresholdOneTbStep = fThresholdTbStep * fThreshold;
+  return true;
 }
 
 void 

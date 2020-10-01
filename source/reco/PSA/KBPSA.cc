@@ -2,6 +2,17 @@
 
 ClassImp(KBPSA)
 
+bool KBPSA::Init()
+{
+  fTbStart = fPar -> GetParInt("tbStart");
+  auto nTbs = fPar -> GetParInt("nTbs");
+  fTbEnd = fTbStart + nTbs - 1;
+  fThreshold = fPar -> GetParDouble("ADCThreshold");
+  fDynamicRange = fPar -> GetParDouble("dynamicRange");
+
+  return true;
+}
+
 void KBPSA::AnalyzeChannel(Double_t *buffer, vector<KBChannelHit> *hitArray)
 {
   Double_t valMax = 0;
@@ -25,12 +36,3 @@ void KBPSA::SetTbRange(Int_t tbi, Int_t tbf)
 }
 
 void KBPSA::SetThreshold(Double_t val) { fThreshold = val; }
-
-void KBPSA::SetParameters(KBParameterContainer *par)
-{
-  fTbStart = par -> GetParInt("tbStart");
-  auto nTbs = par -> GetParInt("nTbs");
-  fTbEnd = fTbStart + nTbs - 1;
-  fThreshold = par -> GetParDouble("ADCThreshold");
-  fDynamicRange = par -> GetParDouble("dynamicRange");
-}

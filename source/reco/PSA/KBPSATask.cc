@@ -19,12 +19,12 @@ bool KBPSATask::Init()
 {
   KBRun *run = KBRun::GetRun();
 
-  auto par = run -> GetParameterContainer();
+  //auto par = run -> GetParameterContainer();
   fTpc = run -> GetDetectorSystem() -> GetTpc();
 
   fNPlanes = fTpc -> GetNumPlanes();
-  fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
-  fTbTime = par -> GetParDouble("tbTime");
+  fDriftVelocity = fPar -> GetParDouble("gasDriftVelocity");
+  fTbTime = fPar -> GetParDouble("tbTime");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 
@@ -36,7 +36,9 @@ bool KBPSATask::Init()
 
   if (fPSA == nullptr)
     fPSA = new KBPSA();
-  fPSA -> SetParameters(par);
+
+  this -> Add(fPSA);
+  fPSA -> Init();
 
   return true;
 }
@@ -79,7 +81,7 @@ void KBPSATask::Exec(Option_t*)
       hit -> SetPadID(pad -> GetPadID());
       hit -> SetX(pos.X());
       hit -> SetY(pos.Y());
-      hit -> SetZ(pos.K());
+      hit -> SetZ(pos.Z());
       hit -> SetTb(channelHit.GetTDC());
       hit -> SetCharge(channelHit.GetADC());
       hit -> SetSection(pad -> GetSection());
