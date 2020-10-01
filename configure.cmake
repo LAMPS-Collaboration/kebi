@@ -10,6 +10,7 @@ set(KEBI_PROJECT_LIST
   # ADD KEBI PROJECT DIRECOTRIES BELOW
   #===================================
   LAMPS-HighEnergy
+  PrototypeTPC
   #===================================
   # ADD KEBI PROJECT DIRECOTRIES ABOVE
   CACHE INTERNAL ""
