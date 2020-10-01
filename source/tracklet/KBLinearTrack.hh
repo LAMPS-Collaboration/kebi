@@ -38,8 +38,8 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
 
     virtual Double_t LengthAt(TVector3 point) const;
 
-
     virtual TGraph *TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
+    virtual TGraph *TrajectoryOnPlane(KBDetectorPlane *plane, Double_t scale=1);
     virtual TGraph *CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
 
   protected:
