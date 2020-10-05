@@ -33,6 +33,7 @@
 #include "KBContainer.hh"
 #include "KBTracklet.hh"
 #include "KBMCStep.hh"
+#include "KBPulseGenerator.hh"
 
 #include <unistd.h>
 #include <iostream>
@@ -57,8 +58,8 @@ KBRun::KBRun()
   fCvsDetectorPlaneArray = new TObjArray();
   fTemporaryBranchArray = new TObjArray();
   fEveEventManagerArray = new TObjArray();
-  fBranchPtr = new TObject*[1000];
-  for (Int_t iBranch = 0; iBranch < 1000; ++iBranch)
+  fBranchPtr = new TObject*[100];
+  for (Int_t iBranch = 0; iBranch < 100; ++iBranch)
     fBranchPtr[iBranch] = nullptr;
 
   fDetectorSystem = new KBDetectorSystem();
@@ -90,7 +91,7 @@ KBRun::KBRun()
   if (numTags>=0)
     fListOfNumTagsInGitBranches.push_back(numTags);
 
-  auto numBranches = fListOfGitBranches.size();
+  Int_t numBranches = fListOfGitBranches.size();
   auto idx1 = 0;
   auto idx2 = 0;
   for (auto iBranch=0; iBranch<numBranches; ++iBranch)
@@ -203,74 +204,91 @@ void KBRun::Print(Option_t *option) const
   kb_out << "===========================================================================================" << endl;
 }
 
-TString KBRun::ConfigureDataPath(TString &name, bool search)
+TString KBRun::GetFileVersion(TString name)
 {
-  name = ConfigureEnv(name);
-  TString softwareVersion;
+  auto array = name.Tokenize(".");
+  if (array -> GetEntries()>=2) {
+    TString kbversion = ((TObjString *) array->At(array->GetEntriesFast()-2)) -> GetString();
+    if (kbversion.Sizeof()==8)
+      return kbversion;
+  }
+  return "";
+}
 
-  TString pathPWD = getenv("PWD"); pathPWD = pathPWD + "/";
-  TString pathKEBI = TString(KEBI_PATH) + "/data/";
-
-  TString fullName;
-
+TString KBRun::ConfigureDataPath(TString name, bool search, TString dataPath, bool isRootFile)
+{
   if (name == "last") {
-    fullName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
-    name = fullName;
-    return softwareVersion;
+    name = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
+    return name;
   }
 
-  if (name.Index(".root") != name.Sizeof()-6)
-    name = name + ".root";
+  TString fullName;
+  //TString softwareVersion;
+
+  name = KBRun::ConfigureEnv(name);
+  dataPath = KBRun::ConfigureEnv(dataPath);
+  if (isRootFile) {
+    if (!name.EndsWith(".root"))
+      name = name + ".root";
+  }
 
   bool hasVersion = false;
   auto array = name.Tokenize(".");
-  if (array->GetEntries()>=5) {
-    auto numEntries = array -> GetEntries();
-    auto branchName = ((TObjString *) array->At(numEntries-4)) -> GetString();
-    bool foundBranch = false;
-    for (auto bname : fListOfGitBranches) {
-      if (branchName==bname) {
-        foundBranch = true;
-        //auto version1 = ((TObjString *) array->At(numEntries-4)) -> GetString();
-        //auto version2 = ((TObjString *) array->At(numEntries-3)) -> GetString();
-        //auto version3 = ((TObjString *) array->At(numEntries-2)) -> GetString();
-        //softwareVersion = version1 + "." + version2 + "." + version3;
-        softwareVersion = ((TObjString *) array->At(numEntries-2)) -> GetString();
-        break;
-      }
-    }
-    if (foundBranch)
-      hasVersion = true;
+
+  /*
+  auto numEntries = array -> GetEntries();
+  if (numEntries>=2) {
+    TString kbversion = ((TObjString *) array->At(numEntries-2)) -> GetString();
+    if (kbversion.Sizeof()==8)
+      softwareVersion = kbversion;
   }
+  */
+
+  TString pathKEBIData = TString(KEBI_PATH) + "/data/";
 
   if (search)
   {
+    string line;
+    TString hashTag, branchName;
+    ifstream log_branch_list(TString(KEBI_PATH)+"/log/KBBranchList.log");
+    std::vector<TString> listOfHashVersions;
+    while (getline(log_branch_list, line)) {
+      istringstream ss(line);
+      ss >> hashTag;
+      if (hashTag=="__BRANCH__") continue;
+      else if (hashTag.IsNull() || hashTag.Sizeof() !=8) continue;
+      else listOfHashVersions.push_back(hashTag);
+    }
+
     if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
       bool found = false;
 
-      TString pathList[] = {fDataPath, pathPWD, pathPWD+"data/", pathKEBI};
+      TString pathPWD = getenv("PWD"); pathPWD = pathPWD + "/";
+      TString pathPWDData = pathPWD + "/data/";
+      TString pathList[] = {dataPath, pathPWD, pathPWDData, pathKEBIData};
 
       for (auto path : pathList) {
         fullName = path + name;
-        if (CheckFileExistence(fullName,0)) {
-          kb_info << fullName << " is found!" << endl;
+        if (KBRun::CheckFileExistence(fullName)) {
+          //kb_info << fullName << " is found!" << endl;
           found = true;
-          softwareVersion = "";
+          //softwareVersion = "";
           break;
         }
 
         TString vxName = fullName;
         bool breakFlag = false;
-        for (auto versionMark : fListOfVersionMarks)
-        {
-          fullName = vxName;
-          fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
-          if (CheckFileExistence(fullName,0)) {
-            kb_info << fullName << " is found!" << endl;
-            found = true;
-            breakFlag = true;
-            softwareVersion = versionMark;
-            break;
+        if (fullName.EndsWith(".root")) {
+          for (auto versionMark : listOfHashVersions)
+          {
+            fullName = vxName;
+            fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
+            if (KBRun::CheckFileExistence(fullName)) {
+              found = true;
+              breakFlag = true;
+              //softwareVersion = versionMark;
+              break;
+            }
           }
         }
         if (breakFlag)
@@ -280,62 +298,69 @@ TString KBRun::ConfigureDataPath(TString &name, bool search)
 
       if (found) {
         name = fullName;
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
       else {
         name = "";
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
     }
     else {
       fullName = name;
-      if (CheckFileExistence(fullName,0)) {
-        kb_info << fullName << " is found!" << endl;
+      if (KBRun::CheckFileExistence(fullName)) {
+        //kb_info << fullName << " is found!" << endl;
         name = fullName;
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
 
       TString vxName = fullName;
-      for (TString versionMark : fListOfVersionMarks)
+      for (TString versionMark : listOfHashVersions)
       {
         fullName = vxName;
         fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
-        if (CheckFileExistence(fullName,0)) {
-          kb_info << fullName << " is found!" << endl;
+        if (KBRun::CheckFileExistence(fullName)) {
+          //kb_info << fullName << " is found!" << endl;
           name = fullName;
-          softwareVersion = versionMark;
-          return softwareVersion;
+          //softwareVersion = versionMark;
+          //return softwareVersion;
+          return name;
         }
       }
 
       name = "";
-      return softwareVersion;
+      //return softwareVersion;
+      return name;
     }
   }
   else {
     if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
-      if (fDataPath.IsNull())
-        fullName = pathKEBI + name;
+      if (dataPath.IsNull())
+        fullName = pathKEBIData + name;
       else
-        fullName = fDataPath + "/" + name;
+        fullName = dataPath + "/" + name;
     }
     else
       fullName = name;
 
     if (!hasVersion) {
-      //fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION+".root");
-      //softwareVersion = KEBI_VERSION;
       fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION_SHORT+".root");
-      softwareVersion = KEBI_VERSION_SHORT;
+      //softwareVersion = KEBI_VERSION_SHORT;
     }
 
     name = fullName;
-    return softwareVersion;
+    //return softwareVersion;
+    return name;
   }
 }
 
 TString KBRun::ConfigureEnv(TString name)
 {
+  if (name.Index("$") < 0)
+    return name;
+
   TString head;
   if (name[0] == '/') head = "/";
   TString fullName = head;
@@ -343,10 +368,16 @@ TString KBRun::ConfigureEnv(TString name)
   TObjArray *tokens = name.Tokenize("/");
 
   for (auto iToken = 0; iToken < tokens -> GetEntries(); ++iToken) {
+
     TString token = ((TObjString *) tokens -> At(iToken)) -> GetString();
     if (token[0] == '$') {
-      TString envName = token(1,token.Sizeof()-2);
-      token = gSystem -> Getenv(envName);
+      TString tokenIn = TString(token(1,token.Sizeof()-1-1));
+      TString tokenOut = gSystem -> Getenv(tokenIn);
+      if (tokenOut.IsNull()) {
+        tokenIn = TString(token(2,token.Sizeof()-2-2));
+        tokenOut = gSystem -> Getenv(tokenIn);
+      }
+      token = tokenOut;
     }
     fullName += token + "/";
   }
@@ -355,7 +386,7 @@ TString KBRun::ConfigureEnv(TString name)
     fullName = fullName + "/";
 
   if (fullName.Index("$") >= 0)
-    return ConfigureEnv(fullName);
+    return KBRun::ConfigureEnv(fullName);
 
   return fullName;
 }
@@ -364,22 +395,24 @@ void KBRun::SetDataPath(TString path) { fDataPath = path; }
 TString KBRun::GetDataPath() { return fDataPath; }
 
 void KBRun::SetInputFile(TString fileName, TString treeName) {
-  fInputFileName = fileName;
-  fInputVersion = ConfigureDataPath(fInputFileName,true);
+  fInputFileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
+  fInputVersion = GetFileVersion(fInputFileName);
   fInputTreeName = treeName;
 }
 
-void KBRun::AddInput(TString fileName) {
-  ConfigureDataPath(fileName,true);
+void KBRun::AddInputFile(TString fileName, TString treeName) {
+  fileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
   fInputFileNameArray.push_back(fileName);
+  fInputTreeName = treeName;
 }
 void KBRun::AddFriend(TString fileName) {
-  ConfigureDataPath(fileName,true);
+  fileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
   fFriendFileNameArray.push_back(fileName);
 }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 
 TFile *KBRun::GetInputFile() { return fInputFile; }
+TTree *KBRun::GetInputTree() const { return (TTree *) fInputTree; }
 TChain *KBRun::GetInputChain()  const { return fInputTree; }
 TChain *KBRun::GetFriendChain(Int_t iFriend)  const { return ((TChain *) fFriendTrees -> At(iFriend)); }
 
@@ -404,7 +437,7 @@ bool KBRun::Init()
   if (fInitialized)
   fInitialized = false;
 
-  kb_print << "Initializing" << endl;
+  kb_info << "Initializing" << endl;
 
   GetDatabasePDG();
 
@@ -416,8 +449,8 @@ bool KBRun::Init()
 
   if (fInputFileName.IsNull() == false) {
     kb_out << endl;
-    if (!CheckFileExistence(fInputFileName)) {
-      kb_print << "given input file deos not exist!" << endl;
+    if (!KBRun::CheckFileExistence(fInputFileName)) {
+      kb_info << "given input file deos not exist!" << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -427,12 +460,12 @@ bool KBRun::Init()
 
     fInputTree = new TChain(fInputTreeName);
     fInputTree -> AddFile(fInputFileName);
-    kb_print << "Input file : " << fInputFileName << endl;
+    kb_info << "Input file : " << fInputFileName << endl;
 
     Int_t nInputs = fInputFileNameArray.size();
     for (Int_t iInput = idxInput; iInput < nInputs; iInput++) {
       fInputTree -> AddFile(fInputFileNameArray[iInput]);
-      kb_print << "Input file : " << fInputFileNameArray[iInput] << endl;
+      kb_info << "Input file : " << fInputFileNameArray[iInput] << endl;
     }
 
     fNumFriends = fFriendFileNameArray.size();
@@ -551,8 +584,7 @@ bool KBRun::Init()
     fDetectorSystem -> SetParameterContainer(fPar);
     fDetectorSystem -> Init();
     fDetectorSystem -> SetTransparency(80);
-    kb_print << fDetectorSystem -> GetName() << " initialized" << endl;
-    kb_out << endl;
+    kb_info << fDetectorSystem -> GetName() << " initialized" << endl;
   }
 
   if (fOutputFileName.IsNull()) {
@@ -569,23 +601,25 @@ bool KBRun::Init()
       if (fSplit != -1)
         fOutputFileName = fOutputFileName + Form(".%d",fSplit);
 
-      fOutputVersion = ConfigureDataPath(fOutputFileName);
+      fOutputFileName = KBRun::ConfigureDataPath(fOutputFileName,false);
+      fOutputVersion = GetFileVersion(fOutputFileName);
     }
     else {
       kb_warning << "Output file is not set!" << endl;
       kb_warning << "Set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
     }
   }
-  else
-    fOutputVersion = ConfigureDataPath(fOutputFileName);
+  else {
+    fOutputFileName = KBRun::ConfigureDataPath(fOutputFileName,false);
+    fOutputVersion = GetFileVersion(fOutputFileName);
+  }
 
   fKBLogFileName = TString(KEBI_PATH) + "/data/kbrun.log";
 
   if (!fOutputFileName.IsNull())
   {
-    if (CheckFileExistence(fOutputFileName)) {}
+    if (KBRun::CheckFileExistence(fOutputFileName)) {}
 
-    kb_out << endl;
     kb_info << "Output file : " << fOutputFileName << endl;
     fOutputFile = new TFile(fOutputFileName, "recreate");
     fOutputTree = new TTree("event", "");
@@ -600,10 +634,9 @@ bool KBRun::Init()
 
   fInitialized = InitTasks();
 
-  kb_out << endl;
   if (fInitialized) {
     kb_info << fNumEntries << " input entries" << endl;
-    kb_print << "KBRun initialized" << endl;
+    kb_info << "KBRun initialized!" << endl;
   }
   else
     kb_error << "[KBRun] FAILED initializing tasks." << endl;
@@ -625,7 +658,7 @@ TDatabasePDG *KBRun::GetDatabasePDG()
 
   if (db->GetParticle("deuteron")==nullptr)
   {
-    kb_print << "Adding ions to TDatabasePDG" << endl;
+    kb_info << "Adding ions to TDatabasePDG" << endl;
 
     db -> AddParticle("deuteron","", 1.87561 ,1,0, 3,"Ion",1000010020);
     db -> AddParticle("triton"  ,"", 2.80892 ,1,0, 3,"Ion",1000010030);
@@ -682,6 +715,21 @@ bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
   if (fBranchPtrMap[name] != nullptr)
     return false;
 
+  TString persistentParName = name+"__PERSISTENCY";
+  if (fPar -> CheckPar(persistentParName)) {
+    persistent = fPar -> GetParBool(persistentParName);
+    if (persistent)
+      persistentParName = TString("(persistent by par. ") + persistentParName + ")";
+    else
+      persistentParName = TString("(temporary by par. ") + persistentParName + ")";
+  }
+  else {
+    if (persistent)
+      persistentParName = "(persistent)";
+    else
+      persistentParName = "(temporary)";
+  }
+
   fBranchPtr[fNumBranches] = obj;
   fBranchPtrMap[name] = fBranchPtr[fNumBranches];
   fBranchNames.push_back(name);
@@ -691,11 +739,10 @@ bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
     if (fOutputTree != nullptr)
       fOutputTree -> Branch(name, &obj);
     fPersistentBranchArray -> Add(obj);
-    kb_info << "Output branch " << name << " (persistent)" << endl;
   } else {
     fTemporaryBranchArray -> Add(obj);
-    kb_info << "Output branch " << name << " (temporary)" << endl;
   }
+  kb_info << "Output branch " << name << " " << persistentParName << endl;
 
   return true;
 }
@@ -1455,7 +1502,7 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
           {
             TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
             if (branchName.Index("Hit")==0) {
-              cout << branchName << " is to be filled to pad plane" << endl;
+              kb_info << branchName << " is to be filled to pad plane" << endl;
               hitArray = (TClonesArray *) fBranchPtrMap[branchName];
               hitArray -> Print();
               exist_hit = true;
@@ -1673,6 +1720,8 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
 
   fHistChannelBuffer -> Draw("hist");
 
+  KBPulseGenerator::GetPulseGenerator(fPar);
+
   for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
     auto hit = pad -> GetHit(iHit);
     hit -> Print();
@@ -1704,16 +1753,9 @@ void KBRun::SetLogFile(TString name) {
 TString KBRun::GetLogFile() { return fRunLogFileName; }
 //std::ofstream &KBRun::GetLogFileStream() { return &fRunLogFileStream; }
 
-bool KBRun::CheckFileExistence(TString fileName, bool print)
+bool KBRun::CheckFileExistence(TString fileName)
 {
   TString name = gSystem -> Which(".", fileName.Data());
-  if (print) {
-    if (name.IsNull())
-      kb_info << fileName << " IS NEW." << endl;
-    else
-      kb_info << fileName << " EXIST!" << endl;
-  }
-
   if (name.IsNull())
     return false;
   return true;

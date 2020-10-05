@@ -267,7 +267,7 @@ Int_t KBParameterContainer::AddPar(KBParameterContainer *parc, TString parNameFo
   if (parNameForFile.IsNull())
     parNameForFile = Form("INPUT_PAR_CONTAINER%d", fNumInputFiles);
   fNumInputFiles++;
-  SetPar(parNameForFile, ""); //@todo
+  //SetPar(parNameForFile, ""); //@todo
 
   Int_t countParameters = 0;
   Int_t countSameParameters = 0;
@@ -290,7 +290,7 @@ Int_t KBParameterContainer::AddPar(KBParameterContainer *parc, TString parNameFo
   }
 
   if (countParameters == 0) {
-    this -> Remove(FindObject(parNameForFile));
+    //this -> Remove(FindObject(parNameForFile));
     fNumInputFiles--;
   }
 
@@ -384,6 +384,8 @@ void KBParameterContainer::Print(Option_t *option) const
           thisIsNewLine = true;
           ssLine << left << setw(28) << key << setw(10) << parType+"[]" << valueString;
           arrayTitleIsSet = true;
+          if (countDownArrayIdx==0)
+            ssLine << comment << endl;
         }
         else if (countDownArrayIdx==0) ssLine << ",  " << valueString << comment << endl;
         else ssLine << ",  " << valueString;
@@ -639,8 +641,12 @@ kbaxis KBParameterContainer::GetParAxis(TString name, Int_t idx)
 
 Bool_t KBParameterContainer::CheckPar(TString name)
 {
-  if (FindObject(name) == nullptr)
-    return false;
+  if (FindObject(name) == nullptr) {
+    if (FindObject(TString("NUM_VALUES_")+name) == nullptr)
+      return false;
+    else
+      return false;
+  }
   return true;
 }
 

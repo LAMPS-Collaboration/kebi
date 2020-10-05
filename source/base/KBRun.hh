@@ -71,10 +71,11 @@ class KBRun : public KBTask
     TString GetDataPath();
 
     void SetInputFile(TString fileName, TString treeName = "event"); ///< Set input file and tree name
-    void AddInput(TString fileName); ///< Add file to input file
+    void AddInputFile(TString fileName, TString treeName = "event"); ///< Add file to input file
     void AddFriend(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
     TFile *GetInputFile();
+    TTree *GetInputTree() const;
     TChain *GetInputChain() const;
     TChain *GetFriendChain(Int_t iFriend) const;
 
@@ -162,10 +163,10 @@ class KBRun : public KBTask
     void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
-    TString ConfigureDataPath(TString &name, bool search = false);
-    TString ConfigureEnv(TString name);
-
-    bool CheckFileExistence(TString fileName, bool print = false);
+    TString GetFileVersion(TString name);
+    static TString ConfigureDataPath(TString name, bool search = false, TString dataPath="", bool isRootFile=true);
+    static TString ConfigureEnv(TString name);
+    static bool CheckFileExistence(TString fileName);
 
     TDatabasePDG *GetDatabasePDG();
     TParticlePDG *GetParticle(Int_t pdgCode);
