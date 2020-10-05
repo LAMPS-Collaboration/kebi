@@ -128,6 +128,9 @@ class KBPad : public KBChannel
     vector<Double_t> *GetMCWeightArray() { return &fMCWeightArray; }
     vector<Double_t> *GetMCTbArray()     { return &fMCTbArray; }
 
+    void SetSortValue(Double_t value) { fSortValue = value; }
+    Double_t GetSortValue() { return fSortValue; }
+
   private:
     bool fActive = false; //!
 
@@ -159,6 +162,8 @@ class KBPad : public KBChannel
     vector<Double_t> fMCTbArray;      ///< Tb of corresponding Track-ID
 
     bool fGrabed = false; //!
+
+    Double_t fSortValue = -999; //!
 
   ClassDef(KBPad, 1)
 };

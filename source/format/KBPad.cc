@@ -122,6 +122,11 @@ Int_t KBPad::Compare(const TObject *obj) const
   int sortLatter = -1;
   int noChange = 0;
 
+  if (fSortValue >= 0) {
+         if (fSortValue < padCompare -> GetSortValue()) return sortLatter;
+    else if (fSortValue > padCompare -> GetSortValue()) return sortEarlier;
+    return noChange;
+  }
        if (padCompare -> GetLayer() < fLayer) return sortLatter;
   else if (padCompare -> GetLayer() > fLayer) return sortEarlier;
   else //same layer

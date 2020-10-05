@@ -34,6 +34,8 @@ class KBTpcHit : public KBHit
     virtual void PrintTpcHit() const;
     void CopyFrom(KBTpcHit const *hit);
 
+    void AddHit(KBTpcHit *hit);
+
     virtual TF1 *GetPulseFunction(Option_t *option = "");
 
     void SetPadID(Int_t id);
