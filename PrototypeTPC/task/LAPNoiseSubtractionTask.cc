@@ -20,6 +20,8 @@ bool LAPNoiseSubtractionTask::Init()
 {
   fPadArray = (TClonesArray *) KBRun::GetRun() -> GetBranch("Pad");
 
+  if (fPar -> CheckPar("skipNoiseSubtraction"))
+    fSkipNoiseSubtraction = fPar -> GetParBool("skipNoiseSubtraction");
   fTbSamplingNoiseStart = fPar -> GetParInt("tbSamplingNoiseRange",0);
   fTbSamplingNoiseEnd = fPar -> GetParInt("tbSamplingNoiseRange",1);
 
@@ -29,6 +31,21 @@ bool LAPNoiseSubtractionTask::Init()
 void LAPNoiseSubtractionTask::Exec(Option_t*)
 {
   Int_t nPads = fPadArray -> GetEntries();
+
+  if (fSkipNoiseSubtraction)
+  {
+    for (Int_t iPad = 0; iPad < nPads; iPad++) {
+      KBPad *pad = (KBPad *) fPadArray -> At(iPad);
+      Short_t *raw = pad -> GetBufferRaw();
+      Double_t out[512] = {0};
+
+      CopyRaw(raw, out);
+      pad -> SetBufferOut(out);
+    }
+
+    kb_info << "skiped" << endl;
+    return;
+  }
 
   FindReferencePad();
 

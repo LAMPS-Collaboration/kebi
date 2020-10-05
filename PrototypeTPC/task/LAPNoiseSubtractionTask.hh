@@ -19,6 +19,8 @@ class LAPNoiseSubtractionTask : public KBTask
     bool Init();
     void Exec(Option_t*);
 
+    void SkipNoiseSubtraction(bool val) { fSkipNoiseSubtraction = val; }
+
   private:
     void FindReferencePad();
     void CopyRaw(Short_t *in, Double_t *out);
@@ -28,6 +30,8 @@ class LAPNoiseSubtractionTask : public KBTask
 
   private:
     TClonesArray* fPadArray;
+
+    bool fSkipNoiseSubtraction = false;
 
     Int_t fIdxPadRef = -1;
     Int_t fTbSamplingNoiseStart = 0;
