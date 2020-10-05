@@ -235,15 +235,6 @@ TString KBRun::ConfigureDataPath(TString name, bool search, TString dataPath, bo
   bool hasVersion = false;
   auto array = name.Tokenize(".");
 
-  /*
-  auto numEntries = array -> GetEntries();
-  if (numEntries>=2) {
-    TString kbversion = ((TObjString *) array->At(numEntries-2)) -> GetString();
-    if (kbversion.Sizeof()==8)
-      softwareVersion = kbversion;
-  }
-  */
-
   TString pathKEBIData = TString(KEBI_PATH) + "/data/";
 
   if (search)
@@ -1488,6 +1479,8 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
       auto histPlane = plane -> GetHist();
       histPlane -> Reset();
 
+      auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
+
       if (plane -> InheritsFrom("KBPadPlane"))
       {
         auto padplane = (KBPadPlane *) plane;
@@ -1513,8 +1506,12 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
         if (padArray != nullptr)
           exist_pad = true;
 
-        if (!exist_hit && !exist_pad)
+        if (!exist_hit && !exist_pad) {
+          cvs -> cd();
+          histPlane -> Draw();
+          plane -> DrawFrame();
           continue;
+        }
 
         if (exist_hit)
         {
@@ -1536,11 +1533,8 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
         }
       }
 
-      auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
       cvs -> Clear();
       cvs -> cd();
-      //histPlane -> SetMaximum(5000);
-      histPlane -> SetMinimum(0.1);
       histPlane -> DrawClone("colz");
       histPlane -> Reset();
       histPlane -> Draw("same");
