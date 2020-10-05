@@ -20,6 +20,9 @@ bool LAPNoiseSubtractionTask::Init()
 {
   fPadArray = (TClonesArray *) KBRun::GetRun() -> GetBranch("Pad");
 
+  fTbSamplingNoiseStart = fPar -> GetParInt("tbSamplingNoiseRange",0);
+  fTbSamplingNoiseEnd = fPar -> GetParInt("tbSamplingNoiseRange",1);
+
   return true;
 }
 
