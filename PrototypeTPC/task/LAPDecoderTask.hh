@@ -29,7 +29,7 @@ class LAPDecoderTask : public KBTask
 
   private:
     TClonesArray* fPadArray;
-    bool fPersistency;
+    bool fPersistency = false;
 
     KBPadPlane *fPadPlane;
 
@@ -37,6 +37,12 @@ class LAPDecoderTask : public KBTask
 
     GETDecoder *fDecoder;
     ifstream fPadMap;
+
+    Int_t fNumAsAds = 4;
+    Int_t fNumAGETs = 4;
+    Int_t fNumChannelsMax = 68;
+
+    vector<Int_t> fSkipAAID;
 
   ClassDef(LAPDecoderTask, 1)
 };

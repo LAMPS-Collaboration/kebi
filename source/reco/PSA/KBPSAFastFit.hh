@@ -9,11 +9,10 @@
 #include <iostream>
 using namespace std;
 
-class KBPSAFastFit : public KBPSA, public KBPulseGenerator
+class KBPSAFastFit : public KBPSA
 {
   public:
     KBPSAFastFit();
-    KBPSAFastFit(TString fileName);
     virtual ~KBPSAFastFit() {}
 
     virtual bool Init();
@@ -60,6 +59,8 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
                      Double_t tbHit,    Double_t amplitude);
 
   private:
+    KBPulseGenerator *fPulseGenerator = nullptr;
+
     Double_t fThresholdOneTbStep;
 
     Int_t fTbStartCut;
@@ -107,6 +108,18 @@ class KBPSAFastFit : public KBPSA, public KBPulseGenerator
      * betaCut = fBetaCut * peak^2
      */
     Double_t fBetaCut = 1.e-8;
+
+    /** Number of timebucket while rising **/
+    Int_t fNumAscending;
+
+    /** Threshold of one timebucket step while risiing **/
+    Double_t fThresholdTbStep;
+
+    /**
+     * Number of degree of freedom on time-bucket when performing
+     * least square fit of amplitude of the pulse using LSFitPulse().
+     */
+    Int_t fNDFTbs;
 
   ClassDef(KBPSAFastFit, 1)
 };

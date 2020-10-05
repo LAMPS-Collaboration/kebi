@@ -27,6 +27,19 @@ bool LAPDecoderTask::Init()
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);
 
+  if (fPar -> CheckPar("skipAAID")) {
+    auto nAsAds = fPar -> GetParN("skipAAID");
+    for (auto i=0; i<nAsAds; ++i)
+      fSkipAAID.push_back(fPar->GetParInt("skipAAID",i));
+  }
+  else {
+    fSkipAAID.push_back(200);
+  }
+
+  fNumAsAds = fPar -> GetParInt("numAsAds");
+  fNumAGETs = fPar -> GetParInt("numAGETs");
+  fNumChannelsMax = fPar -> GetParInt("numChannelsMax");
+
   TString padMapFileName = fPar -> GetParString("padMap");
   kb_info << "pad map: " << padMapFileName.Data() << endl;
   fPadMap.open(padMapFileName.Data());
@@ -57,12 +70,16 @@ void LAPDecoderTask::Exec(Option_t*)
 
   GETCoboFrame *cobo = fDecoder -> GetCoboFrame(currentEntry);
 
-  for (Int_t iAsAd = 0; iAsAd < 4; iAsAd++) {
+  for (Int_t iAsAd = 0; iAsAd < fNumAsAds; iAsAd++) {
     GETBasicFrame *frame = cobo -> GetFrame(iAsAd);
     Int_t AsAdID = frame -> GetAsadID();
-    for (Int_t iAGET = 0; iAGET < 4; iAGET++) {
-      for (Int_t iChannel = 0; iChannel < 68; iChannel++) {
-        if (AsAdID == 0 && iAGET == 2)
+    for (Int_t iAGET = 0; iAGET < fNumAGETs; iAGET++) {
+      for (Int_t iChannel = 0; iChannel < fNumChannelsMax; iChannel++) {
+        bool skip = false;
+        for (auto selAAID : fSkipAAID)
+          if (1000*AsAdID+100*iAGET == selAAID)
+            skip = true;
+        if (skip)
           continue;
 
         Int_t asad, aget, channel, padID;
@@ -75,9 +92,8 @@ void LAPDecoderTask::Exec(Option_t*)
             break;
           }
         }
-
         if (!foundPad)
-          padID = -90000-(1000*0+100*iAGET+iChannel);
+          continue;
 
         Int_t *sample = frame -> GetSample(iAGET, iChannel);
 
@@ -97,10 +113,13 @@ void LAPDecoderTask::Exec(Option_t*)
         padSave -> SetPad(pad);
         padSave -> SetBufferRaw(copy);
         padSave -> SetBufferOut(copy2);
+        padSave -> SetSortValue(padID);
         countChannels++;
       }
     }
   }
+
+  fPadArray -> Sort();
 
   kb_info << "found " << countChannels << " channels." << endl;
   

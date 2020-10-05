@@ -29,6 +29,8 @@ class KBPadPlane : public KBDetectorPlane
     KBPad *GetPadFast(Int_t idx);
     KBPad *GetPad(Int_t idx);
 
+    KBPad *GetPadByPadID(Int_t padID);
+
     void SetPadArray(TClonesArray *padArray);
     void SetHitArray(TClonesArray *hitArray);
     Int_t GetNumPads();

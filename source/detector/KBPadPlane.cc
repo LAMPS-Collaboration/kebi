@@ -48,6 +48,18 @@ KBPad *KBPadPlane::GetPad(Int_t idx)
   return (KBPad *) obj;
 }
 
+KBPad *KBPadPlane::GetPadByPadID(Int_t padID)
+{
+  Int_t numPads = fChannelArray -> GetEntriesFast();
+  for (Int_t i = 0; i < numPads; ++i) {
+    auto pad = (KBPad *) fChannelArray -> At(i);
+    if (pad && padID==pad->GetPadID())
+      return pad;
+  }
+
+  return (KBPad *) nullptr;
+}
+
 void KBPadPlane::SetPadArray(TClonesArray *padArray)
 {
   TIter iterPads(padArray);
@@ -110,6 +122,7 @@ void KBPadPlane::FillDataToHist(Option_t *option)
   TIter iterPads(fChannelArray);
 
   if (optionString == "hit") {
+    fH2Plane -> SetTitle("Hit charge distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       if (pad -> GetNumHits() == 0)
         continue;
@@ -125,6 +138,7 @@ void KBPadPlane::FillDataToHist(Option_t *option)
     }
   }
   else if (optionString == "out") {
+    fH2Plane -> SetTitle("pad calibrated output distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferOut();
       Double_t val = *max_element(buffer,buffer+512);
@@ -133,6 +147,7 @@ void KBPadPlane::FillDataToHist(Option_t *option)
     }
   }
   else if (optionString == "raw") {
+    fH2Plane -> SetTitle("pad raw input distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferRaw();
       Double_t val = *max_element(buffer,buffer+512);
@@ -141,6 +156,7 @@ void KBPadPlane::FillDataToHist(Option_t *option)
     }
   }
   else if (optionString == "in") {
+    fH2Plane -> SetTitle("pad calibrated input distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferIn();
       Double_t val = *max_element(buffer,buffer+512);
@@ -149,21 +165,31 @@ void KBPadPlane::FillDataToHist(Option_t *option)
     }
   }
 
-  else if (optionString == "section")
+  else if (optionString == "section") {
+    fH2Plane -> SetTitle("pad section");
     while ((pad = (KBPad *) iterPads.Next()))
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetSection());
-  else if (optionString == "row")
+  }
+  else if (optionString == "row") {
+    fH2Plane -> SetTitle("pad raw");
     while ((pad = (KBPad *) iterPads.Next()))
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetRow());
-  else if (optionString == "layer")
+  }
+  else if (optionString == "layer") {
+    fH2Plane -> SetTitle("pad layer");
     while ((pad = (KBPad *) iterPads.Next()))
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetLayer());
-  else if (optionString == "padid")
+  }
+  else if (optionString == "padid") {
+    fH2Plane -> SetTitle("pad id");
     while ((pad = (KBPad *) iterPads.Next()))
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetPadID());
-  else if (optionString == "nhit")
+  }
+  else if (optionString == "nhit") {
+    fH2Plane -> SetTitle("pad nhit");
     while ((pad = (KBPad *) iterPads.Next()))
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetNumHits());
+  }
 }
 
 Int_t KBPadPlane::GetNumPads() { return GetNChannels(); }

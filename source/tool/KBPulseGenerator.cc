@@ -1,3 +1,5 @@
+#include "KBGlobal.hh"
+#include "KBRun.hh"
 #include "KBPulseGenerator.hh"
 #include "TSystem.h"
 #include <fstream>
@@ -12,17 +14,20 @@ ClassImp(KBPulseGenerator);
 
 KBPulseGenerator* KBPulseGenerator::fInstance = nullptr;
 
-KBPulseGenerator* KBPulseGenerator::GetPulseGenerator(TString fileName) {
-  if (fInstance != nullptr)
-    return fInstance;
-  return new KBPulseGenerator(fileName);
+KBPulseGenerator* KBPulseGenerator::GetPulseGenerator(KBParameterContainer *par) {
+  if (fInstance == nullptr) {
+    TString fileName;
+    if (par -> CheckPar("pulserData"))
+      fileName = par -> GetParString("pulserData");
+    fInstance = new KBPulseGenerator(fileName);
+  }
+  return fInstance;
 }
 
-KBPulseGenerator::KBPulseGenerator()
-{
-  TString kebi = gSystem -> Getenv("KEBIPATH");
-  TString fileName = "pulser_464ns.dat";
-  Initialize(fileName);
+KBPulseGenerator* KBPulseGenerator::GetPulseGenerator(TString fileName) {
+  if (fInstance == nullptr)
+    fInstance = new KBPulseGenerator(fileName);
+  return fInstance;
 }
 
 KBPulseGenerator::KBPulseGenerator(TString fileName)
@@ -30,27 +35,28 @@ KBPulseGenerator::KBPulseGenerator(TString fileName)
   Initialize(fileName);
 }
 
-void KBPulseGenerator::Initialize(TString fileName)
+bool KBPulseGenerator::Initialize(TString fileName)
 {
-  fInstance = this;
+  if (fileName.IsNull())
+    fileName = "pulser_464ns.dat";
+  TString fileNameConfigured = KBRun::ConfigureDataPath(fileName,true,"$(KEBIPATH)/input/",false);
+  if (fileNameConfigured.IsNull()) {
+    KBLog("KBPulseGenerator","Initialize",0,4) << "Input pulser file: " << fileName << " is not found!" << endl; 
+    return false;
+  }
 
-  TString kebi = gSystem -> Getenv("KEBIPATH");
-
-  fileName = kebi + "/input/" + fileName;
-
-  cout << "[KBPulseGenerator::Initialize] Using " << fileName << endl;
-  ifstream file(fileName);
+  KBLog("KBPulseGenerator","Initialize",0,2) << "Using pulser file: " << fileNameConfigured << endl;
+  ifstream file(fileNameConfigured);
   string line;
 
   while (getline(file, line) && line.find("#") == 0) {}
   istringstream ss(line);
   ss >> fShapingTime >> fNumDataPoints >> fStepSize >> fNumAscending >> fNDFTbs;
 
-  if (fNumDataPoints < 20 || fStepSize > 1)
-  {
-    cout << "*** Error occured while initializing the pulse!" << endl;
-    cout << "*** Check file: " << fileName << endl;
-    return;
+  if (fNumDataPoints < 20 || fStepSize > 1) {
+    KBLog("KBPulseGenerator","Initialize",0,4) << "Number of data points (" << fNumDataPoints << ") should be >= 20, fStepSize (" << fStepSize << " should be < 1." << endl;
+    KBLog("KBPulseGenerator","Initialize",0,4) << "Check file: " << fileName << endl;
+    return false;
   }
 
   fPulseData = new KBSamplePoint[fNumDataPoints];
@@ -99,6 +105,8 @@ void KBPulseGenerator::Initialize(TString fileName)
   }
 
   file.close();
+
+  return true;
 }
 
 Double_t 
@@ -152,24 +160,25 @@ Double_t  KBPulseGenerator::GetTbAtMax()         { return fTbAtMax;         }
 Double_t  KBPulseGenerator::GetThresholdTbStep() { return fThresholdTbStep; }
    Int_t  KBPulseGenerator::GetNumDataPoints()   { return fNumDataPoints;   }
 Double_t  KBPulseGenerator::GetStepSize()        { return fStepSize;        }
+   Int_t  KBPulseGenerator::GetNDFTbs()          { return fNDFTbs;          }
 
 KBSamplePoint **KBPulseGenerator::GetPulseData()  { return &fPulseData; }
 
 void
 KBPulseGenerator::Print()
 {
-  cout << "[KBPulseGenerator INFO]" << endl;
-  cout << " == Shaping time : " << fShapingTime << " ns" << endl;
-  cout << " == Number of data points : " << fNumDataPoints << endl;
-  cout << " == Step size between data points : " << fStepSize << endl;
-  cout << " == Threshold for one timebucket step : " << fThresholdTbStep << endl; 
-  cout << " == Number of timebucket while rising : " << fNumAscending << endl;
-  cout << " == Timebucket at threshold (" << setw(3) << fThresholdRatio 
+  KBLog("KBPulseGenerator","Print",0,2) << "[KBPulseGenerator INFO]" << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Shaping time : " << fShapingTime << " ns" << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Number of data points : " << fNumDataPoints << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Step size between data points : " << fStepSize << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Threshold for one timebucket step : " << fThresholdTbStep << endl; 
+  KBLog("KBPulseGenerator","Print",0,2) << " == Number of timebucket while rising : " << fNumAscending << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Timebucket at threshold (" << setw(3) << fThresholdRatio 
        << " of peak) : " << fTbAtThreshold << endl; 
-  cout << " == Timebucket at peak : " << fTbAtMax << endl; 
-  cout << " == Timebucket difference from threshold to peak : " 
+  KBLog("KBPulseGenerator","Print",0,2) << " == Timebucket at peak : " << fTbAtMax << endl; 
+  KBLog("KBPulseGenerator","Print",0,2) << " == Timebucket difference from threshold to peak : " 
        << fTbAtMax - fTbAtThreshold << endl; 
-  cout << " == Number of degree of freedom : " << fNDFTbs << endl;
+  KBLog("KBPulseGenerator","Print",0,2) << " == Number of degree of freedom : " << fNDFTbs << endl;
 }
 
 void

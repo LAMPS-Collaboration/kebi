@@ -68,13 +68,14 @@ bool LAPPadPlane::Init()
         padMapData >> asadID >> agetID >> channelID >> padID;
         KBPad *pad = new KBPad();
 
-        Double_t posI = row * (fPadWidth[section] + 0.5);
-        Double_t posJ = fRBaseLine[section] + layer * (fPadHeight[section] + 0.5);
+        Double_t posI = row * (fPadWidth[section] + fPadGap);
+        Double_t posJ = fRBaseLine[section] + layer * (fPadHeight[section] + fPadGap);
         KBVector3 posPad(fAxis1%fAxis2, posI, posJ, 0);
         posPad.Rotate(fSectionAngle[section]);
 
         pad -> SetPlaneID(fPlaneID);
         pad -> SetPadID(padID);
+        //pad -> SetSortValue(padID);
         pad -> SetAsAdID(asadID);
         pad -> SetAGETID(agetID);
         pad -> SetChannelID(channelID);
@@ -130,7 +131,6 @@ Int_t LAPPadPlane::FindPadID(Int_t section, Int_t row, Int_t layer)
 
 Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
 {
-  kb_debug << i << " " << j << endl;
   Int_t section = FindSection(i, j);
 
   if (section == -1)
@@ -138,23 +138,20 @@ Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
 
   Double_t posRadial = i;
   Double_t posArcDir = j;
-  if (section > 1) {
-    posRadial = j;
-    posArcDir = i;
-  }
-  posRadial = abs(posRadial);
 
-  Int_t layer = Int_t((posRadial-fRBaseLine[section]+fPadHeight[section]/2.)/fPadHeight[section]);
+  KBVector3 posInput(fAxis1%fAxis2, i, j, 0);
+  posInput.Rotate(-fSectionAngle[section]);
+
+  Int_t layer = Int_t((posInput.J()-fRBaseLine[section]+fPadHeight[section]/2.)/fPadHeight[section]);
   Int_t nLayers = fNRowsInLayer[section].size();
   if (layer < 0 || layer >= nLayers)
     return -1;
 
-  Double_t dx = fPadWidth[section] - fPadGap;
-  Double_t x0 = posArcDir + .5*dx;
+  Double_t dx = fPadWidth[section] + fPadGap;
+  Double_t x0 = posInput.I() + .5*dx;
   Int_t row;
   if (x0 >= 0) row = Int_t( x0 / dx );
   else         row = Int_t( x0 / dx ) - 1;
-  //kb_debug << posArcDir << " " << x0 << " " << fPadWidth[section] << endl;
 
   // XXX number of row is alwasy odd number
   int nRowsInLayer = fNRowsInLayer[section][layer];
@@ -202,8 +199,8 @@ TH2* LAPPadPlane::GetHist(Option_t *)
 
   Double_t iPoints[5] = {0};
   Double_t jPoints[5] = {0};
-  Double_t iSigns[5] = {-1, -1, 1, 1, -1};
-  Double_t jSigns[5] = {-1, 1, 1, -1, -1};
+  Int_t iSigns[5] = {-1, -1, 1, 1, -1};
+  Int_t jSigns[5] = {-1, 1, 1, -1, -1};
 
   KBPad *pad;
   TIter iterPads(fChannelArray);
@@ -211,8 +208,8 @@ TH2* LAPPadPlane::GetHist(Option_t *)
     Int_t section = pad -> GetSection();
     //if (section > 1) continue;
 
-    Double_t dr = 0.5 * (fPadHeight[section] - fPadGap);
-    Double_t dw = 0.5 * (fPadWidth[section]  - fPadGap);
+    Double_t dr = 0.5 * (fPadHeight[section]);
+    Double_t dw = 0.5 * (fPadWidth[section]);
     Double_t di, dj;
 
     if (section == 0 || section == 1) {

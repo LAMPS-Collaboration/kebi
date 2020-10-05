@@ -25,12 +25,12 @@ KBHelixTrack::KBHelixTrack(Int_t id)
   fTrackID = id;
 }
 
-void KBHelixTrack::Clear(Option_t *)
+void KBHelixTrack::Clear(Option_t *option)
 {
+  KBTracklet::Clear(option);
+
   fFitStatus = kBad;
 
-  fTrackID  = -999;
-  fParentID = -999;
   fGenfitID = -999;
   fGenfitMomentum = -999.;
 

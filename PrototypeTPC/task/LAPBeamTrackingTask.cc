@@ -21,7 +21,7 @@ bool LAPBeamTrackingTask::Init()
   fHitArray = (TClonesArray *) run -> GetBranch("Hit");
 
   fHitClusterArray = new TClonesArray("KBTpcHit");
-  fBeamTrackArray = new TClonesArray("KBLinearTrack");
+  fBeamTrackArray = new TClonesArray("KBLinearTrack",1);
 
   run -> RegisterBranch("HitCluster", fHitClusterArray, fHitClusterPersistency);
   run -> RegisterBranch("Beam", fBeamTrackArray, fLinearTrackPersistency);
@@ -95,9 +95,9 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   }
   fHitClusterArray -> Compress();
 
-  auto numHitClusters = fHitClusterArray -> GetEntries();
-  if (numHitClusters < 4) {
-    kb_info << "No beam track found. Least number of clusters should be 4. You have " << numHitClusters << endl;
+  auto numClustersFinal = fHitClusterArray -> GetEntries();
+  if (numClustersFinal < 4) {
+    kb_info << "No beam track found. Least number of clusters should be 4. You have " << numClustersFinal << endl;
     return;
   }
 
@@ -110,5 +110,15 @@ void LAPBeamTrackingTask::Exec(Option_t*)
   beamTrack -> Fit();
 
 
-  kb_info << "Beam track found from " << numHitClusters << " clustsers with rms: " << beamTrack -> GetRMS() << endl;
+
+  //
+  for (auto iCluster = 0; iCluster < numClustersFinal; ++iCluster) {
+    auto cluster = (KBTpcHit *) fHitClusterArray -> At(iCluster);
+    auto pos = cluster -> GetPosition();
+    TVector3 poca = beamTrack -> ClosestPointOnLine(pos);
+    cluster -> SetDPosition((pos-poca));
+  }
+
+
+  kb_info << "Beam track found from " << numClustersFinal << " clustsers with rms: " << beamTrack -> GetRMS() << endl;
 }
