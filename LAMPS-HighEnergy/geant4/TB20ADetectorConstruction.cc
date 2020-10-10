@@ -439,13 +439,20 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	//Start counter
 	if ( par -> GetParBool("StartCounterIn") )
 	{
-		G4Box *solidSC = new G4Box("SC", 200/2.0, 200/2.0, 2/2.0);
+		G4double SCx = par -> GetParDouble("SCx");
+		G4double SCy = par -> GetParDouble("SCy");
+		G4double SCz = par -> GetParDouble("SCz");
+		G4double SCzOffset = par -> GetParDouble("SCzOffset");
+
+		G4Box *solidSC = new G4Box("SC", SCx/2.0, SCy/2.0, SCz/2.0);
 		G4LogicalVolume *logicSC = new G4LogicalVolume(solidSC, matSC, "SC");
 		{
 			G4VisAttributes * attSC = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			attSC -> SetForceWireframe(true);
 			logicSC -> SetVisAttributes(attSC);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,-150), logicSC, "SC", logicWorld, false, 0, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset), logicSC, "SC", logicWorld, false, 1, true);
+		runManager -> SetSensitiveDetector(pvp);
 	}
 
 	if ( par -> GetParBool("VetoIn") )
@@ -523,8 +530,25 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			logicTPC -> SetVisAttributes(attTPC);
 		}
 		logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 2, true);
 		runManager -> SetSensitiveDetector(pvp);
+	}
+
+	//Start counter
+	if ( par -> GetParBool("BTOFIn") )
+	{
+
+		G4Box *solidBTOF = new G4Box("BTOF", 10/2.0, 90/2.0, 1500/2.0);
+		G4LogicalVolume *logicBTOF = new G4LogicalVolume(solidBTOF, matSC, "BTOF");
+		{
+			G4VisAttributes * attBTOF = new G4VisAttributes(G4Colour(G4Colour::Red()));
+			attBTOF -> SetForceWireframe(true);
+			logicBTOF -> SetVisAttributes(attBTOF);
+		}
+		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,tpcZOffset), logicBTOF, "BTOF", logicWorld, false, 3, true);
+		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,tpcZOffset), logicBTOF, "BTOF", logicWorld, false, 3, true);
+		runManager -> SetSensitiveDetector(pvp1);
+		runManager -> SetSensitiveDetector(pvp2);
 	}
 
 
