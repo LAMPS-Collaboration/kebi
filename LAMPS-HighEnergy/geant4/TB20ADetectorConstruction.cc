@@ -147,10 +147,10 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		}
 
 		{
-			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
 			logicSubC -> SetVisAttributes(attSubC);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset+Collimatorz/2), logicSubC, "SubC", logicWorld, false, 0, true);
 	}
 
 	//2nd Collimator
@@ -191,98 +191,10 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		}
 
 		{
-			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
 			logicSubC -> SetVisAttributes(attSubC);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
-	}
-
-	//3rd Collimator
-	if ( par -> GetParBool("Collimator3In") )
-	{
-		G4double Collimatorx = par -> GetParDouble("Collimatorx");
-		G4double Collimatory = par -> GetParDouble("Collimatory");
-		G4double Collimatorz = par -> GetParDouble("Collimatorz");
-		G4double CollimatorzOffset = par -> GetParDouble("Collimator3zOffset");
-
-		G4Box *solidCollimator = new G4Box("Collimator", Collimatorx/2.0, Collimatory/2.0, Collimatorz/2.0);
-		G4SubtractionSolid *solidSubC;
-		if ( par -> GetParInt("HoleOpt")==0 ){
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}else if ( par -> GetParInt("HoleOpt")==1 ){
-			G4double Holedia = par -> GetParDouble("Holedia");
-			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Collimatorz/2.0, 0, 2*M_PI);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}else{
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}
-
-		G4LogicalVolume *logicSubC;
-		if ( par -> GetParInt("CollimatorOpt")==0 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
-		}else if ( par -> GetParInt("CollimatorOpt")==1 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matCu, "SubC");
-		}else if ( par -> GetParInt("CollimatorOpt")==2 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matFe, "SubC");
-		}else{
-			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
-		}
-
-		{
-			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
-			logicSubC -> SetVisAttributes(attSubC);
-		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
-	}
-
-	//4th Collimator
-	if ( par -> GetParBool("Collimator4In") )
-	{
-		G4double Collimatorx = par -> GetParDouble("Collimatorx");
-		G4double Collimatory = par -> GetParDouble("Collimatory");
-		G4double Collimatorz = par -> GetParDouble("Collimatorz");
-		G4double CollimatorzOffset = par -> GetParDouble("Collimator4zOffset");
-
-		G4Box *solidCollimator = new G4Box("Collimator", Collimatorx/2.0, Collimatory/2.0, Collimatorz/2.0);
-		G4SubtractionSolid *solidSubC;
-		if ( par -> GetParInt("HoleOpt")==0 ){
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}else if ( par -> GetParInt("HoleOpt")==1 ){
-			G4double Holedia = par -> GetParDouble("Holedia");
-			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Collimatorz/2.0, 0, 2*M_PI);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}else{
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Collimatorz/2.0);
-			solidSubC = new G4SubtractionSolid("SubC", solidCollimator, solidHole, 0, G4ThreeVector(0,0,0));
-		}
-
-		G4LogicalVolume *logicSubC;
-		if ( par -> GetParInt("CollimatorOpt")==0 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
-		}else if ( par -> GetParInt("CollimatorOpt")==1 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matCu, "SubC");
-		}else if ( par -> GetParInt("CollimatorOpt")==2 ){
-			logicSubC = new G4LogicalVolume(solidSubC, matFe, "SubC");
-		}else{
-			logicSubC = new G4LogicalVolume(solidSubC, matAl, "SubC");
-		}
-
-		{
-			G4VisAttributes * attSubC = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
-			logicSubC -> SetVisAttributes(attSubC);
-		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset), logicSubC, "SubC", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,CollimatorzOffset+Collimatorz/2), logicSubC, "SubC", logicWorld, false, 0, true);
 	}
 
 	//1st Shield
@@ -313,10 +225,10 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 
 		G4LogicalVolume *logicSubS = new G4LogicalVolume(solidSubS, matB, "SubS");
 		{
-			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Brown()));
 			logicSubS -> SetVisAttributes(attSubS);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset), logicSubS, "SubS", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset+Shieldz/2), logicSubS, "SubS", logicWorld, false, 0, true);
 	}
 
 	//2nd Shield
@@ -347,78 +259,10 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 
 		G4LogicalVolume *logicSubS = new G4LogicalVolume(solidSubS, matB, "SubS");
 		{
-			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Brown()));
 			logicSubS -> SetVisAttributes(attSubS);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset), logicSubS, "SubS", logicWorld, false, 0, true);
-	}
-
-	//3rd Shield
-	if ( par -> GetParBool("Shield3In") )
-	{
-		G4double Shieldx = par -> GetParDouble("Collimatorx");
-		G4double Shieldy = par -> GetParDouble("Collimatory");
-		G4double Shieldz = par -> GetParDouble("Shieldz");
-		G4double ShieldzOffset = par -> GetParDouble("Shield3zOffset");
-
-		G4Box *solidShield = new G4Box("Shield", Shieldx/2.0, Shieldy/2.0, Shieldz/2.0);
-		G4SubtractionSolid *solidSubS;
-		if ( par -> GetParInt("HoleOpt")==0 ){
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Shieldz/2.0);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}else if ( par -> GetParInt("HoleOpt")==1 ){
-			G4double Holedia = par -> GetParDouble("Holedia");
-			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Shieldz/2.0, 0, 2*M_PI);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}else{
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Shieldz/2.0);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}
-
-		G4LogicalVolume *logicSubS = new G4LogicalVolume(solidSubS, matB, "SubS");
-		{
-			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-			logicSubS -> SetVisAttributes(attSubS);
-		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset), logicSubS, "SubS", logicWorld, false, 0, true);
-	}
-
-	//4th Shield
-	if ( par -> GetParBool("Shield4In") )
-	{
-		G4double Shieldx = par -> GetParDouble("Collimatorx");
-		G4double Shieldy = par -> GetParDouble("Collimatory");
-		G4double Shieldz = par -> GetParDouble("Shieldz");
-		G4double ShieldzOffset = par -> GetParDouble("Shield4zOffset");
-
-		G4Box *solidShield = new G4Box("Shield", Shieldx/2.0, Shieldy/2.0, Shieldz/2.0);
-		G4SubtractionSolid *solidSubS;
-		if ( par -> GetParInt("HoleOpt")==0 ){
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Shieldz/2.0);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}else if ( par -> GetParInt("HoleOpt")==1 ){
-			G4double Holedia = par -> GetParDouble("Holedia");
-			G4Tubs *solidHole = new G4Tubs("Hole", 0, Holedia/2, Shieldz/2.0, 0, 2*M_PI);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}else{
-			G4double Holex = par -> GetParDouble("Holex");
-			G4double Holey = par -> GetParDouble("Holey");
-			G4Box *solidHole = new G4Box("Hole", Holex/2.0, Holey/2.0, Shieldz/2.0);
-			solidSubS = new G4SubtractionSolid("SubC", solidShield, solidHole, 0, G4ThreeVector(0,0,0));
-		}
-
-		G4LogicalVolume *logicSubS = new G4LogicalVolume(solidSubS, matB, "SubS");
-		{
-			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-			logicSubS -> SetVisAttributes(attSubS);
-		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset), logicSubS, "SubS", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset+Shieldz/2), logicSubS, "SubS", logicWorld, false, 0, true);
 	}
 
 	//Beam Monitor
@@ -451,21 +295,68 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attSC -> SetForceWireframe(true);
 			logicSC -> SetVisAttributes(attSC);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset), logicSC, "SC", logicWorld, false, 1, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset+SCz/2), logicSC, "SC", logicWorld, false, 1, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
+	//Veto counter
 	if ( par -> GetParBool("VetoIn") )
 	{
-		G4Box *solidVeto = new G4Box("Veto", 200/2.0, 200/2.0, 2/2.0);
-		G4LogicalVolume *logicVeto = new G4LogicalVolume(solidVeto, matSC, "Veto");
+
+		G4double Vetox = par -> GetParDouble("Vetox");
+		G4double Vetoy = par -> GetParDouble("Vetoy");
+		G4double Vetoz = par -> GetParDouble("Vetoz");
+		G4double VetozOffset = par -> GetParDouble("VetozOffset");
+
+		G4Box *solidVeto = new G4Box("Veto", Vetox/2.0, Vetoy/2.0, Vetoz/2.0);
+		G4Box *solidHole = new G4Box("VetoHole", 10/2.0, 10/2.0, Vetoz/2.0);
+		G4SubtractionSolid *solidSubVeto = new G4SubtractionSolid("SubVeto", solidVeto, solidHole, 0, G4ThreeVector(0,0,0));
+
+		G4LogicalVolume *logicVeto = new G4LogicalVolume(solidSubVeto, matSC, "Veto");
 		{
 			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
 			logicVeto -> SetVisAttributes(attVeto);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,-100), logicVeto, "Veto", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+Vetoz/2), logicVeto, "Veto", logicWorld, false, 2, true);
 	}
 
+	//BDC1
+	if ( par -> GetParBool("BDC1In") )
+	{
+		G4double BDC1x = par -> GetParDouble("BDC1x");
+		G4double BDC1y = par -> GetParDouble("BDC1y");
+		G4double BDC1z = par -> GetParDouble("BDC1z");
+		G4double BDC1zOffset = par -> GetParDouble("BDC1zOffset");
+
+		G4Box *solidBDC1 = new G4Box("BDC1", BDC1x/2.0, BDC1y/2.0, BDC1z/2.0);
+		G4LogicalVolume *logicBDC1 = new G4LogicalVolume(solidBDC1, matGas, "BDC1");
+		{
+			G4VisAttributes * attBDC1 = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			attBDC1 -> SetForceWireframe(true);
+			logicBDC1 -> SetVisAttributes(attBDC1);
+		}
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC1zOffset+BDC1z/2), logicBDC1, "BDC1", logicWorld, false, 3, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
+
+	//BDC2
+	if ( par -> GetParBool("BDC2In") )
+	{
+		G4double BDC2x = par -> GetParDouble("BDC2x");
+		G4double BDC2y = par -> GetParDouble("BDC2y");
+		G4double BDC2z = par -> GetParDouble("BDC2z");
+		G4double BDC2zOffset = par -> GetParDouble("BDC2zOffset");
+
+		G4Box *solidBDC2 = new G4Box("BDC2", BDC2x/2.0, BDC2y/2.0, BDC2z/2.0);
+		G4LogicalVolume *logicBDC2 = new G4LogicalVolume(solidBDC2, matGas, "BDC2");
+		{
+			G4VisAttributes * attBDC2 = new G4VisAttributes(G4Colour(G4Colour::Yellow()));
+			attBDC2 -> SetForceWireframe(true);
+			logicBDC2 -> SetVisAttributes(attBDC2);
+		}
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC2zOffset+BDC2z/2), logicBDC2, "BDC2", logicWorld, false, 4, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
 
 	//Target1
 	if ( par -> GetParBool("Target1In") )
@@ -473,7 +364,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Target1x = par -> GetParDouble("Target1x");
 		G4double Target1y = par -> GetParDouble("Target1y");
 		G4double Target1z = par -> GetParDouble("Target1z");
-		G4double Target1zOffset = par -> GetParDouble("Target1zOffset");
+		G4double Target1zOffset = tpcZOffset+tpcLength/2;
 
 		G4Box *solidTarget1 = new G4Box("Target1", Target1x/2.0, Target1y/2.0, Target1z/2.0);
 		G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
@@ -530,13 +421,15 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			logicTPC -> SetVisAttributes(attTPC);
 		}
 		logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 2, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset+tpcLength/2), logicTPC, "TPC", logicWorld, false, 5, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
-	//Start counter
+	//BTOF
 	if ( par -> GetParBool("BTOFIn") )
 	{
+
+		G4double BTOFzOffset = tpcZOffset+tpcLength/2;
 
 		G4Box *solidBTOF = new G4Box("BTOF", 10/2.0, 90/2.0, 1500/2.0);
 		G4LogicalVolume *logicBTOF = new G4LogicalVolume(solidBTOF, matSC, "BTOF");
@@ -545,8 +438,8 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attBTOF -> SetForceWireframe(true);
 			logicBTOF -> SetVisAttributes(attBTOF);
 		}
-		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,tpcZOffset), logicBTOF, "BTOF", logicWorld, false, 3, true);
-		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,tpcZOffset), logicBTOF, "BTOF", logicWorld, false, 3, true);
+		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 6, true);
+		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 6, true);
 		runManager -> SetSensitiveDetector(pvp1);
 		runManager -> SetSensitiveDetector(pvp2);
 	}
