@@ -22,6 +22,8 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
   G4ThreeVector mom = step -> GetTrack() -> GetMomentum();
   G4int preNo = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
 
+	if ( preNo<=0 ) return;
+
   if (stat == fWorldBoundary) {
     fRunManager -> AddTrackVertex(mom.x(),mom.y(),mom.z(),preNo,pos.x(),pos.y(),pos.z());
     return;
@@ -36,6 +38,7 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
     return;
 
   G4double time = step -> GetPreStepPoint() -> GetGlobalTime();
-  G4ThreeVector stepPos = .5 * (step -> GetPreStepPoint() -> GetPosition() + step -> GetPostStepPoint() -> GetPosition());
+  //G4ThreeVector stepPos = .5 * (step -> GetPreStepPoint() -> GetPosition() + step -> GetPostStepPoint() -> GetPosition());
+	G4ThreeVector stepPos = step -> GetPreStepPoint() -> GetPosition();
   fRunManager -> AddMCStep(preNo, stepPos.x(), stepPos.y(), stepPos.z(), time, edep);
 }
