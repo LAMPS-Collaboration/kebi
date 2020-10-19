@@ -308,16 +308,29 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Vetoz = par -> GetParDouble("Vetoz");
 		G4double VetozOffset = par -> GetParDouble("VetozOffset");
 
-		G4Box *solidVeto = new G4Box("Veto", Vetox/2.0, Vetoy/2.0, Vetoz/2.0);
-		G4Box *solidHole = new G4Box("VetoHole", 10/2.0, 10/2.0, Vetoz/2.0);
-		G4SubtractionSolid *solidSubVeto = new G4SubtractionSolid("SubVeto", solidVeto, solidHole, 0, G4ThreeVector(0,0,0));
+		G4Box *solidVeto1 = new G4Box("Veto1", Vetox/2.0, Vetoy/2.0, Vetoz/2.0);
+		G4Box *solidHole1 = new G4Box("VetoHole1", Vetox/2.0, 10/2.0, Vetoz/2.0);
+		G4SubtractionSolid *solidSubVeto1 = new G4SubtractionSolid("SubVeto1", solidVeto1, solidHole1, 0, G4ThreeVector(0,0,0));
 
-		G4LogicalVolume *logicVeto = new G4LogicalVolume(solidSubVeto, matSC, "Veto");
+		G4LogicalVolume *logicVeto1 = new G4LogicalVolume(solidSubVeto1, matSC, "Veto1");
 		{
 			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-			logicVeto -> SetVisAttributes(attVeto);
+			logicVeto1 -> SetVisAttributes(attVeto);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+Vetoz/2), logicVeto, "Veto", logicWorld, false, 2, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+Vetoz/2), logicVeto1, "Veto1", logicWorld, false, 2, true);
+		runManager -> SetSensitiveDetector(pvp);
+
+		G4Box *solidVeto2 = new G4Box("Veto2", Vetox/2.0, Vetoy/2.0, Vetoz/2.0);
+		G4Box *solidHole2 = new G4Box("VetoHole2", 10/2.0, Vetoy/2.0, Vetoz/2.0);
+		G4SubtractionSolid *solidSubVeto2 = new G4SubtractionSolid("SubVeto2", solidVeto2, solidHole2, 0, G4ThreeVector(0,0,0));
+
+		G4LogicalVolume *logicVeto2 = new G4LogicalVolume(solidSubVeto2, matSC, "Veto2");
+		{
+			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			logicVeto2 -> SetVisAttributes(attVeto);
+		}
+		pvp = new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+3*Vetoz/2), logicVeto2, "Veto2", logicWorld, false, 3, true);
+		runManager -> SetSensitiveDetector(pvp);
 	}
 
 	//BDC1
@@ -335,7 +348,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attBDC1 -> SetForceWireframe(true);
 			logicBDC1 -> SetVisAttributes(attBDC1);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC1zOffset+BDC1z/2), logicBDC1, "BDC1", logicWorld, false, 3, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC1zOffset+BDC1z/2), logicBDC1, "BDC1", logicWorld, false, 4, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
@@ -354,7 +367,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attBDC2 -> SetForceWireframe(true);
 			logicBDC2 -> SetVisAttributes(attBDC2);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC2zOffset+BDC2z/2), logicBDC2, "BDC2", logicWorld, false, 4, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,BDC2zOffset+BDC2z/2), logicBDC2, "BDC2", logicWorld, false, 5, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
@@ -372,7 +385,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget1 -> SetVisAttributes(attTarget1);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 10, true);
 	}
 
 	//Target2
@@ -421,7 +434,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			logicTPC -> SetVisAttributes(attTPC);
 		}
 		logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset+tpcLength/2), logicTPC, "TPC", logicWorld, false, 5, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset+tpcLength/2), logicTPC, "TPC", logicWorld, false, 6, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
@@ -438,13 +451,11 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attBTOF -> SetForceWireframe(true);
 			logicBTOF -> SetVisAttributes(attBTOF);
 		}
-		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 6, true);
-		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 6, true);
+		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
+		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
 		runManager -> SetSensitiveDetector(pvp1);
 		runManager -> SetSensitiveDetector(pvp2);
 	}
-
-
 
 	/*
   bool checkWall = par -> CheckPar("numNeutronWall");
