@@ -385,7 +385,8 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget1 -> SetVisAttributes(attTarget1);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 10, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 10, true);
+		runManager -> SetSensitiveDetector(pvp);
 	}
 
 	//Target2
@@ -444,15 +445,15 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 
 		G4double BTOFzOffset = tpcZOffset+tpcLength/2;
 
-		G4Box *solidBTOF = new G4Box("BTOF", 10/2.0, 90/2.0, 1500/2.0);
+		G4Box *solidBTOF = new G4Box("BTOF", 10/2.0, 180/2.0, 1500/2.0);
 		G4LogicalVolume *logicBTOF = new G4LogicalVolume(solidBTOF, matSC, "BTOF");
 		{
 			G4VisAttributes * attBTOF = new G4VisAttributes(G4Colour(G4Colour::Red()));
 			attBTOF -> SetForceWireframe(true);
 			logicBTOF -> SetVisAttributes(attBTOF);
 		}
-		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
-		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-750,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
+		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(+450,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
+		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(-450,0,BTOFzOffset), logicBTOF, "BTOF", logicWorld, false, 7, true);
 		runManager -> SetSensitiveDetector(pvp1);
 		runManager -> SetSensitiveDetector(pvp2);
 	}
