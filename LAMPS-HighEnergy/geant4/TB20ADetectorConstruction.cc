@@ -377,7 +377,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Target1x = par -> GetParDouble("Target1x");
 		G4double Target1y = par -> GetParDouble("Target1y");
 		G4double Target1z = par -> GetParDouble("Target1z");
-		G4double Target1zOffset = tpcZOffset+tpcLength/2;
+		G4double Target1zOffset = par -> GetParDouble("Target1zOffset");
 
 		G4Box *solidTarget1 = new G4Box("Target1", Target1x/2.0, Target1y/2.0, Target1z/2.0);
 		G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
