@@ -362,7 +362,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget1 -> SetVisAttributes(attTarget1);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset), logicTarget1, "Target1", logicWorld, false, 10, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,Target1zOffset+Target1z/2), logicTarget1, "Target1", logicWorld, false, 10, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
@@ -375,12 +375,13 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Target2zOffset = par -> GetParDouble("Target2zOffset");
 
 		G4Box *solidTarget2 = new G4Box("Target2", Target2x/2.0, Target2y/2.0, Target2z/2.0);
-		G4LogicalVolume *logicTarget2 = new G4LogicalVolume(solidTarget2, matCH2, "Traget1");
+		G4LogicalVolume *logicTarget2 = new G4LogicalVolume(solidTarget2, matCH2, "Traget2");
 		{
 			G4VisAttributes * attTarget2 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget2 -> SetVisAttributes(attTarget2);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,Target2zOffset), logicTarget2, "Target2", logicWorld, false, 0, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,Target2zOffset+Target2z/2), logicTarget2, "Target2", logicWorld, false, 11, true);
+		runManager -> SetSensitiveDetector(pvp);
 	}
 
 	//Target3
@@ -392,12 +393,13 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Target3zOffset = par -> GetParDouble("Target3zOffset");
 
 		G4Box *solidTarget3 = new G4Box("Target3", Target3x/2.0, Target3y/2.0, Target3z/2.0);
-		G4LogicalVolume *logicTarget3 = new G4LogicalVolume(solidTarget3, matCH2, "Traget1");
+		G4LogicalVolume *logicTarget3 = new G4LogicalVolume(solidTarget3, matCH2, "Traget3");
 		{
 			G4VisAttributes * attTarget3 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget3 -> SetVisAttributes(attTarget3);
 		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,Target3zOffset), logicTarget3, "Target3", logicWorld, false, 0, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,Target3zOffset+Target3z/2), logicTarget3, "Target3", logicWorld, false, 12, true);
+		runManager -> SetSensitiveDetector(pvp);
 	}
 
 
