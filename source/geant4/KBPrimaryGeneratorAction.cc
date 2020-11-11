@@ -1,6 +1,7 @@
 #include "KBPrimaryGeneratorAction.hh"
 #include "KBG4RunManager.hh"
 
+#include "G4IonTable.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
@@ -53,28 +54,43 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 
 	G4double vx, vy, vz;
 
-	vz = -1.0*par->GetParDouble("worlddZ");
+	//vz = -1.0*par->GetParDouble("worlddZ");
+	vz = -1.0*1500;
 
 	G4double energy = par->GetParDouble("G4InputEnergy");
 
 	G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
 	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
-	fParticleGun->SetParticleEnergy(energy*MeV);
 	G4cout.rdbuf(oldBuffer);
 
 	G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
 	TString particleName = par->GetParString("G4InputParticle");
-	G4ParticleDefinition* particle
-		= particleTable->FindParticle(particleName.Data());
-	fParticleGun->SetParticleDefinition(particle);
+	if ( particleName=="ion" )
+	{
+		G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(1000060120);
+		fParticleGun->SetParticleDefinition(particle);
+		fParticleGun->SetParticleEnergy(12*energy*MeV);
+	}
+	else
+	{
+		G4ParticleDefinition* particle
+			= particleTable->FindParticle(particleName.Data());
+		fParticleGun->SetParticleDefinition(particle);
+		fParticleGun->SetParticleEnergy(energy*MeV);
+	}
 
 	G4int NperEvent = par->GetParInt("G4InputNumberPerEvent"); 
 
 	for (G4int ip=0; ip<NperEvent; ip++){
 
 		//10 cm by 10 cm (square)
-		vx = (G4UniformRand()-0.5)*100;
-		vy = (G4UniformRand()-0.5)*100;
+		//vx = (G4UniformRand()-0.5)*100;
+		//vy = (G4UniformRand()-0.5)*100;
+		//0.4 mm by 0.4 mm (square)
+		vx = (G4UniformRand()-0.5)*0.4;
+		vy = (G4UniformRand()-0.5)*0.4;
+		//vx = 0;
+		//vy = 0;
 		/*
 		G4double r = (G4UniformRand())*15.0; 
 		G4double phi = (G4UniformRand()-0.5)*twopi;
