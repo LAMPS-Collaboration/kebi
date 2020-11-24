@@ -54,8 +54,7 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 
 	G4double vx, vy, vz;
 
-	//vz = -1.0*par->GetParDouble("worlddZ");
-	vz = -1.0*1500;
+	vz = -1.0*par->GetParDouble("worlddZ");
 
 	G4double energy = par->GetParDouble("G4InputEnergy");
 
@@ -67,9 +66,9 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	TString particleName = par->GetParString("G4InputParticle");
 	if ( particleName=="ion" )
 	{
-		G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(1000060120);
+		G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(par->GetParInt("G4InputIonId"));
 		fParticleGun->SetParticleDefinition(particle);
-		fParticleGun->SetParticleEnergy(12*energy*MeV);
+		fParticleGun->SetParticleEnergy(energy*MeV);
 	}
 	else
 	{
@@ -81,23 +80,13 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 
 	G4int NperEvent = par->GetParInt("G4InputNumberPerEvent"); 
 
+	G4double beamdx = par->GetParDouble("G4InputWidthX");
+	G4double beamdy = par->GetParDouble("G4InputWidthY");
+
 	for (G4int ip=0; ip<NperEvent; ip++){
 
-		//10 cm by 10 cm (square)
-		//vx = (G4UniformRand()-0.5)*100;
-		//vy = (G4UniformRand()-0.5)*100;
-		//0.4 mm by 0.4 mm (square)
-		vx = (G4UniformRand()-0.5)*0.4;
-		vy = (G4UniformRand()-0.5)*0.4;
-		//vx = 0;
-		//vy = 0;
-		/*
-		G4double r = (G4UniformRand())*15.0; 
-		G4double phi = (G4UniformRand()-0.5)*twopi;
-
-		vx = r*cos(phi);
-		vy = r*sin(phi);
-		*/
+		vx = (G4UniformRand()-0.5)*beamdx;
+		vy = (G4UniformRand()-0.5)*beamdy;
 
 		fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
 
@@ -118,8 +107,16 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode1(G4Event* anEvent)
 
   while (fEventGenerator -> ReadNextTrack(pdg, px, py, pz))
   {
-    G4ParticleDefinition* particle = G4ParticleTable::GetParticleTable() -> FindParticle(pdg);
-    fParticleGun -> SetParticleDefinition(particle);
+		if ( pdg>1000000000 )
+		{
+			G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(pdg);
+			fParticleGun->SetParticleDefinition(particle);
+		}
+		else
+		{
+			G4ParticleDefinition* particle = G4ParticleTable::GetParticleTable() -> FindParticle(pdg);
+			fParticleGun -> SetParticleDefinition(particle);
+		}
 
     G4ThreeVector momentum(px,py,pz);
     fParticleGun -> SetParticleMomentumDirection(momentum.unit());
