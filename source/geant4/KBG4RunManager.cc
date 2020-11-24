@@ -68,9 +68,15 @@ void KBG4RunManager::Initialize()
 
   auto procNames = G4ProcessTable::GetProcessTable() -> GetNameList();
   Int_t idx = 0;
+	G4cout << "####################" << G4endl;
+	G4cout << "Create Process Table" << G4endl;
   fProcessTable -> SetPar("Primary", idx++);
-  for (auto name : *procNames)
-    fProcessTable -> SetPar(name, idx++);
+	G4cout << idx-1 << " " << "Primary" << G4endl;
+  for (auto name : *procNames){
+		fProcessTable -> SetPar(name, idx++);
+		G4cout << idx-1 << " " << name << G4endl;
+	}
+	G4cout << "####################" << G4endl;
 
   if (fPar->CheckPar("G4ExportGDML"))
   {
@@ -198,8 +204,10 @@ void KBG4RunManager::SetOutputFile(TString name)
 {
   fPar -> ReplaceEnvironmentVariable(name);
 
-  fSetEdepSumTree         = fPar->GetParBool("MCSetEdepSumTree");;
-  fStepPersistency        = fPar->GetParBool("MCStepPersistency");;
+  fMCTrack 				        = fPar->GetParBool("MCTrack");
+  fMCPostTrack		        = fPar->GetParBool("MCPostTrack");
+  fSetEdepSumTree         = fPar->GetParBool("MCSetEdepSumTree");
+  fStepPersistency        = fPar->GetParBool("MCStepPersistency");
   fSecondaryPersistency   = fPar->GetParBool("MCSecondaryPersistency");
   fTrackVertexPersistency = fPar->GetParBool("MCTrackVertexPersistency");
 
@@ -333,6 +341,14 @@ void KBG4RunManager::AddMCTrack(Int_t opt, Int_t trackID, Int_t parentID, Int_t 
     return;
   }
 
+	if (opt==0 && !fMCTrack) {
+		fCurrentTrack = nullptr;
+		return;
+	}else if (opt==1 && !fMCPostTrack) {
+		fCurrentTrack = nullptr;
+		return;
+	}
+
   fTrackID = trackID;
 	if ( opt==0 ){
 		fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
@@ -377,7 +393,9 @@ void KBG4RunManager::SetNumEvents(Int_t numEvents)
 
 void KBG4RunManager::NextEvent()
 {
-  g4_info << "End of Event " << fTree -> GetEntries() << endl;
+	if ( fTree -> GetEntries()%1000==0 ){
+		g4_info << "End of Event " << fTree -> GetEntries() << endl;
+	}
   fTree -> Fill();
 
   fTrackArray -> Clear("C");

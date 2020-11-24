@@ -78,6 +78,8 @@ class KBG4RunManager : public G4RunManager, public KBGear
     std::map<Int_t, Int_t> fIdxOfCopyNo;
     Int_t fNumActiveVolumes = 0;
 
+    bool fMCTrack = false;
+    bool fMCPostTrack = false;
     bool fSetEdepSumTree = false;
     bool fStepPersistency = false;
     bool fSecondaryPersistency = false;
