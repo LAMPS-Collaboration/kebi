@@ -266,8 +266,11 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			attSC -> SetForceWireframe(true);
 			logicSC -> SetVisAttributes(attSC);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset+SCz/2), logicSC, "SC", logicWorld, false, 1, true);
-		runManager -> SetSensitiveDetector(pvp);
+		auto pvp1 = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset+SCz/2), logicSC, "SC1", logicWorld, false, 1, true);
+		runManager -> SetSensitiveDetector(pvp1);
+
+		auto pvp2 = new G4PVPlacement(0, G4ThreeVector(0,0,SCzOffset+SCz/2+20), logicSC, "SC2", logicWorld, false, 2, true);
+		runManager -> SetSensitiveDetector(pvp2);
 	}
 
 	//Veto counter
@@ -288,19 +291,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
 			logicVeto1 -> SetVisAttributes(attVeto);
 		}
-		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+Vetoz/2), logicVeto1, "Veto1", logicWorld, false, 2, true);
-		runManager -> SetSensitiveDetector(pvp);
-
-		G4Box *solidVeto2 = new G4Box("Veto2", Vetox/2.0, Vetoy/2.0, Vetoz/2.0);
-		G4Box *solidHole2 = new G4Box("VetoHole2", 10/2.0, Vetoy/2.0, Vetoz/2.0);
-		G4SubtractionSolid *solidSubVeto2 = new G4SubtractionSolid("SubVeto2", solidVeto2, solidHole2, 0, G4ThreeVector(0,0,0));
-
-		G4LogicalVolume *logicVeto2 = new G4LogicalVolume(solidSubVeto2, matSC, "Veto2");
-		{
-			G4VisAttributes * attVeto = new G4VisAttributes(G4Colour(G4Colour::Blue()));
-			logicVeto2 -> SetVisAttributes(attVeto);
-		}
-		pvp = new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+3*Vetoz/2), logicVeto2, "Veto2", logicWorld, false, 3, true);
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,VetozOffset+Vetoz/2), logicVeto1, "Veto1", logicWorld, false, 3, true);
 		runManager -> SetSensitiveDetector(pvp);
 	}
 
