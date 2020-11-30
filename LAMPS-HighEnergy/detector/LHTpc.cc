@@ -36,7 +36,7 @@ TVector3 LHTpc::GetEField(TVector3)
 
 KBPadPlane *LHTpc::GetDriftPlane(TVector3 pos)
 {
-  fDetectorPlaneArray -> At(0);
+  return (KBPadPlane *) fDetectorPlaneArray -> At(0);
 }
 
 bool LHTpc::BuildGeometry()
