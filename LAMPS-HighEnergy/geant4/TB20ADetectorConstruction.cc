@@ -65,7 +65,7 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 	G4Material *matAl = nist->FindOrBuildMaterial("G4_Al");
 	G4Material *matCu = nist->FindOrBuildMaterial("G4_Cu");
 	G4Material *matFe = nist->FindOrBuildMaterial("G4_Fe");
-	//G4Material *matSn = nist->FindOrBuildMaterial("G4_Sn");
+	G4Material *matSn = nist->FindOrBuildMaterial("G4_Sn");
 	G4Material *matSC = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 	//G4Material *matXYLENE = nist->FindOrBuildMaterial("G4_XYLENE");
 	G4Material *matCH2 = nist->FindOrBuildMaterial("G4_POLYETHYLENE");
@@ -76,6 +76,11 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
   G4Material *matMethaneGas = new G4Material("matMethaneGas ", densityMethane, 2, kStateGas, labTemperature);
   matMethaneGas -> AddElement(elementH, 4);
   matMethaneGas -> AddElement(elementC, 1);
+
+	G4double densityBP = 0.3*matB->GetDensity() + 0.7*matCH2->GetDensity(); 
+	G4Material *matBP = new G4Material("BoratedPolyethylene", densityBP, 2);
+	matBP->AddMaterial(matB, 0.3);
+	matBP->AddMaterial(matCH2, 0.7);
 
   TString gasPar = "p10";
   if (par -> CheckPar("TPCgasPar")) {
@@ -187,7 +192,14 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double ShieldHoley = par -> GetParDouble("ShieldHoley");
 
 		G4Box *solidShield1 = new G4Box("Shield1", Shieldx/2.0, Shieldy/2.0, Shieldz/2.0);
-		G4LogicalVolume *logicShield1 = new G4LogicalVolume(solidShield1, matB, "Shield1");
+		G4LogicalVolume *logicShield1 = nullptr;
+		if ( par -> GetParInt("ShieldOpt")==0 ){
+			logicShield1 = new G4LogicalVolume(solidShield1, matB, "Shield1");
+		}else if ( par -> GetParInt("ShieldOpt")==1 ){
+			logicShield1 = new G4LogicalVolume(solidShield1, matBP, "Shield1");
+		}else{
+			logicShield1 = new G4LogicalVolume(solidShield1, matB, "Shield1");
+		}
 
 		{
 			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Brown()));
@@ -209,7 +221,14 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		new G4PVPlacement(0, G4ThreeVector(0,0,ShieldzOffset+Shieldz/2), logicSubS1_1, "SubS1_1", logicWorld, false, 0, true);
 
 		G4Box *solidShield2 = new G4Box("Shield2", Shieldy/2.0, Shieldx/2.0, Shieldz/2.0);
-		G4LogicalVolume *logicShield2 = new G4LogicalVolume(solidShield2, matB, "Shield2");
+		G4LogicalVolume *logicShield2 = nullptr;
+		if ( par -> GetParInt("ShieldOpt")==0 ){
+			logicShield2 = new G4LogicalVolume(solidShield2, matB, "Shield2");
+		}else if ( par -> GetParInt("ShieldOpt")==1 ){
+			logicShield2 = new G4LogicalVolume(solidShield2, matBP, "Shield2");
+		}else{
+			logicShield2 = new G4LogicalVolume(solidShield2, matB, "Shield2");
+		}
 
 		{
 			G4VisAttributes * attSubS = new G4VisAttributes(G4Colour(G4Colour::Brown()));
@@ -342,7 +361,8 @@ G4VPhysicalVolume *TB20ADetectorConstruction::Construct()
 		G4double Target1zOffset = par -> GetParDouble("Target1zOffset");
 
 		G4Box *solidTarget1 = new G4Box("Target1", Target1x/2.0, Target1y/2.0, Target1z/2.0);
-		G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
+		//G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matCH2, "Traget1");
+		G4LogicalVolume *logicTarget1 = new G4LogicalVolume(solidTarget1, matSn, "Traget1");
 		{
 			G4VisAttributes * attTarget1 = new G4VisAttributes(G4Colour(G4Colour::Green()));
 			logicTarget1 -> SetVisAttributes(attTarget1);
