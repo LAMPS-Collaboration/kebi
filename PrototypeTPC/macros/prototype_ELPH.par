@@ -1,0 +1,7 @@
+# 
+prototypeBase file prototype.par
+
+# Run
+expRunSummary    string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/ELPH_exp_run_summary.dat
+pathToRawData    string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/
+pathToMetaData   string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/

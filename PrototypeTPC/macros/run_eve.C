@@ -6,11 +6,12 @@ void next(Int_t eventID = -1) {
   cout << "Event " << fEventID << endl;
 }
 
-void run_eve(TString name = "/Users/ejungwoo/kebi/data/run0098.test.0.2b74df9.root")
+
+void run_eve(TString name = "last")
 {
   auto run = new KBRun();
   run -> SetInputFile(name);
-  run -> SetPar("prototype.par");
+  run -> AddPar("prototype_eve.par");
   run -> SetTag("eve");
   run -> AddDetector(new LAPTpc());
   run -> Init();

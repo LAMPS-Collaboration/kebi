@@ -1,16 +1,9 @@
-# Run
-expRunSummary    string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/ELPH_exp_run_summary.dat
-pathToRawData    string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/
-pathToMetaData   string  $KEBIPATH/PrototypeTPC/macros/data_ELPH/
-
-#Pad__PERSISTENCY bool    true
-
 # Tpc
 tpcEFieldAxis    axis    y
 rMinTPC          double  75.    # minimum radius (gas) [mm]
 rMaxTPC          double  245.   # maximum radius (gas) [mm]
 dyTPC            double  570.   # lenth along y-axis of TPC [mm]
-yOffset          double  -285.  # offset along y-axis [mm]
+tpcOffset        v3      0 -285. 0  # offset along y-axis [mm]
 tpcPadPlaneK     double  0      # pad plane position on y-axis
 tpcCathodePlaneK double  -570   # cathode plane position on y-axis (not used)
 
@@ -31,19 +24,20 @@ nRowsInLayer3    int[11]     21, 23, 25, 27, 29, 33, 35, 37, 39, 43, 45   # sect
 padMap           string      $KEBIPATH/PrototypeTPC/macros/data_ELPH/padMap.ELPH.dat
 padBoundaryGap   double      0.5  # gap between two pads (mm)
 
-# Decoder
+# Decoder task
+#Pad__PERSISTENCY bool    true
 numAsAds         int         4    # number of AsAds
 numAGETs         int         4    # number of AGETs
 numChannelsMax   int         68   # max number of channels in AGET
 skipAAID         int[]       200  # asad=0 aget=2
 
-# PSA
+# PSA task
 pulserData          string   $KEBIPATH/input/pulser_464ns.dat
 tbStart             int      0    # start tb of the psa analysis
 nTbs                int      512  # number of time buckets
 tbTime              double   20   # [ns]
 dynamicRange        double   5000 # should be set but not used @todo
-gasDriftVelocity    double   0.0542411  # [mm/ns]
+#gasDriftVelocity    double   0.0542411  # [mm/ns]
 ADCThreshold        double   100 # hit is not reconstructed if charge (height of the pulse) is samller than this value
 
 # LAPNoiseSubtractionTask

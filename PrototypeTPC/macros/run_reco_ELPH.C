@@ -1,10 +1,10 @@
-void run_reco(Int_t runID = 98, Int_t split = 0, Int_t numEventsPerSplit=20)
+void run_reco_ELPH(Int_t runID = 98, Int_t split = 0, Int_t numEventsPerSplit=20)
 {
   auto run = new KBRun();
   run -> SetRunID(runID);
   run -> SetTag("test");
   run -> SetSplit(split, numEventsPerSplit);
-  run -> AddPar("prototype.par");
+  run -> AddPar("prototype_ELPH.par");
   run -> AddDetector(new LAPTpc());
 
   auto pathToRawData  = run -> GetPar() -> GetParString("pathToRawData");
