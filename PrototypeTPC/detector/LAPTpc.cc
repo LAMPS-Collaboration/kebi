@@ -28,7 +28,7 @@ bool LAPTpc::BuildGeometry()
   auto rMinTPC = fPar -> GetParDouble("rMinTPC");
   auto rMaxTPC = fPar -> GetParDouble("rMaxTPC");
   auto dyTPC = fPar -> GetParDouble("dyTPC");
-  auto yOffset = fPar -> GetParDouble("yOffset");
+  auto yOffset = fPar -> GetParDouble("tpcOffset",1);
 
   TGeoMedium *p10 = new TGeoMedium("p10", 1, new TGeoMaterial("p10"));
 

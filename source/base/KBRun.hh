@@ -61,7 +61,7 @@ class KBRun : public KBTask
      */
     virtual void Print(Option_t *option="all") const;
 
-    void SetRunName(TString name);
+    void SetRunName(TString name, Int_t id=-999);
     TString GetRunName() const;
 
     void SetRunID(Int_t id);
@@ -142,9 +142,9 @@ class KBRun : public KBTask
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
     void RunEve(Long64_t eveEventID=0, TString option="ep");
-    void SelectEveBranches(TString option);
+    //void SelectEveBranches(TString option);
     void SetEveScale(Double_t scale);
-    Color_t GetColor();
+    //Color_t GetColor();
 
 #ifdef ACTIVATE_EVE
     void AddEveElementToEvent(KBContainer *eveObj, bool permanent = true);
@@ -178,6 +178,12 @@ class KBRun : public KBTask
 #ifdef ACTIVATE_EVE
     void OpenEventDisplay();
 #endif
+    void DrawEve3D();
+    void DrawDetectorPlanes();
+    void SetEveLineAtt(TEveElement *el, TString branchName);
+    void SetEveMarkerAtt(TEveElement *el, TString branchName);
+    bool SelectTrack(KBTracklet *track);
+    bool SelectHit(KBHit *hit);
 
     void CheckIn();
     void CheckOut();
@@ -249,8 +255,22 @@ class KBRun : public KBTask
 
     Double_t fEveScale = 1;
 #endif
-    TString fEveBranches;
+    //TString fEveBranches;
     TString fEveOption;
+
+    vector<Int_t> fSelTrkIDs;
+    vector<Int_t> fIgnTrkIDs;
+    vector<Int_t> fSelPntIDs;
+    vector<Int_t> fIgnPntIDs;
+    vector<Int_t> fSelPDGs;
+    vector<Int_t> fIgnPDGs;
+    vector<Int_t> fSelMCIDs;
+    vector<Int_t> fIgnMCIDs;
+    vector<Int_t> fSelHitPntIDs;
+    vector<Int_t> fIgnHitPntIDs;
+    vector<TString> fSelBranchNames;
+
+    int fNumSelectedBranches;
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
     TCanvas *fCvsChannelBuffer = nullptr;

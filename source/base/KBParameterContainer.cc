@@ -103,6 +103,20 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
       ReplaceEnvironmentVariable(val);
       AddFile(val, parName);
     }
+    else if (parType == "v3" || parType == "vector3" || parType == "tvector3" || parType == "kbvector3") {
+      TString valuesInString = line;
+      valuesInString = TString(valuesInString(valuesInString.First("3")+2, valuesInString.Sizeof()-valuesInString.First("3")));
+      if (valuesInString.First("#")>=0)
+        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+      auto valueTokens = valuesInString.Tokenize(" ");
+      Int_t numValues = valueTokens -> GetEntriesFast();
+      if (numValues != 3)
+        continue;
+      SetPar(TString("VECTOR3_")+parName,numValues,overwrite);
+      for (auto iVal=0; iVal<numValues; ++iVal)
+        SetPar(parName+"["+iVal+"]",TString(((TObjString *) valueTokens->At(iVal))->GetString()).Atof(),overwrite);
+    }
     else if (parType == "b" || parType == "bool" || parType == "bool_t") {
       TString valueBoolean;
       ss >> valueBoolean;
@@ -301,6 +315,11 @@ Int_t KBParameterContainer::GetNumInputFiles() { return fNumInputFiles; }
 
 void KBParameterContainer::Print(Option_t *option) const
 {
+  if (TString(option)=="raw") {
+    TObjArray::Print();
+    return;
+  }
+
   bool printout = true;
   ofstream fileOut;
 
@@ -320,7 +339,7 @@ void KBParameterContainer::Print(Option_t *option) const
     fileOut << endl;
   }
 
-  bool arrayTitleIsSet = true;
+  TString arrayTitleIsSet;
   Int_t countDownArrayIdx = 0;
   TIter iterator(this);
   TObject *obj;
@@ -348,12 +367,17 @@ void KBParameterContainer::Print(Option_t *option) const
     else if (className == "TParameter<int>") {
       TParameter<Int_t> *par = (TParameter<Int_t> *) obj;
       valueString += par -> GetVal();
+      parType = "int";
       if (key.Index("NUM_VALUES_")==0) {
         countDownArrayIdx = valueString.Atoi();
-        arrayTitleIsSet = false;
+        arrayTitleIsSet = "[]";
         skipPrint = true;
       }
-      parType = "int";
+      if (key.Index("VECTOR3_")==0) {
+        countDownArrayIdx = 3;
+        arrayTitleIsSet = "v3";
+        skipPrint = true;
+      }
     }
     else if (className == "TParameter<double>") {
       TParameter<Double_t> *par = (TParameter<Double_t> *) obj;
@@ -380,10 +404,12 @@ void KBParameterContainer::Print(Option_t *option) const
       if (countDownArrayIdx!=0) {
         --countDownArrayIdx;
         key = TString(key(0,key.First("[")));
-        if (!arrayTitleIsSet) {
+        if (!arrayTitleIsSet.IsNull()) {
+          if (arrayTitleIsSet=="[]")
+            arrayTitleIsSet = parType + arrayTitleIsSet;
           thisIsNewLine = true;
-          ssLine << left << setw(28) << key << setw(10) << parType+"[]" << valueString;
-          arrayTitleIsSet = true;
+          ssLine << left << setw(28) << key << setw(10) << arrayTitleIsSet << valueString;
+          arrayTitleIsSet = "";
           if (countDownArrayIdx==0)
             ssLine << comment << endl;
         }
@@ -521,16 +547,12 @@ Int_t KBParameterContainer::GetParN(TString name)
   name = TString("NUM_VALUES_") + name;
 
   TObject *obj = FindObject(name);
-  if (obj == nullptr) {
-    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
-    if (!fDebugMode) gApplication -> Terminate();
-    SetPar(TString("NEWPAR")+name, -999);
-    return -999;
-  }
+  if (obj == nullptr)
+    return 0;
 
   TString className = obj -> ClassName();
   if (className != "TParameter<int>") {
-    kr_error(0) << "parameter type is " << className << ", not int!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not int!" << endl;
   }
 
   return ((TParameter<Int_t> *) obj) -> GetVal();
@@ -538,7 +560,7 @@ Int_t KBParameterContainer::GetParN(TString name)
 
 Bool_t KBParameterContainer::GetParBool(TString name, Int_t idx)
 {
-  if (idx>=0) name = name + "[" + idx + "]";
+  if (idx>=0) return GetParBool(name+"["+idx+"]");
 
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -550,7 +572,7 @@ Bool_t KBParameterContainer::GetParBool(TString name, Int_t idx)
 
   TString className = obj -> ClassName();
   if (className != "TParameter<bool>") {
-    kr_error(0) << "parameter type is " << className << ", not bool!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not bool!" << endl;
   }
 
   return ((TParameter<Bool_t> *) obj) -> GetVal();
@@ -558,7 +580,7 @@ Bool_t KBParameterContainer::GetParBool(TString name, Int_t idx)
 
 Int_t KBParameterContainer::GetParInt(TString name, Int_t idx)
 {
-  if (idx>=0) name = name + "[" + idx + "]";
+  if (idx>=0) return GetParInt(name+"["+idx+"]");
 
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -570,7 +592,7 @@ Int_t KBParameterContainer::GetParInt(TString name, Int_t idx)
 
   TString className = obj -> ClassName();
   if (className != "TParameter<int>") {
-    kr_error(0) << "parameter type is " << className << ", not int!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not int!" << endl;
   }
 
   return ((TParameter<Int_t> *) obj) -> GetVal();
@@ -578,7 +600,7 @@ Int_t KBParameterContainer::GetParInt(TString name, Int_t idx)
 
 Double_t KBParameterContainer::GetParDouble(TString name, Int_t idx)
 {
-  if (idx>=0) name = name + "[" + idx + "]";
+  if (idx>=0) return GetParDouble(name+"["+idx+"]");
 
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -590,7 +612,7 @@ Double_t KBParameterContainer::GetParDouble(TString name, Int_t idx)
 
   TString className = obj -> ClassName();
   if (className != "TParameter<double>") {
-    kr_error(0) << "parameter type is " << className << ", not double!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not double!" << endl;
   }
 
   return ((TParameter<Double_t> *) obj) -> GetVal();
@@ -598,7 +620,7 @@ Double_t KBParameterContainer::GetParDouble(TString name, Int_t idx)
 
 TString KBParameterContainer::GetParString(TString name, Int_t idx)
 {
-  if (idx>=0) name = name + "[" + idx + "]";
+  if (idx>=0) return GetParString(name+"["+idx+"]");
 
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -610,7 +632,7 @@ TString KBParameterContainer::GetParString(TString name, Int_t idx)
 
   TString className = obj -> ClassName();
   if (className != "TNamed") {
-    kr_error(0) << "parameter type is " << className << ", not string!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not string!" << endl;
   }
 
   return ((TNamed *) obj) -> GetTitle();
@@ -618,7 +640,7 @@ TString KBParameterContainer::GetParString(TString name, Int_t idx)
 
 kbaxis KBParameterContainer::GetParAxis(TString name, Int_t idx)
 {
-  if (idx>=0) name = name + "[" + idx + "]";
+  if (idx>=0) return GetParAxis(name+"["+idx+"]");
 
   TObject *obj = FindObject(name);
   if (obj == nullptr) {
@@ -630,7 +652,7 @@ kbaxis KBParameterContainer::GetParAxis(TString name, Int_t idx)
 
   TString className = obj -> ClassName();
   if (className != "TNamed") {
-    kr_error(0) << "parameter type is " << className << ", not axis(string)!" << endl;
+    kr_error(0) << name << " parameter type is " << className << ", not axis(string)!" << endl;
   }
 
   TString value = ((TNamed *) obj) -> GetTitle();
@@ -639,15 +661,85 @@ kbaxis KBParameterContainer::GetParAxis(TString name, Int_t idx)
   return KBVector3::GetAxis(value);
 }
 
+vector<Bool_t> KBParameterContainer::GetParVBool(TString name)
+{
+  vector<Bool_t> array;
+  auto npar = GetParN(name);
+  for (auto i=0; i<npar; ++i)
+    array.push_back(GetParBool(name,i));
+  return array;
+}
+
+vector<Int_t> KBParameterContainer::GetParVInt(TString name)
+{
+  vector<Int_t> array;
+  auto npar = GetParN(name);
+  for (auto i=0; i<npar; ++i)
+    array.push_back(GetParInt(name,i));
+  return array;
+}
+
+vector<Double_t> KBParameterContainer::GetParVDouble(TString name)
+{
+  vector<Double_t> array;
+  auto npar = GetParN(name);
+  for (auto i=0; i<npar; ++i)
+    array.push_back(GetParDouble(name,i));
+  return array;
+}
+
+vector<TString> KBParameterContainer::GetParVString(TString name)
+{
+  vector<TString> array;
+  auto npar = GetParN(name);
+  for (auto i=0; i<npar; ++i)
+    array.push_back(GetParString(name,i));
+  return array;
+}
+
+vector<kbaxis> KBParameterContainer::GetParVAxis(TString name)
+{
+  vector<kbaxis> array;
+  auto npar = GetParN(name);
+  for (auto i=0; i<npar; ++i)
+    array.push_back(GetParAxis(name,i));
+  return array;
+}
+
+
+
+TVector3 KBParameterContainer::GetParV3(TString name)
+{
+  TString xname = name + "[0]";
+  TString yname = name + "[1]";
+  TString zname = name + "[2]";
+
+  TObject *xobj = FindObject(xname);
+  if (xobj == nullptr) {
+    kr_error(0) << "parameter with name " << name << " does not exist!" << endl;
+    if (!fDebugMode) gApplication -> Terminate();
+    SetPar(TString("NEWPAR")+name, -999.999);
+    return TVector3(-999,-999,-999);
+  }
+
+  TString className = xobj -> ClassName();
+  if (className != "TParameter<double>") {
+    kr_error(0) << name << " parameter type is " << className << ", not (v3)double!" << endl;
+  }
+
+  auto x = ((TParameter<Double_t> *) FindObject(xname)) -> GetVal();
+  auto y = ((TParameter<Double_t> *) FindObject(yname)) -> GetVal();
+  auto z = ((TParameter<Double_t> *) FindObject(zname)) -> GetVal();
+
+  return TVector3(x,y,z);
+}
+
 Bool_t KBParameterContainer::CheckPar(TString name)
 {
-  if (FindObject(name) == nullptr) {
-    if (FindObject(TString("NUM_VALUES_")+name) == nullptr)
-      return false;
-    else
-      return false;
-  }
-  return true;
+  if (FindObject(name) != nullptr) return true;
+  if (FindObject(TString("VECTOR3_")+name) != nullptr) return true;
+  if (FindObject(TString("NUM_VALUES_")+name) != nullptr) return true;
+  return false;
 }
 
 bool KBParameterContainer::IsEmpty() const

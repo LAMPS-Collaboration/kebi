@@ -6,6 +6,9 @@
 #include "TNamed.h"
 #include "TParameter.h"
 #include "KBVector3.hh"
+#include <vector>
+
+using std::vector;
 
 /**
  * List of parameters <[parameter name], [parameter values]>
@@ -78,8 +81,20 @@ class KBParameterContainer : public TObjArray
     TString  GetParString(TString name, Int_t idx=-1);  ///< Get TString  type parameter by given name.
     kbaxis   GetParAxis  (TString name, Int_t idx=-1);  ///< Get KBVector3::Axis type parameter by given name.
 
-    Int_t GetParWidth(TString name) { return GetParInt(name); }
-    Int_t GetParColor(TString name) { return GetParInt(name); }
+    vector<Bool_t>   GetParVBool  (TString name);
+    vector<Int_t>    GetParVInt   (TString name);
+    vector<Double_t> GetParVDouble(TString name);
+    vector<TString>  GetParVString(TString name);
+    vector<kbaxis>   GetParVAxis  (TString name);
+
+    TVector3 GetParV3(TString name);
+
+    Double_t GetParX(TString name) { return GetParDouble(name,0); }
+    Double_t GetParY(TString name) { return GetParDouble(name,1); }
+    Double_t GetParZ(TString name) { return GetParDouble(name,2); }
+
+    Int_t GetParWidth(TString name)   { return GetParInt(name); }
+    Int_t GetParColor(TString name)   { return GetParInt(name); }
     Double_t GetParSize(TString name) { return GetParDouble(name); }
 
     Bool_t CheckPar(TString name);
