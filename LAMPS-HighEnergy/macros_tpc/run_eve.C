@@ -16,7 +16,8 @@ void run_eve(TString name = "iqmd_test")
   auto run = new KBRun();
   run -> SetInputFile(name+".reco");
   //run -> AddFriend(name+".digi");
-  //run -> AddFriend(name+".mc"); run -> SelectEveBranches("Tracklet:Hit:MCTrack:Vertex");
+  //run -> SetInputFile(name+".mc");
+  //run -> AddFriend(name+".mc");
 
   run -> AddDetector(new LHTpc());
   run -> SetTag("eve");

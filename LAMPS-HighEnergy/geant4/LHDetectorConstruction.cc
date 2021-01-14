@@ -57,23 +57,23 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   matMethaneGas -> AddElement(elementH, 4);
   matMethaneGas -> AddElement(elementC, 1);
 
-  TString gasPar = "p10";
-  if (par -> CheckPar("gasPar")) {
-    gasPar = par -> GetParString("gasPar");
-    gasPar.ToLower();
-         if (gasPar.Index("p10")>=0) gasPar = "p10";
-    else if (gasPar.Index("p20")>=0) gasPar = "p20";
-    else gasPar = "p10";
+  TString detMatName = "p10";
+  if (par -> CheckPar("detMatName")) {
+    detMatName = par -> GetParString("detMatName");
+    detMatName.ToLower();
+         if (detMatName.Index("p10")>=0) detMatName = "p10";
+    else if (detMatName.Index("p20")>=0) detMatName = "p20";
+    else detMatName = "p10";
   }
 
   G4Material *matGas = nullptr;
-  if (gasPar == "p10") {
+  if (detMatName == "p10") {
     G4double densityGas = .9*densityArGas + .1*densityMethane;
     matGas = new G4Material("matP10", densityGas, 2, kStateGas, labTemperature);
     matGas -> AddMaterial(matArGas, 0.9*densityArGas/densityGas);
     matGas -> AddMaterial(matMethaneGas, 0.1*densityMethane/densityGas);
   }
-  else if (gasPar == "p20") {
+  else if (detMatName == "p20") {
     G4double densityGas = .8*densityArGas + .2*densityMethane;
     matGas = new G4Material("matP20", densityGas, 2, kStateGas, labTemperature);
     matGas -> AddMaterial(matArGas, 0.8*densityArGas/densityGas);

@@ -1,4 +1,4 @@
-#include "globals.hh"
+//#include "globals.hh"
 #include "KBCompiled.h"
 
 #include "KBG4RunManager.hh"
