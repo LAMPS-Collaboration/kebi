@@ -294,13 +294,17 @@ Int_t KBParameterContainer::AddPar(KBParameterContainer *parc, TString parNameFo
 
     TObject *found = FindObject(name);
     if (found != nullptr) {
-      kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
-      ++countSameParameters ;
+      if (name.Index("INPUT_PARAMETER_FILE")==0)
+        ((TNamed *) obj) -> SetName(name+"_");
+      else {
+        kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
+        ++countSameParameters ;
+        continue;
+      }
     }
-    else {
-      Add(obj);
-      ++countParameters;
-    }
+
+    Add(obj);
+    ++countParameters;
   }
 
   if (countParameters == 0) {

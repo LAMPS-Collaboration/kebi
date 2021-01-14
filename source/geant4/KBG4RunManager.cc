@@ -89,7 +89,7 @@ void KBG4RunManager::Initialize()
 
 void KBG4RunManager::InitializeGeometry()
 {
-  g4_warning << "InitializeGeometry" << endl;
+  g4_info << "InitializeGeometry" << endl;
   if (fSuppressInitMessage) {
     G4strstreambuf* suppressMessage = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
     // Suppress print outs in between here ------------->
@@ -99,12 +99,12 @@ void KBG4RunManager::InitializeGeometry()
   }
   else
     G4RunManager::InitializeGeometry();
-  g4_warning << "InitializeGeometry" << endl;
+  g4_info << "InitializeGeometry" << endl;
 }
 
 void KBG4RunManager::InitializePhysics()
 {
-  g4_warning << "InitializePhysics" << endl;
+  g4_info << "InitializePhysics" << endl;
   if (fSuppressInitMessage) {
     G4strstreambuf* suppressMessage = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
     // Suppress print outs in between here ------------->
@@ -114,7 +114,7 @@ void KBG4RunManager::InitializePhysics()
   }
   else
     G4RunManager::InitializePhysics();
-  g4_warning << "InitializePhysics" << endl;
+  g4_info << "InitializePhysics" << endl;
 }
 
 void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
@@ -165,11 +165,11 @@ void KBG4RunManager::BeamOn(G4int numEvents, const char *macroFile, G4int numSel
     ConstructScoringWorlds();
 
     if (fSuppressInitMessage) {
-      G4strstreambuf* suppressSSB = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+      G4strstreambuf* suppressMessage = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
       // Suppress print outs in between here ------------->
       RunInitialization();
       // <------------- to here
-      G4cout.rdbuf(suppressSSB);
+      G4cout.rdbuf(suppressMessage);
     }
     else
       RunInitialization();

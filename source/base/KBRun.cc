@@ -523,7 +523,8 @@ bool KBRun::Init()
     kb_warning << "Input file is not set!" << endl;
   }
 
-  if (fPar->IsEmpty()) {
+  //if (fPar->IsEmpty())
+  {
     if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr) {
       auto par = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
       AddParameterContainer(par);
@@ -1079,7 +1080,8 @@ void KBRun::DrawEve3D()
     bool isHit = (objSample -> InheritsFrom("KBHit")) ? true : false;
 
     KBContainer *eveObj = (KBContainer *) objSample;
-    if (fSelBranchNames.size() == 0 && !eveObj -> DrawByDefault())
+    //if (fSelBranchNames.size() == 0 && !eveObj -> DrawByDefault())
+    if (fSelBranchNames.size() == 0 || !eveObj -> DrawByDefault())
       continue;
 
     auto eveEvent = (TEveEventManager *) fEveEventManagerArray -> FindObject(branchName);
