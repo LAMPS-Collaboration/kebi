@@ -1169,7 +1169,8 @@ void KBRun::DrawEve3D()
   }
 
   gEve -> Redraw3D();
-#elif
+#endif
+#ifndef ACTIVATE_EVE
   kb_warning << "ACTIVATE_EVE is OFF!" << endl;
 #endif
 }
