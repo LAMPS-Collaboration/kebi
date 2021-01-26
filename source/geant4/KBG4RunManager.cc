@@ -42,20 +42,18 @@ void KBG4RunManager::Initialize()
   if (GetUserTrackingAction() == nullptr) SetUserAction(new KBTrackingAction(this));
   if (GetUserSteppingAction() == nullptr) SetUserAction(new KBSteppingAction(this));
 
-  TString sdNameArgument = fPar -> GetParString("SensitiveDetectors");
-  TObjArray *sdNameArray = sdNameArgument.Tokenize(":");
-  Int_t numsds = sdNameArray -> GetEntries();
-  for (auto isd=0; isd<numsds; ++isd)
-  {
-    TString sdName = ((TObjString *) sdNameArray  -> At(isd)) -> GetString();
-
-    if (sdName.Index("!")!=0)
+  if (fPar -> CheckPar("SensitiveDetectors")) {
+    auto sdNames = fPar -> GetParVString("SensitiveDetectors");
+    for (auto sdName : sdNames)
     {
-      sdName.ReplaceAll("!","");
-      fSDAssembly.push_back(sdName);
+      if (sdName.Index("!")!=0)
+      {
+        sdName.ReplaceAll("!","");
+        fSDAssembly.push_back(sdName);
+      }
+      else
+        fSDNames.push_back(sdName);
     }
-    else
-      fSDNames.push_back(sdName);
   }
 
   G4RunManager::Initialize();
