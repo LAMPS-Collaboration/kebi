@@ -48,6 +48,7 @@ KBPad *KBPadPlane::GetPad(Int_t idx)
   return (KBPad *) obj;
 }
 
+/*
 KBPad *KBPadPlane::GetPadByPadID(Int_t padID)
 {
   Int_t numPads = fChannelArray -> GetEntriesFast();
@@ -59,6 +60,7 @@ KBPad *KBPadPlane::GetPadByPadID(Int_t padID)
 
   return (KBPad *) nullptr;
 }
+*/
 
 void KBPadPlane::SetPadArray(TClonesArray *padArray)
 {
@@ -488,15 +490,25 @@ bool KBPadPlane::PadNeighborChecker()
   }
   cout << endl;
 
-  kb_info << "No. of pads with 1 neighbors = " << ids1Neighbors.size() << endl;
-  kb_info << "No. of pads with 2 neighbors = " << ids2Neighbors.size() << endl;
-  kb_info << "No. of pads with 3 neighbors = " << ids3Neighbors.size() << endl;
-  kb_info << "No. of pads with 4 neighbors = " << ids4Neighbors.size() << endl;
-  kb_info << "No. of pads with 5 neighbors = " << ids5Neighbors.size() << endl;
-  kb_info << "No. of pads with 6 neighbors = " << ids6Neighbors.size() << endl;
-  kb_info << "No. of pads with 7 neighbors = " << ids7Neighbors.size() << endl;
-  kb_info << "No. of pads with 8 neighbors = " << ids8Neighbors.size() << endl;
-  kb_info << "No. of pads with > neighbors = " << ids9Neighbors.size() << endl;
+  TString examples1; for (auto ii=0; ii<int(ids1Neighbors.size()); ++ii) { if (ii>4) break; examples1 += Form(" %d",ids1Neighbors[ii]); }
+  TString examples2; for (auto ii=0; ii<int(ids2Neighbors.size()); ++ii) { if (ii>4) break; examples2 += Form(" %d",ids2Neighbors[ii]); }
+  TString examples3; for (auto ii=0; ii<int(ids3Neighbors.size()); ++ii) { if (ii>4) break; examples3 += Form(" %d",ids3Neighbors[ii]); }
+  TString examples4; for (auto ii=0; ii<int(ids4Neighbors.size()); ++ii) { if (ii>4) break; examples4 += Form(" %d",ids4Neighbors[ii]); }
+  TString examples5; for (auto ii=0; ii<int(ids5Neighbors.size()); ++ii) { if (ii>4) break; examples5 += Form(" %d",ids5Neighbors[ii]); }
+  TString examples6; for (auto ii=0; ii<int(ids6Neighbors.size()); ++ii) { if (ii>4) break; examples6 += Form(" %d",ids6Neighbors[ii]); }
+  TString examples7; for (auto ii=0; ii<int(ids7Neighbors.size()); ++ii) { if (ii>4) break; examples7 += Form(" %d",ids7Neighbors[ii]); }
+  TString examples8; for (auto ii=0; ii<int(ids8Neighbors.size()); ++ii) { if (ii>4) break; examples8 += Form(" %d",ids8Neighbors[ii]); }
+  TString examples9; for (auto ii=0; ii<int(ids9Neighbors.size()); ++ii) { if (ii>4) break; examples9 += Form(" %d",ids9Neighbors[ii]); }
+
+  kb_info << "No. of pads with 1 neighbors = " << ids1Neighbors.size() << "(" << examples1 << " )" << endl;
+  kb_info << "No. of pads with 2 neighbors = " << ids2Neighbors.size() << "(" << examples2 << " )" << endl;
+  kb_info << "No. of pads with 3 neighbors = " << ids3Neighbors.size() << "(" << examples3 << " )" << endl;
+  kb_info << "No. of pads with 4 neighbors = " << ids4Neighbors.size() << "(" << examples4 << " )" << endl;
+  kb_info << "No. of pads with 5 neighbors = " << ids5Neighbors.size() << "(" << examples5 << " )" << endl;
+  kb_info << "No. of pads with 6 neighbors = " << ids6Neighbors.size() << "(" << examples6 << " )" << endl;
+  kb_info << "No. of pads with 7 neighbors = " << ids7Neighbors.size() << "(" << examples7 << " )" << endl;
+  kb_info << "No. of pads with 8 neighbors = " << ids8Neighbors.size() << "(" << examples8 << " )" << endl;
+  kb_info << "No. of pads with > neighbors = " << ids9Neighbors.size() << "(" << examples9 << " )" << endl;
 
   return true;
 }

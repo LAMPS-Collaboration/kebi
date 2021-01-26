@@ -38,6 +38,7 @@ void KBPad::Print(Option_t *option) const
     return;
   }
 
+  kr_info(0) << "==" << endl;
   kr_info(0) << "Pad-ID(Plane-ID)      : " << fID << "(" << fPlaneID << ")";
   if (fActive) kb_out << " is Active!" << endl;
   else kb_out << " is NOT Active." << endl;
@@ -46,6 +47,8 @@ void KBPad::Print(Option_t *option) const
   kr_info(0) << "(Section, Row, Layer) : (" << fSection << ", " << fRow << ", " << fLayer << ")" << endl;
   kr_info(0) << "Noise-Amp | BaseLine  : " << fNoiseAmp << " | " << fBaseLine << endl;
   kr_info(0) << "Position              : (" << fPosition.X() << ", " << fPosition.Y() << ", " << fPosition.Z() << ") ; " << fPosition.GetReferenceAxis() << endl;
+  TString nbids; for (auto ii=0; ii<int(fNeighborPadArray.size()); ++ii) nbids += Form(" %d",fNeighborPadArray.at(ii)->GetPadID());
+  kr_info(0) << "Neighbors             : " << nbids << "(" << fNeighborPadArray.size() << ")" << endl;
 
   if (opts.Index(">")>=0) {
     Int_t numMCID = fMCIDArray.size();
@@ -116,27 +119,35 @@ Bool_t KBPad::IsSortable() const { return true; }
 
 Int_t KBPad::Compare(const TObject *obj) const
 {
-  auto padCompare = (KBPad *) obj;
+  /// By default, the pads should be sorted from the outer-side of the TPC to the inner-side of the TPC.
+  /// This sorting is used in KBPadPlane::PullOutNextFreeHit().
+  /// In track finding KBPadPlane::PullOutNextFreeHit() method is used 
+  /// and the hits are pull from first index of the pad array to the last indes of the pad array
+  /// assumming that the pads are sorted this way.
+  /// Here we assume that the layer numbering is given from inner-side to the outer-side of the TPC
+  /// in increasing order.
 
-  int sortEarlier = 1;
-  int sortLatter = -1;
+  auto pad2 = (KBPad *) obj;
+
+  int sortThisPadLatterThanPad2 = 1;
+  int sortThisPadEarlierThanPad2 = -1;
   int noChange = 0;
 
   if (fSortValue >= 0) {
-         if (fSortValue < padCompare -> GetSortValue()) return sortLatter;
-    else if (fSortValue > padCompare -> GetSortValue()) return sortEarlier;
+         if (fSortValue < pad2 -> GetSortValue()) return sortThisPadEarlierThanPad2;
+    else if (fSortValue > pad2 -> GetSortValue()) return sortThisPadLatterThanPad2;
     return noChange;
   }
-       if (padCompare -> GetLayer() < fLayer) return sortLatter;
-  else if (padCompare -> GetLayer() > fLayer) return sortEarlier;
+       if (pad2 -> GetLayer() < fLayer) return sortThisPadEarlierThanPad2;
+  else if (pad2 -> GetLayer() > fLayer) return sortThisPadLatterThanPad2;
   else //same layer
   {
-         if (padCompare -> GetSection() > fSection) return sortLatter;
-    else if (padCompare -> GetSection() < fSection) return sortEarlier;
+         if (pad2 -> GetSection() > fSection) return sortThisPadEarlierThanPad2;
+    else if (pad2 -> GetSection() < fSection) return sortThisPadLatterThanPad2;
     else // same layer, same section
     {
-           if (padCompare -> GetRow() > fRow) return sortLatter;
-      else if (padCompare -> GetRow() < fRow) return sortEarlier;
+           if (pad2 -> GetRow() < fRow) return sortThisPadEarlierThanPad2;
+      else if (pad2 -> GetRow() > fRow) return sortThisPadLatterThanPad2;
       else // same pad
         return noChange;
     }
