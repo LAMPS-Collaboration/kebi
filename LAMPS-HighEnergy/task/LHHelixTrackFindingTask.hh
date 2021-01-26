@@ -10,7 +10,7 @@
 #include "KBHitArray.hh"
 
 #include "LHTpc.hh"
-#include "LHPadPlane.hh"
+#include "KBPadPlane.hh"
 
 #include <vector>
 using namespace std;
@@ -83,7 +83,7 @@ class LHHelixTrackFindingTask : public KBTask
 
   private:
     LHTpc *fTpc = nullptr;
-    LHPadPlane *fPadPlane = nullptr;
+    KBPadPlane *fPadPlane = nullptr;
     TClonesArray *fHitArray = nullptr;
     TClonesArray *fTrackArray = nullptr;
 
