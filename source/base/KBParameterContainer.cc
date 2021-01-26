@@ -62,7 +62,7 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
     fileNameFull = TString(gSystem -> Getenv("PWD")) + "/" + fileName;
 
   if (TString(gSystem -> Which(".", fileNameFull.Data())).IsNull()) {
-    kr_info(0) << "Parameter file " << fileNameFull << " does not exist!" << endl;
+    kr_error(0) << "Parameter file " << fileNameFull << " does not exist!" << endl;
     return 0;
   }
   kr_info(0) << "Adding parameter file " << fileNameFull << endl;

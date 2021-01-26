@@ -94,6 +94,8 @@ class KBRun : public KBTask
     KBParameterContainer *GetVolumeTable() const;
 
     void CreateParameterFile(TString name);
+    virtual void AddParameterContainer(KBParameterContainer *par);
+    virtual void AddParameterContainer(TString fname);
 
     /**
      * Register obj as a output branch with given name.
@@ -141,7 +143,7 @@ class KBRun : public KBTask
     /// option is used to activate following displays:
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
-    void RunEve(Long64_t eveEventID=0, TString option="ep");
+    void RunEve(Long64_t eveEventID=0, TString option="");
     //void SelectEveBranches(TString option);
     void SetEveScale(Double_t scale);
     //Color_t GetColor();
@@ -176,9 +178,10 @@ class KBRun : public KBTask
 
   private:
 #ifdef ACTIVATE_EVE
-    void OpenEventDisplay();
+    void ConfigureEventDisplay();
 #endif
     void DrawEve3D();
+    void ConfigureDetectorPlanes();
     void DrawDetectorPlanes();
     void SetEveLineAtt(TEveElement *el, TString branchName);
     void SetEveMarkerAtt(TEveElement *el, TString branchName);
@@ -201,6 +204,8 @@ class KBRun : public KBTask
     TString fInputTreeName = "";
     TFile *fInputFile = nullptr;
     TChain *fInputTree = nullptr;
+
+    KBParameterContainer fTempPar;
 
     Int_t fNumFriends = 0;
     TObjArray *fFriendTrees = nullptr;

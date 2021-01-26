@@ -237,7 +237,7 @@ TString KBRun::ConfigureDataPath(TString name, bool search, TString dataPath, bo
   }
 
   bool hasVersion = false;
-  auto array = name.Tokenize(".");
+  //auto array = name.Tokenize(".");
 
   TString pathKEBIData = TString(KEBI_PATH) + "/data/";
 
@@ -274,8 +274,10 @@ TString KBRun::ConfigureDataPath(TString name, bool search, TString dataPath, bo
         TString vxName = fullName;
         bool breakFlag = false;
         if (fullName.EndsWith(".root")) {
-          for (auto versionMark : listOfHashVersions)
+          for (auto iv=int(listOfHashVersions.size())-1; iv>=0; --iv)
+          //for (auto versionMark : listOfHashVersions)
           {
+            auto versionMark = listOfHashVersions.at(iv);
             fullName = vxName;
             fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
             if (KBRun::CheckFileExistence(fullName)) {
@@ -534,6 +536,8 @@ bool KBRun::Init()
       kb_warning << "FAILED to load parameter container from the input file." << endl;
       //return false;
     }
+
+    fPar -> AddPar(&fTempPar);
   }
 
   if (fInputFile != nullptr) {
@@ -590,6 +594,7 @@ bool KBRun::Init()
     fDetectorSystem -> Init();
     fDetectorSystem -> SetTransparency(80);
     kb_info << fDetectorSystem -> GetName() << " initialized" << endl;
+    fDetectorSystem -> Print();
   }
 
   if (fOutputFileName.IsNull()) {
@@ -713,6 +718,14 @@ void KBRun::CreateParameterFile(TString name)
   if (fAutoTerminate) Terminate(this);
 }
 
+void KBRun::AddParameterContainer(KBParameterContainer *par) {
+  fTempPar.AddPar(par);
+}
+
+void KBRun::AddParameterContainer(TString fname) {
+  fTempPar.AddFile(fname);
+}
+
 bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
 {
   if (fBranchPtrMap[name] != nullptr)
@@ -802,7 +815,7 @@ Long64_t KBRun::GetEventCount() const { return fEventCount; }
 bool KBRun::Event(Long64_t eventID)
 {
   fCurrentEventID = eventID;
-  GetEntry(eventID);
+  auto entries = GetEntry(fCurrentEventID);
 
   kb_info << "Execute Event " << fCurrentEventID << endl;
   ExecuteTask("");
@@ -953,7 +966,7 @@ void KBRun::RunInRange(Long64_t startID, Long64_t endID)
 }
 
 #ifdef ACTIVATE_EVE
-void KBRun::OpenEventDisplay()
+void KBRun::ConfigureEventDisplay()
 {
   if (fDetectorSystem -> GetEntries() == 0)
     kb_warning << "Cannot open event display: detector is not set." << endl;
@@ -1031,15 +1044,6 @@ void KBRun::OpenEventDisplay()
   gEve -> GetBrowser() -> GetTabRight() -> SetTab(1);
   */
 
-  for (Int_t iPlane = 0; iPlane < fDetectorSystem -> GetNumPlanes(); iPlane++) {
-    KBDetectorPlane *plane = fDetectorSystem -> GetDetectorPlane(iPlane);
-    TCanvas *cvs = plane -> GetCanvas();
-    cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
-    fCvsDetectorPlaneArray -> Add(cvs);
-    cvs -> cd();
-    //plane -> GetHist() -> Draw("colz");
-  }
-
   gEve -> GetBrowser() -> HideBottomTab();
   gEve -> ElementSelect(gEve -> GetCurrentEvent());
   gEve -> GetWindowManager() -> HideAllEveDecorations();
@@ -1057,7 +1061,7 @@ void KBRun::DrawEve3D()
   }
 
   if (gEve == nullptr)
-    OpenEventDisplay();
+    ConfigureEventDisplay();
 
   bool removePointTrack = (fPar->CheckPar("eveRemovePointTrack")) ? (fPar->GetParBool("eveRemovePointTrack")) : false;
 
@@ -1175,8 +1179,24 @@ void KBRun::DrawEve3D()
 #endif
 }
 
+void KBRun::ConfigureDetectorPlanes()
+{
+  if (fCvsDetectorPlaneArray->GetEntries()>0)
+    return;
+
+  auto numPlanes = fDetectorSystem -> GetNumPlanes();
+  for (Int_t iPlane = 0; iPlane < numPlanes; iPlane++) {
+    KBDetectorPlane *plane = fDetectorSystem -> GetDetectorPlane(iPlane);
+    TCanvas *cvs = plane -> GetCanvas();
+    cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
+    fCvsDetectorPlaneArray -> Add(cvs);
+  }
+}
+
 void KBRun::DrawDetectorPlanes()
 {
+  ConfigureDetectorPlanes();
+
   if (fGraphChannelBoundaryNb[0] == nullptr) { // TODO
     for (Int_t iGraph = 0; iGraph < 20; ++iGraph) {
       fGraphChannelBoundaryNb[iGraph] = new TGraph();
@@ -1188,6 +1208,10 @@ void KBRun::DrawDetectorPlanes()
   auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
   auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
 
+  auto ppHistMin = 0.01;
+  if (fPar->CheckPar("evePPHistMin"))
+    ppHistMin = fPar -> GetParDouble("evePPHistMin");
+
   auto numPlanes = fDetectorSystem -> GetNumPlanes();
   for (auto iPlane = 0; iPlane < numPlanes; ++iPlane)
   {
@@ -1195,6 +1219,7 @@ void KBRun::DrawDetectorPlanes()
     kb_info << "Drawing " << plane -> GetName() << endl;
 
     auto histPlane = plane -> GetHist();
+    histPlane -> SetMinimum(ppHistMin);
     histPlane -> Reset();
 
     auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
@@ -1380,7 +1405,11 @@ void KBRun::AddEveElementToEvent(TEveElement *element, bool permanent)
 
 void KBRun::RunEve(Long64_t eveEventID, TString option)
 {
-  if (fEveOption.IsNull() || (!fEveOption.IsNull() && option.Index("0")<0))
+  if (option.Index("e")<0 && option.Index("p")<0) {
+    if (fEveOption.IsNull())
+      fEveOption = "ep";
+  }
+  else
     fEveOption = option;
 
   Bool_t drawEve3D = (fEveOption.Index("e")>=0) ? true : false;
@@ -1449,9 +1478,14 @@ void KBRun::Terminate(TObject *obj, TString message)
 void KBRun::ClickSelectedPadPlane()
 {
   TObject* select = ((TCanvas*)gPad) -> GetClickSelected();
-
-  if (select == NULL || (!(select -> InheritsFrom(TH2::Class())) && !(select -> InheritsFrom(TGraph::Class()))))
+  if (select == nullptr)
     return;
+
+  bool isNotH2 = !(select -> InheritsFrom(TH2::Class()));
+  bool isNotGraph = !(select -> InheritsFrom(TGraph::Class()));
+  if (isNotH2 && isNotGraph)
+    return;
+
 
   TH2D* hist = (TH2D*) select;
 
@@ -1484,6 +1518,7 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   KBTpc *tpc = (KBTpc *) fDetectorSystem -> GetTpc();
   if (tpc == nullptr)
     return;
+
   KBPadPlane *padplane = tpc -> GetPadPlane();
   Int_t id = padplane -> FindPadID(x, y);
   if (id < 0) {
@@ -1491,42 +1526,44 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
     return;
   }
 
-
   KBPad *pad = padplane -> GetPad(id);
   pad -> SetHist(fHistChannelBuffer,"pao");
   pad -> Print();
-  {
-    if (fGraphChannelBoundary == nullptr) {
-      fGraphChannelBoundary = new TGraph();
-      fGraphChannelBoundary -> SetLineColor(kRed);
-      fGraphChannelBoundary -> SetLineWidth(2);
-    }
-    fGraphChannelBoundary -> Set(0);
 
-    auto corners = pad -> GetPadCorners();
-    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
-      TVector2 corner = corners -> at(iCorner);
-      fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
-    }
-    TVector2 corner = corners -> at(0);
+  if (fGraphChannelBoundary == nullptr) {
+    fGraphChannelBoundary = new TGraph();
+    fGraphChannelBoundary -> SetLineColor(kRed);
+    fGraphChannelBoundary -> SetLineWidth(2);
+  }
+  fGraphChannelBoundary -> Set(0);
+
+  auto corners = pad -> GetPadCorners();
+  for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
+    TVector2 corner = corners -> at(iCorner);
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
-
-  for (Int_t iBLine = 0; iBLine < 20; ++iBLine)
-    fGraphChannelBoundaryNb[iBLine] -> Set(0);
+  TVector2 corner = corners -> at(0);
+  fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
 
   auto nbs = pad -> GetNeighborPadArray();
   Int_t numNbs = nbs -> size();
-  for (auto iNb = 0; iNb < numNbs; ++iNb) {
-    auto nb = (KBPad *) nbs -> at(iNb);
-    auto corners = nb -> GetPadCorners();
-    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
-      TVector2 corner = corners -> at(iCorner);
-      fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
-    }
-    TVector2 corner = corners -> at(0);
-    fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
 
+  for (Int_t iBLine = 0; iBLine < numNbs; ++iBLine)
+    fGraphChannelBoundaryNb[iBLine] -> Set(0);
+
+  for (Int_t iBLine = numNbs; iBLine < 20; ++iBLine)
+    fGraphChannelBoundaryNb[iBLine] -> Set(1);
+
+  for (auto iNb = 0; iNb < numNbs; ++iNb)
+  {
+    auto padNb = (KBPad *) nbs -> at(iNb);
+    auto cornersNb = padNb -> GetPadCorners();
+    for (UInt_t iCorner = 0; iCorner < cornersNb -> size(); ++iCorner) {
+      TVector2 cornerNb = cornersNb -> at(iCorner);
+      fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), cornerNb.X(), cornerNb.Y());
+    }
+    TVector2 cornerNb = cornersNb -> at(0);
+    fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), cornerNb.X(), cornerNb.Y());
   }
 
   fHistChannelBuffer -> Draw("hist");
@@ -1546,10 +1583,15 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   fCvsChannelBuffer -> Modified();
   fCvsChannelBuffer -> Update();
 
-  ((TCanvas *) fCvsDetectorPlaneArray -> At(0)) -> cd();
+  auto cvsDetectorPlane = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
+  cvsDetectorPlane -> cd();
   fGraphChannelBoundary -> Draw("samel");
-  for (auto iNb = 0; iNb < numNbs; ++iNb)
-    fGraphChannelBoundaryNb[iNb] -> Draw("samel");
+  for (auto iNb = 0; iNb < numNbs; ++iNb) {
+    if (fGraphChannelBoundaryNb[iNb] -> GetN() > 0)
+      fGraphChannelBoundaryNb[iNb] -> Draw("samel");
+  }
+  cvsDetectorPlane -> Modified();
+  cvsDetectorPlane -> Update();
 }
 
 void KBRun::SetLogFile(TString name) {
