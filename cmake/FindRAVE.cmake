@@ -11,9 +11,9 @@
 Message(STATUS "Looking for RAVE...")
 
 Set(RAVE_FOUND FALSE)
-Set(RAVE_INCLUDE_DIR0 ${KEBI_PATH}/tools/install/include/)
-Set(RAVE_INCLUDE_DIR ${KEBI_PATH}/tools/install/include/rave)
-Set(RAVE_LIBRARY_DIR ${KEBI_PATH}/tools/install/lib)
+Set(RAVE_INCLUDE_DIR0 ${RAVE}/include/)
+Set(RAVE_INCLUDE_DIR ${RAVE}/include/rave)
+Set(RAVE_LIBRARY_DIR ${RAVE}/lib)
 Set(RAVE_LDFLAGS "-L${RAVE_LIBRARY_DIR} -lRaveBase -lRaveCore -lRaveVertex -lRaveFlavorTag -lRaveVertexKinematics")
 
 Find_Library(RAVE_LIBRARY  NAMES RaveBase PATHS ${RAVE_LIBRARY_DIR} NO_DEFAULT_PATH)

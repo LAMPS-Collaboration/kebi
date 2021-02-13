@@ -11,8 +11,8 @@
 Message(STATUS "Looking for GENFIT2...")
 
 Set(GENFIT2_FOUND FALSE)
-Set(GENFIT2_INCLUDE_DIR ${KEBI_PATH}/tools/install/include)
-Set(GENFIT2_LIBRARY_DIR ${KEBI_PATH}/tools/install/lib)
+Set(GENFIT2_INCLUDE_DIR ${GENFIT2}/include)
+Set(GENFIT2_LIBRARY_DIR ${GENFIT2}/lib)
 Set(GENFIT2_LDFLAGS "-L${GENFIT2_LIBRARY_DIR} -lgenfit2")
 
 Find_Library(GENFIT2_LIBRARY NAMES genfit2
