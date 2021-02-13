@@ -29,9 +29,10 @@
 /vis/viewer/set/style surface
 /vis/viewer/set/hiddenMarker true
 /vis/viewer/set/viewpointThetaPhi 100 160
+#/vis/viewer/set/viewpointThetaPhi 0 180
 /vis/viewer/set/autoRefresh true
 
 /tracking/verbose 1
 /vis/verbose warnings
 
-/run/beamOn 1
+#/run/beamOn 1

@@ -33,9 +33,9 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
   auto par = runManager -> GetParameterContainer();
 
-  G4double tpcInnerRadius = par -> GetParDouble("rMinTPC");
-  G4double tpcOuterRadius = par -> GetParDouble("rMaxTPC");
-  G4double tpcLength = par -> GetParDouble("tpcLength");
+	G4double tpcInnerRadius = par -> GetParDouble("TPCrMin");
+	G4double tpcOuterRadius = par -> GetParDouble("TPCrMax");
+	G4double tpcLength = par -> GetParDouble("TPCLength");
   G4double tpcZOffset = par -> GetParDouble("zOffset");
 
   G4double bfieldx = par -> GetParDouble("bfieldx");
@@ -57,13 +57,14 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   matMethaneGas -> AddElement(elementH, 4);
   matMethaneGas -> AddElement(elementC, 1);
 
-  TString detMatName = "p10";
-  if (par -> CheckPar("detMatName")) {
-    detMatName = par -> GetParString("detMatName");
-    detMatName.ToLower();
-         if (detMatName.Index("p10")>=0) detMatName = "p10";
-    else if (detMatName.Index("p20")>=0) detMatName = "p20";
-    else detMatName = "p10";
+
+  TString gasPar = "p10";
+  if (par -> CheckPar("TPCgasPar")) {
+    gasPar = par -> GetParString("TPCgasPar");
+    gasPar.ToLower();
+         if (gasPar.Index("p10")>=0) gasPar = "p10";
+    else if (gasPar.Index("p20")>=0) gasPar = "p20";
+    else gasPar = "p10";
   }
 
   G4Material *matGas = nullptr;

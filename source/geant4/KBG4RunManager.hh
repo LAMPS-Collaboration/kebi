@@ -46,7 +46,7 @@ class KBG4RunManager : public G4RunManager, public KBGear
     KBParameterContainer *GetSensitiveDetectors();
     KBParameterContainer *GetProcessTable();
 
-    void AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg,
+    void AddMCTrack(Int_t opt, Int_t trackID, Int_t parentID, Int_t pdg,
         Double_t px, Double_t py, Double_t pz,
         Int_t dID, Double_t vx, Double_t vy, Double_t vz, Int_t pcID);
 
@@ -70,6 +70,7 @@ class KBG4RunManager : public G4RunManager, public KBGear
     TFile* fFile;
     TTree* fTree;
     TClonesArray *fTrackArray;
+		TClonesArray *fPostTrackArray;
     TObjArray *fStepArrayList;
 
     Double_t fEdepSumArray[200] = {0};
@@ -77,6 +78,8 @@ class KBG4RunManager : public G4RunManager, public KBGear
     std::map<Int_t, Int_t> fIdxOfCopyNo;
     Int_t fNumActiveVolumes = 0;
 
+    bool fMCTrack = false;
+    bool fMCPostTrack = false;
     bool fSetEdepSumTree = false;
     bool fStepPersistency = false;
     bool fSecondaryPersistency = false;

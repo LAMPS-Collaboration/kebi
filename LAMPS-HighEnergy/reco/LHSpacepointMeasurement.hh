@@ -1,9 +1,9 @@
 #ifndef LHSPACEPOINTMEASUREMENT_HH
 #define LHSPACEPOINTMEASUREMENT_HH
 
-#include "AbsMeasurement.h"
-#include "SpacepointMeasurement.h"
-#include "TrackCandHit.h"
+#include "genfit2/AbsMeasurement.h"
+#include "genfit2/SpacepointMeasurement.h"
+#include "genfit2/TrackCandHit.h"
 
 #include "KBHit.hh"
 

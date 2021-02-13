@@ -59,13 +59,22 @@ void KBG4RunManager::Initialize()
   G4RunManager::Initialize();
 
   SetOutputFile(fPar->GetParString("G4OutputFile").Data());
-  SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+	if ( fPar->GetParInt("G4InputMode")==1 )
+	{
+		SetGeneratorFile(fPar->GetParString("G4InputFile").Data());
+	}
 
   auto procNames = G4ProcessTable::GetProcessTable() -> GetNameList();
   Int_t idx = 0;
+	G4cout << "####################" << G4endl;
+	G4cout << "Create Process Table" << G4endl;
   fProcessTable -> SetPar("Primary", idx++);
-  for (auto name : *procNames)
-    fProcessTable -> SetPar(name, idx++);
+	G4cout << idx-1 << " " << "Primary" << G4endl;
+  for (auto name : *procNames){
+		fProcessTable -> SetPar(name, idx++);
+		G4cout << idx-1 << " " << name << G4endl;
+	}
+	G4cout << "####################" << G4endl;
 
   if (fPar->CheckPar("G4ExportGDML"))
   {
@@ -140,6 +149,7 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
     uiManager -> ApplyCommand(command+fileName);
   }
 
+
   WriteToFile(fProcessTable);
   WriteToFile(fSensitiveDetectors);
   WriteToFile(fVolumes);
@@ -192,16 +202,20 @@ void KBG4RunManager::SetOutputFile(TString name)
 {
   fPar -> ReplaceEnvironmentVariable(name);
 
-  fSetEdepSumTree         = fPar->GetParBool("MCSetEdepSumTree");;
-  fStepPersistency        = fPar->GetParBool("MCStepPersistency");;
+  fMCTrack 				        = fPar->GetParBool("MCTrack");
+  fMCPostTrack		        = fPar->GetParBool("MCPostTrack");
+  fSetEdepSumTree         = fPar->GetParBool("MCSetEdepSumTree");
+  fStepPersistency        = fPar->GetParBool("MCStepPersistency");
   fSecondaryPersistency   = fPar->GetParBool("MCSecondaryPersistency");
   fTrackVertexPersistency = fPar->GetParBool("MCTrackVertexPersistency");
 
   fFile = new TFile(name,"recreate");
   fTree = new TTree("event", name);
 
-  fTrackArray = new TClonesArray("KBMCTrack", 100);
+	fTrackArray = new TClonesArray("KBMCTrack", 100);
+	fPostTrackArray = new TClonesArray("KBMCTrack", 100);
   fTree -> Branch("MCTrack", &fTrackArray);
+  fTree -> Branch("MCPostTrack", &fPostTrackArray);
 
   fStepArrayList = new TObjArray();
 
@@ -318,16 +332,29 @@ KBParameterContainer *KBG4RunManager::GetProcessTable()       { return fProcessT
 
 
 
-void KBG4RunManager::AddMCTrack(Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
+void KBG4RunManager::AddMCTrack(Int_t opt, Int_t trackID, Int_t parentID, Int_t pdg, Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz, Int_t processID)
 {
-  if (parentID != 0 && !fSecondaryPersistency) {
+  if (opt==0 && parentID != 0 && !fSecondaryPersistency) {
     fCurrentTrack = nullptr;
     return;
   }
 
+	if (opt==0 && !fMCTrack) {
+		fCurrentTrack = nullptr;
+		return;
+	}else if (opt==1 && !fMCPostTrack) {
+		fCurrentTrack = nullptr;
+		return;
+	}
+
   fTrackID = trackID;
-  fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
-  fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz, processID);
+	if ( opt==0 ){
+		fCurrentTrack = (KBMCTrack *) fTrackArray -> ConstructedAt(fTrackArray -> GetEntriesFast());
+	}else if ( opt==1 ){
+		fCurrentTrack = (KBMCTrack *) fPostTrackArray -> ConstructedAt(fPostTrackArray -> GetEntriesFast());
+	}
+
+	fCurrentTrack -> SetMCTrack(trackID, parentID, pdg, px, py, pz, detectorID, vx, vy, vz, processID);
 }
 
 void KBG4RunManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Int_t detectorID, Double_t vx, Double_t vy, Double_t vz)
@@ -364,10 +391,13 @@ void KBG4RunManager::SetNumEvents(Int_t numEvents)
 
 void KBG4RunManager::NextEvent()
 {
-  g4_info << "End of Event " << fTree -> GetEntries() << endl;
+	if ( fTree -> GetEntries()%1000==0 ){
+		g4_info << "End of Event " << fTree -> GetEntries() << endl;
+	}
   fTree -> Fill();
 
   fTrackArray -> Clear("C");
+  fPostTrackArray -> Clear("C");
   TIter it(fStepArrayList);
 
   if (fStepPersistency) {

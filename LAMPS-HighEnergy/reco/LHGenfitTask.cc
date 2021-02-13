@@ -8,11 +8,11 @@ using namespace std;
 
 #include "TMatrixDSym.h"
 
-#include "FieldManager.h"
-#include "ConstField.h"
-#include "MaterialEffects.h"
-#include "TGeoMaterialInterface.h"
-#include "TrackCand.h"
+#include "genfit2/FieldManager.h"
+#include "genfit2/ConstField.h"
+#include "genfit2/MaterialEffects.h"
+#include "genfit2/TGeoMaterialInterface.h"
+#include "genfit2/TrackCand.h"
 
 ClassImp(LHGenfitTask)
 
