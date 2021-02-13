@@ -38,7 +38,7 @@ class KBPSATask : public KBTask
 
     KBPadPlane *fPadPlane[2];
 
-    KBPSA *fPSA = nullptr;
+    KBPSA *fPSA;
 
   ClassDef(KBPSATask, 1)
 };
