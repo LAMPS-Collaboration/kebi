@@ -61,7 +61,7 @@ class KBRun : public KBTask
      */
     virtual void Print(Option_t *option="all") const;
 
-    void SetRunName(TString name);
+    void SetRunName(TString name, Int_t id=-999);
     TString GetRunName() const;
 
     void SetRunID(Int_t id);
@@ -71,10 +71,11 @@ class KBRun : public KBTask
     TString GetDataPath();
 
     void SetInputFile(TString fileName, TString treeName = "event"); ///< Set input file and tree name
-    void AddInput(TString fileName); ///< Add file to input file
+    void AddInputFile(TString fileName, TString treeName = "event"); ///< Add file to input file
     void AddFriend(TString fileName); ///< Add file to input file
     void SetInputTreeName(TString treeName); ///< Set input tree name
     TFile *GetInputFile();
+    TTree *GetInputTree() const;
     TChain *GetInputChain() const;
     TChain *GetFriendChain(Int_t iFriend) const;
 
@@ -93,6 +94,8 @@ class KBRun : public KBTask
     KBParameterContainer *GetVolumeTable() const;
 
     void CreateParameterFile(TString name);
+    virtual void AddParameterContainer(KBParameterContainer *par);
+    virtual void AddParameterContainer(TString fname);
 
     /**
      * Register obj as a output branch with given name.
@@ -104,7 +107,7 @@ class KBRun : public KBTask
     TClonesArray *GetBranchA(TString name); ///< Get TClonesArray branch by name.
 
     void AddDetector(KBDetector *detector); ///< Set detector
-    KBDetector *GetDetector(Int_t idx) const;
+    KBDetector *GetDetector(Int_t idx=0) const;
     KBDetectorSystem *GetDetectorSystem() const;
 
     void SetGeoManager(TGeoManager *gm);
@@ -140,10 +143,10 @@ class KBRun : public KBTask
     /// option is used to activate following displays:
     /// - e : display 3D eventdisplay
     /// - p : display detector planes
-    void RunEve(Long64_t eveEventID=0, TString option="ep");
-    void SelectEveBranches(TString option);
+    void RunEve(Long64_t eveEventID=0, TString option="");
+    //void SelectEveBranches(TString option);
     void SetEveScale(Double_t scale);
-    Color_t GetColor();
+    //Color_t GetColor();
 
 #ifdef ACTIVATE_EVE
     void AddEveElementToEvent(KBContainer *eveObj, bool permanent = true);
@@ -162,10 +165,10 @@ class KBRun : public KBTask
     void SetAutoTermination(Bool_t val);
     void Terminate(TObject *obj, TString message = "");
 
-    TString ConfigureDataPath(TString &name, bool search = false);
-    TString ConfigureEnv(TString name);
-
-    bool CheckFileExistence(TString fileName, bool print = false);
+    TString GetFileVersion(TString name);
+    static TString ConfigureDataPath(TString name, bool search = false, TString dataPath="", bool isRootFile=true);
+    static TString ConfigureEnv(TString name);
+    static bool CheckFileExistence(TString fileName);
 
     TDatabasePDG *GetDatabasePDG();
     TParticlePDG *GetParticle(Int_t pdgCode);
@@ -175,8 +178,15 @@ class KBRun : public KBTask
 
   private:
 #ifdef ACTIVATE_EVE
-    void OpenEventDisplay();
+    void ConfigureEventDisplay();
 #endif
+    void DrawEve3D();
+    void ConfigureDetectorPlanes();
+    void DrawDetectorPlanes();
+    void SetEveLineAtt(TEveElement *el, TString branchName);
+    void SetEveMarkerAtt(TEveElement *el, TString branchName);
+    bool SelectTrack(KBTracklet *track);
+    bool SelectHit(KBHit *hit);
 
     void CheckIn();
     void CheckOut();
@@ -194,6 +204,8 @@ class KBRun : public KBTask
     TString fInputTreeName = "";
     TFile *fInputFile = nullptr;
     TChain *fInputTree = nullptr;
+
+    KBParameterContainer fTempPar;
 
     Int_t fNumFriends = 0;
     TObjArray *fFriendTrees = nullptr;
@@ -248,14 +260,28 @@ class KBRun : public KBTask
 
     Double_t fEveScale = 1;
 #endif
-    TString fEveBranches;
+    //TString fEveBranches;
     TString fEveOption;
+
+    vector<Int_t> fSelTrkIDs;
+    vector<Int_t> fIgnTrkIDs;
+    vector<Int_t> fSelPntIDs;
+    vector<Int_t> fIgnPntIDs;
+    vector<Int_t> fSelPDGs;
+    vector<Int_t> fIgnPDGs;
+    vector<Int_t> fSelMCIDs;
+    vector<Int_t> fIgnMCIDs;
+    vector<Int_t> fSelHitPntIDs;
+    vector<Int_t> fIgnHitPntIDs;
+    vector<TString> fSelBranchNames;
+
+    int fNumSelectedBranches;
 
     TObjArray *fCvsDetectorPlaneArray = nullptr;
     TCanvas *fCvsChannelBuffer = nullptr;
     TH1D *fHistChannelBuffer = nullptr;
     TGraph *fGraphChannelBoundary = nullptr;
-    TGraph *fGraphChannelBoundaryNb[20];
+    TGraph *fGraphChannelBoundaryNb[20] = {0};
 
     TString fRunLogFileName;
     std::ofstream fRunLogFileStream;

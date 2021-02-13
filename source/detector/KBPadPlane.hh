@@ -8,6 +8,33 @@
 #include "TVector2.h"
 #include "TH2.h"
 
+/*!
+
+  Any PadPlane class should inherit this class and implement following methods:
+
+  - bool Init()
+  : Initial parameters and setting should be done in this method.
+  This method is called when KBRun::Init() is called.
+  If the class is used separately, the method should be called manually.
+
+  - bool IsInBoundary(Double_t i, Double_t j)
+  : Check if the position (i,j) is inside the pad-plane boundary and return true if so, and return false else.
+
+  - TH2* GetHist(Option_t *option)
+  : This method is not essential but returned histogram is used in EVE.
+
+  - Int_t FindPadID(Double_t i, Double_t j)
+  : Find and return padID from the given position (i,j)
+
+  - Int_t FindPadID(Int_t section, Int_t row, Int_t layer)
+  : Find and return padID from the given (section, row, layer)
+
+  - Double_t PadDisplacement() const
+  : Should return approximate displacements between pads. Doesn't have to be exact.
+  One example of use of this method is calculation of the track continuity in track finding.
+
+ */
+
 class KBPadPlane : public KBDetectorPlane
 {
   public:
@@ -26,8 +53,13 @@ class KBPadPlane : public KBDetectorPlane
     virtual Double_t PadDisplacement() const = 0; ///< Rough (maximum) value of displacements between pads
 
   public:
-    KBPad *GetPadFast(Int_t idx);
-    KBPad *GetPad(Int_t idx);
+    KBPad *GetPadFast(Int_t padID);
+    KBPad *GetPad(Int_t padID);
+
+    KBPad *GetPad(Double_t i, Double_t j)                { return GetPad(FindPadID(i,j)); }
+    KBPad *GetPad(Int_t section, Int_t row, Int_t layer) { return GetPad(FindPadID(section, row, layer));  }
+
+    //KBPad *GetPadByPadID(Int_t padID);
 
     void SetPadArray(TClonesArray *padArray);
     void SetHitArray(TClonesArray *hitArray);

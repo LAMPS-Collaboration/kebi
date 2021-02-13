@@ -25,14 +25,15 @@ class KBHit : public KBWPoint
   protected:
     Int_t fHitID = -1;
     Int_t fTrackID = -1;
-
-    Double_t fAlpha; // TODO the polar angle
+    Double_t fAlpha = -999; // TODO the polar angle
+    Double_t fDX = -999;
+    Double_t fDY = -999;
+    Double_t fDZ = -999;
+    Double_t fSortValue = 0; //! sort earlier if smaller, latter if larger
 
     KBHitArray fHitArray; //!
 
     vector<Int_t> fTrackCandArray;  //!
-
-    Double_t fSortValue = 0; // sort earlier if smaller, latter if larger
 
   public :
     KBHit() { Clear(); }
@@ -58,6 +59,10 @@ class KBHit : public KBWPoint
     void SetHitID(Int_t id);
     void SetTrackID(Int_t id);
     void SetAlpha(Double_t a);
+    void SetDPosition(TVector3 dpos);
+    void SetDX(Double_t dx);
+    void SetDY(Double_t dy);
+    void SetDZ(Double_t dz);
     void SetX(Double_t x);
     void SetY(Double_t y);
     void SetZ(Double_t z);
@@ -75,6 +80,10 @@ class KBHit : public KBWPoint
        Int_t GetHitID()   const;
        Int_t GetTrackID() const;
     Double_t GetAlpha()   const;
+    TVector3 GetDPosition() const;
+    Double_t GetDX()      const;
+    Double_t GetDY()      const;
+    Double_t GetDZ()      const;
     Double_t GetX()       const;
     Double_t GetY()       const;
     Double_t GetZ()       const;

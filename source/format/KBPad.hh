@@ -4,6 +4,7 @@
 #include "KBChannel.hh"
 #include "KBTpcHit.hh"
 #include "KBHitArray.hh"
+#include "KBVector3.hh"
 
 #include "TObject.h"
 #include "TH1D.h"
@@ -19,7 +20,7 @@ class KBPad : public KBChannel
     virtual ~KBPad() {}
 
     virtual void Clear(Option_t *option = "");
-    virtual void Print(Option_t *option = "at") const;
+    virtual void Print(Option_t *option = "") const;
 
     /// option (default is "")
     /// - p : Add Pad[ID] to main title
@@ -65,11 +66,16 @@ class KBPad : public KBChannel
     void SetNoiseAmplitude(Double_t gain);
     Double_t GetNoiseAmplitude() const;
 
+    void SetPosition(KBVector3 pos);
     void SetPosition(Double_t i, Double_t j);
     void GetPosition(Double_t &i, Double_t &j) const;
-    TVector2 GetPosition() const;
+    KBVector3 GetPosition() const;
     Double_t GetI() const;
     Double_t GetJ() const;
+    Double_t GetK() const;
+    Double_t GetX() const;
+    Double_t GetY() const;
+    Double_t GetZ() const;
 
     void AddPadCorner(Double_t i, Double_t j);
     vector<TVector2> *GetPadCorners();
@@ -122,6 +128,9 @@ class KBPad : public KBChannel
     vector<Double_t> *GetMCWeightArray() { return &fMCWeightArray; }
     vector<Double_t> *GetMCTbArray()     { return &fMCTbArray; }
 
+    void SetSortValue(Double_t value) { fSortValue = value; }
+    Double_t GetSortValue() { return fSortValue; }
+
   private:
     bool fActive = false; //!
 
@@ -133,8 +142,7 @@ class KBPad : public KBChannel
     Double_t fBaseLine = 0;
     Double_t fNoiseAmp = 0;
 
-    Double_t fI = -999;
-    Double_t fJ = -999;
+    KBVector3 fPosition = KBVector3(KBVector3::kZ);
 
     vector<TVector2> fPadCorners; //!
 
@@ -154,6 +162,8 @@ class KBPad : public KBChannel
     vector<Double_t> fMCTbArray;      ///< Tb of corresponding Track-ID
 
     bool fGrabed = false; //!
+
+    Double_t fSortValue = -999; //!
 
   ClassDef(KBPad, 1)
 };

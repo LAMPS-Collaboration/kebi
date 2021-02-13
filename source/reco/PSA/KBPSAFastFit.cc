@@ -3,21 +3,23 @@
 ClassImp(KBPSAFastFit)
 
 KBPSAFastFit::KBPSAFastFit()
-: KBPulseGenerator()
 {
-  Init();
 }
 
-KBPSAFastFit::KBPSAFastFit(TString fileName)
-: KBPulseGenerator(fileName)
+bool KBPSAFastFit::Init()
 {
-  Init();
-}
+  KBPSA::Init();
 
-void KBPSAFastFit::Init()
-{
+  fPulseGenerator = KBPulseGenerator::GetPulseGenerator(fPar);
+  fNumAscending = fPulseGenerator -> GetNumAscending();
+  fThresholdTbStep = fPulseGenerator -> GetThresholdTbStep();
+  fNDFTbs = fPulseGenerator -> GetNDFTbs();
+
   fTbStartCut = 512 - fNDFTbs - 1;
   fThresholdOneTbStep = fThresholdTbStep * fThreshold;
+
+
+  return true;
 }
 
 void 
@@ -208,7 +210,7 @@ KBPSAFastFit::LSFitPulse(Double_t *buffer,
     Int_t tb = tbStartOfPulse + iTbPulse;
     Double_t y = buffer[tb];
 
-    Double_t ref = Pulse(tb + 0.5, 1, tbStartOfPulse);
+    Double_t ref = fPulseGenerator -> Pulse(tb + 0.5, 1, tbStartOfPulse);
     refy += ref * y;
     ref2 += ref * ref;
   }
@@ -225,7 +227,7 @@ KBPSAFastFit::LSFitPulse(Double_t *buffer,
   for (Int_t iTbPulse = 0; iTbPulse < ndf; iTbPulse++) {
     Int_t tb = tbStartOfPulse + iTbPulse;
     Double_t val = buffer[tb];
-    Double_t ref = Pulse(tb + 0.5, amplitude, tbStartOfPulse);
+    Double_t ref = fPulseGenerator -> Pulse(tb + 0.5, amplitude, tbStartOfPulse);
     chi2 += (val - ref) * (val - ref);
   }
 }
@@ -247,12 +249,11 @@ KBPSAFastFit::TestPulse(Double_t *adc,
     return false;
   }
 
-  if (amplitude < Pulse(tbHit + 9, amplitudePre, tbHitPre) / 2.5) 
+  if (amplitude < fPulseGenerator -> Pulse(tbHit + 9, amplitudePre, tbHitPre) / 2.5) 
   {
     for (Int_t iTbPulse = -1; iTbPulse < numTbsCorrection; iTbPulse++) {
       Int_t tb = Int_t(tbHit) + iTbPulse;
-      adc[tb] -= Pulse(tb, amplitude, tbHit);
-      //adc[tb] = 0;
+      adc[tb] -= fPulseGenerator -> Pulse(tb, amplitude, tbHit);
     }
 
     return false;
@@ -260,8 +261,7 @@ KBPSAFastFit::TestPulse(Double_t *adc,
 
   for (Int_t iTbPulse = -1; iTbPulse < numTbsCorrection; iTbPulse++) {
     Int_t tb = Int_t(tbHit) + iTbPulse;
-    adc[tb] -= Pulse(tb, amplitude, tbHit);
-    //adc[tb] = 0;
+    adc[tb] -= fPulseGenerator -> Pulse(tb, amplitude, tbHit);
   }
 
 

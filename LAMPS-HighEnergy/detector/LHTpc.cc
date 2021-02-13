@@ -1,6 +1,7 @@
 #include "LHTpc.hh"
 #include "LHPadPlane.hh"
 #include "LHPadPlaneRPad.hh"
+#include "LHPadPlane3.hh"
 
 ClassImp(LHTpc)
 
@@ -36,7 +37,7 @@ TVector3 LHTpc::GetEField(TVector3)
 
 KBPadPlane *LHTpc::GetDriftPlane(TVector3 pos)
 {
-  fDetectorPlaneArray -> At(0);
+  return (KBPadPlane *) fDetectorPlaneArray -> At(0);
 }
 
 bool LHTpc::BuildGeometry()
@@ -85,8 +86,14 @@ bool LHTpc::BuildGeometry()
 bool LHTpc::BuildDetectorPlane()
 {
   KBPadPlane *padplane = nullptr;
-  if (fPar->GetParString("TPCPadPlaneType") == "LHPadPlaneRPad")
-    padplane = new LHPadPlaneRPad();
+
+  if (fPar->CheckPar("TPCPadPlaneType"))
+  {
+    if (fPar->GetParString("PadPlaneType") == "LHPadPlaneRPad")
+      padplane = new LHPadPlaneRPad();
+    else if (fPar->GetParString("PadPlaneType") == "LHPadPlane3")
+      padplane = new LHPadPlane3();
+  }
   else
     padplane = new LHPadPlane();
 

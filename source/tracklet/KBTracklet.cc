@@ -193,3 +193,8 @@ TGraph *KBTracklet::TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, bool (*fis
 
   return fTrajectoryOnPlane;
 }
+
+TGraph *KBTracklet::TrajectoryOnPlane(KBDetectorPlane *plane, Double_t scale)
+{
+  return TrajectoryOnPlane(plane->GetAxis1(), plane->GetAxis2(), scale);
+}

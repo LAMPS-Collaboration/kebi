@@ -119,6 +119,13 @@ void KBTpcHit::Copy(TObject &obj) const
   tpchit.fTb        = fTb       ;
 }
 
+void KBTpcHit::AddHit(KBTpcHit *hit)
+{
+  auto w0 = fW;
+  KBHit::AddHit((KBHit *) hit);
+  fTb = (w0*fTb + hit->GetCharge()*hit->GetTb()) / (w0+hit->GetCharge());
+}
+
 TF1 *KBTpcHit::GetPulseFunction(Option_t *)
 {
   auto pulseGen = KBPulseGenerator::GetPulseGenerator();

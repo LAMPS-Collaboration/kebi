@@ -16,8 +16,10 @@ class KBGear
     KBGear() {};
     virtual ~KBGear() {};
 
-    virtual void SetParameterContainer(KBParameterContainer *par);
-    virtual void SetParameterContainer(TString fname);
+    void CreateParameterContainer(bool debug=false);
+
+    void SetParameterContainer(KBParameterContainer *par);
+    void SetParameterContainer(TString fname);
 
     virtual void AddParameterContainer(KBParameterContainer *par);
     virtual void AddParameterContainer(TString fname);

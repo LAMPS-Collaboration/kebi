@@ -90,8 +90,15 @@ void KBLinearTrack::SetTrack(TVector3 pos1, TVector3 pos2)
   KBGeoLine::SetLine(pos1, pos2);
 }
 
-void KBLinearTrack::Clear(Option_t *)
+void KBLinearTrack::Clear(Option_t *option)
 {
+  KBTracklet::Clear(option);
+
+  fQuality = -1;
+  fWidth = -1;
+  fHeight = -1;
+  fPerpDirectionInPlane = TVector3();
+
   fX1 = -1;
   fY1 = -1;
   fZ1 = -1;
@@ -116,6 +123,23 @@ bool KBLinearTrack::Fit()
 
   SetLine(line.GetX1(), line.GetY1(), line.GetZ1(), line.GetX2(), line.GetY2(), line.GetZ2());
   fRMS = line.GetRMS();
+
+  Double_t lengthMax = -DBL_MAX;
+  Double_t lengthMin = DBL_MAX;
+  KBHit *hitAtLengthMax = nullptr;
+  KBHit *hitAtLengthMin = nullptr;
+  auto numHits = fHitArray.GetNumHits();
+  for (auto iHit=0; iHit<numHits; ++iHit) {
+    auto hit = fHitArray.GetHit(iHit);
+    auto posHit = hit -> GetPosition();
+    auto lengthOnTrack = Length(posHit);
+    if (lengthOnTrack > lengthMax) { lengthMax = lengthOnTrack; hitAtLengthMax = hit; }
+    if (lengthOnTrack < lengthMin) { lengthMin = lengthOnTrack; hitAtLengthMin = hit; }
+  }
+  TVector3 posMin = ClosestPointOnLine(hitAtLengthMin -> GetPosition());
+  TVector3 posMax = ClosestPointOnLine(hitAtLengthMax -> GetPosition());
+  SetLine(posMin, posMax);
+
   return true;
 }
 
@@ -175,15 +199,24 @@ Double_t KBLinearTrack::GetQuality() { return fQuality; }
 
 TGraph *KBLinearTrack::TrajectoryOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t)
 {
-  auto graph = new TGraph();
+  if (fTrajectoryOnPlane == nullptr) {
+    fTrajectoryOnPlane = new TGraph();
+    fTrajectoryOnPlane -> SetLineColor(kRed);
+    fTrajectoryOnPlane -> SetLineWidth(2);
+  }
 
   KBVector3 posi(fX1,fY1,fZ1);
   KBVector3 posf(fX2,fY2,fZ2);
 
-  graph -> SetPoint(0,posi.At(axis1), posi.At(axis2));
-  graph -> SetPoint(1,posf.At(axis1), posf.At(axis2));
+  fTrajectoryOnPlane -> SetPoint(0,posi.At(axis1), posi.At(axis2));
+  fTrajectoryOnPlane -> SetPoint(1,posf.At(axis1), posf.At(axis2));
 
-  return graph;
+  return fTrajectoryOnPlane;
+}
+
+TGraph *KBLinearTrack::TrajectoryOnPlane(KBDetectorPlane *plane, Double_t scale)
+{
+  return TrajectoryOnPlane(plane->GetAxis1(), plane->GetAxis2(), scale);
 }
 
 TGraph *KBLinearTrack::CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale)

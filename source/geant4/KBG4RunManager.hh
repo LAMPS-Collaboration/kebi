@@ -13,7 +13,7 @@ using namespace std;
 #include "G4RunManager.hh"
 #include "G4VPhysicalVolume.hh"
 #include "TString.h"
-#include "globals.hh"
+//#include "globals.hh"
 
 #include "TFile.h"
 #include "TTree.h"

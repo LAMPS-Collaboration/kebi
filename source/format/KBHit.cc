@@ -16,10 +16,14 @@ void KBHit::Clear(Option_t *option)
 
   fHitID = -1;
   fTrackID = -1;
-
-  fTrackCandArray.clear();
+  fAlpha = -999;
+  fDX = -999;
+  fDY = -999;
+  fDZ = -999;
+  fSortValue = 0;
 
   fHitArray.Clear("C");
+  fTrackCandArray.clear();
 }
 
 void KBHit::Print(Option_t *option) const
@@ -72,6 +76,9 @@ void KBHit::CopyFrom(KBHit *hit)
   fMCError   = hit -> GetMCError  ();
   fMCID      = hit -> GetMCID     ();
   fMCPurity  = hit -> GetMCPurity ();
+  fDX        = hit -> GetDX       ();
+  fDY        = hit -> GetDY       ();
+  fDZ        = hit -> GetDZ       ();
   fX         = hit -> GetX        ();
   fY         = hit -> GetY        ();
   fZ         = hit -> GetZ        ();
@@ -216,6 +223,10 @@ void KBHit::PropagateMC()
 void KBHit::SetHitID(Int_t id) { fHitID = id; }
 void KBHit::SetTrackID(Int_t id) { fTrackID = id; }
 void KBHit::SetAlpha(Double_t a) { fAlpha = a; }
+void KBHit::SetDPosition(TVector3 dpos) { fDX = dpos.X(); fDY = dpos.Y(); fDZ = dpos.Z(); }
+void KBHit::SetDX(Double_t dx) { fDX = dx; }
+void KBHit::SetDY(Double_t dy) { fDY = dy; }
+void KBHit::SetDZ(Double_t dz) { fDZ = dz; }
 void KBHit::SetX(Double_t x) { fX = x; }
 void KBHit::SetY(Double_t y) { fY = y; }
 void KBHit::SetZ(Double_t z) { fZ = z; }
@@ -242,6 +253,10 @@ void KBHit::RemoveHit(KBHit *hit)
    Int_t KBHit::GetHitID()   const { return fHitID; }
    Int_t KBHit::GetTrackID() const { return fTrackID; }
 Double_t KBHit::GetAlpha()   const { return fAlpha; }
+TVector3 KBHit::GetDPosition() const { return TVector3(fDX,fDY,fDZ); }
+Double_t KBHit::GetDX()      const { return fDX; }
+Double_t KBHit::GetDY()      const { return fDY; }
+Double_t KBHit::GetDZ()      const { return fDZ; }
 Double_t KBHit::GetX()       const { return fX; }
 Double_t KBHit::GetY()       const { return fY; }
 Double_t KBHit::GetZ()       const { return fZ; }

@@ -53,6 +53,7 @@ class KBODRFitter
      *    distance from point to the centroid for fitting line.
      */
     void AddPoint(Double_t x, Double_t y, Double_t z, Double_t w = 1);
+    void PreAddPoint(Double_t x, Double_t y, Double_t z, Double_t w = 1);
 
     void SetMatrixA(Double_t c00, 
                     Double_t c01, 

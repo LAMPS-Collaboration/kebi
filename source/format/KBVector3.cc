@@ -12,14 +12,8 @@ void KBVector3::Print(Option_t *option) const
   TString opts = TString(option);
 
   Int_t rank = 0;
-  if (opts.Index("r1")>=0) {
-    rank = 1;
-    opts.ReplaceAll("r1","");
-  }
-  if (opts.Index("r2")>=0) {
-    rank = 2;
-    opts.ReplaceAll("r2","");
-  }
+  if (opts.Index("r1")>=0) { rank = 1; opts.ReplaceAll("r1",""); }
+  if (opts.Index("r2")>=0) { rank = 2; opts.ReplaceAll("r2",""); }
 
   if (opts.Index("s")>=0) {
     if (fReferenceAxis != KBVector3::kNon)
@@ -47,13 +41,7 @@ void KBVector3::Clear(Option_t *)
 
 void KBVector3::SetReferenceAxis(KBVector3::Axis referenceAxis)
 {
-  if (referenceAxis!=KBVector3::kZ  &&
-      referenceAxis!=KBVector3::kY  &&
-      referenceAxis!=KBVector3::kX  &&
-      referenceAxis!=KBVector3::kMZ &&
-      referenceAxis!=KBVector3::kMY &&
-      referenceAxis!=KBVector3::kMX)
-  {
+  if (!IsGlobalAxis(referenceAxis)) {
     kr_error(0) << "Reference axis should be one of: kX(1), kY(2), kZ(3), kMX(4), kMY(5), kMZ(6)" << endl;
     return;
   }
@@ -61,6 +49,35 @@ void KBVector3::SetReferenceAxis(KBVector3::Axis referenceAxis)
 }
 
 KBVector3::Axis KBVector3::GetReferenceAxis() const { return fReferenceAxis; }
+
+KBVector3::Axis KBVector3::GetGlobalAxis(Axis axisIn) const
+{
+  if (IsGlobalAxis(axisIn))
+    return axisIn;
+
+  Axis axisOut = kNon;
+  Axis axisRef = fReferenceAxis;
+  if (axisRef==kNon)
+    return kNon;
+
+  bool negativeCorrection = 0;
+  if (int(axisIn)%2==0) {
+    negativeCorrection = 1;
+    axisIn = KBVector3::Axis(int(axisIn)-1);
+  }
+  if (int(axisRef)%2==0) {
+    negativeCorrection = !negativeCorrection;
+    axisRef = KBVector3::Axis(int(axisRef)-1);
+  }
+
+       if (axisRef==kZ)  { axisOut = (  (axisIn==kI) ?kX :((axisIn==kJ) ?kY :kZ)  ); }
+  else if (axisRef==kY)  { axisOut = (  (axisIn==kI) ?kZ :((axisIn==kJ) ?kX :kY)  ); }
+  else if (axisRef==kX)  { axisOut = (  (axisIn==kI) ?kY :((axisIn==kJ) ?kZ :kX)  ); }
+  else {}
+
+  axisOut = Axis(int(axisOut)+int(negativeCorrection));
+  return axisOut;
+}
 
 Double_t KBVector3::At(KBVector3::Axis ka) const
 {
@@ -100,15 +117,27 @@ void KBVector3::AddAt(Double_t value, Axis ka, bool ignoreNegative)
     kr_error(0) << "Cannot use method AddAt() for axis kNon" << endl;
 }
 
+void KBVector3::SetAt(Double_t value, Axis ka, bool ignoreNegative)
+{
+       if (ka == KBVector3::kX)  SetX(value);
+  else if (ka == KBVector3::kY)  SetY(value);
+  else if (ka == KBVector3::kZ)  SetZ(value);
+  else if (ka == KBVector3::kMX) { if (ignoreNegative) SetX(value); else SetX(-value); }
+  else if (ka == KBVector3::kMY) { if (ignoreNegative) SetY(value); else SetY(-value); }
+  else if (ka == KBVector3::kMZ) { if (ignoreNegative) SetZ(value); else SetZ(-value); }
+  else if (ka == KBVector3::kI)  SetI(value);
+  else if (ka == KBVector3::kJ)  SetJ(value);
+  else if (ka == KBVector3::kK)  SetK(value);
+  else if (ka == KBVector3::kMI) { if (ignoreNegative) SetI(value); else SetI(-value); }
+  else if (ka == KBVector3::kMJ) { if (ignoreNegative) SetJ(value); else SetJ(-value); }
+  else if (ka == KBVector3::kMK) { if (ignoreNegative) SetK(value); else SetK(-value); }
+  else
+    kr_error(0) << "Cannot use method AddAt() for axis kNon" << endl;
+}
+
 void KBVector3::SetIJKR(Double_t i, Double_t j, Double_t k, KBVector3::Axis referenceAxis)
 {
-  if (referenceAxis!=KBVector3::kX  &&
-      referenceAxis!=KBVector3::kY  &&
-      referenceAxis!=KBVector3::kZ  &&
-      referenceAxis!=KBVector3::kMX &&
-      referenceAxis!=KBVector3::kMY &&
-      referenceAxis!=KBVector3::kMZ)
-  {
+  if (!IsGlobalAxis(referenceAxis)) {
     kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
     return;
   }
@@ -119,118 +148,32 @@ void KBVector3::SetIJKR(Double_t i, Double_t j, Double_t k, KBVector3::Axis refe
 
 void KBVector3::SetIJK(Double_t i, Double_t j, Double_t k)
 {
-       if (fReferenceAxis == KBVector3::kZ)  { SetX(i); SetY(j); SetZ(k);  return; }
-  else if (fReferenceAxis == KBVector3::kY)  { SetZ(i); SetX(j); SetY(k);  return; }
-  else if (fReferenceAxis == KBVector3::kX)  { SetY(i); SetZ(j); SetX(k);  return; }
-  else if (fReferenceAxis == KBVector3::kMZ) { SetY(i); SetX(j); SetZ(-k); return; }
-  else if (fReferenceAxis == KBVector3::kMY) { SetX(i); SetZ(j); SetY(-k); return; }
-  else if (fReferenceAxis == KBVector3::kMX) { SetZ(i); SetY(j); SetX(-k); return; }
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return;
-  }
+  SetAt(i, GetGlobalAxis(kI));
+  SetAt(j, GetGlobalAxis(kJ));
+  SetAt(k, GetGlobalAxis(kK));
 }
 
-void KBVector3::SetI(Double_t i)
+void KBVector3::SetI(Double_t i) { SetAt(i, GetGlobalAxis(kI)); }
+void KBVector3::SetJ(Double_t j) { SetAt(j, GetGlobalAxis(kJ)); }
+void KBVector3::SetK(Double_t k) { SetAt(k, GetGlobalAxis(kK)); }
+
+Double_t KBVector3::I() const { return At(GetGlobalAxis(kI)); }
+Double_t KBVector3::J() const { return At(GetGlobalAxis(kJ)); }
+Double_t KBVector3::K() const { return At(GetGlobalAxis(kK)); }
+
+TVector3 KBVector3::GetXYZ() const { return TVector3(X(), Y(), Z()); }
+TVector3 KBVector3::GetIJK() const { return TVector3(I(), J(), K()); }
+
+TArrow *KBVector3::ArrowXY() { return KBGeoLine(TVector3(),GetXYZ()).DrawArrowXY(); }
+TArrow *KBVector3::ArrowYZ() { return KBGeoLine(TVector3(),GetXYZ()).DrawArrowYZ(); }
+TArrow *KBVector3::ArrowZX() { return KBGeoLine(TVector3(),GetXYZ()).DrawArrowZX(); }
+
+void KBVector3::Rotate(Double_t angle, Axis ka)
 {
-       if (fReferenceAxis == KBVector3::kZ)  { SetX(i); return; }
-  else if (fReferenceAxis == KBVector3::kY)  { SetZ(i); return; }
-  else if (fReferenceAxis == KBVector3::kX)  { SetY(i); return; }
-  else if (fReferenceAxis == KBVector3::kMZ) { SetY(i); return; }
-  else if (fReferenceAxis == KBVector3::kMY) { SetX(i); return; }
-  else if (fReferenceAxis == KBVector3::kMX) { SetZ(i); return; }
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return;
-  }
-}
-
-void KBVector3::SetJ(Double_t j)
-{
-       if (fReferenceAxis == KBVector3::kZ) { SetY(j); return; }
-  else if (fReferenceAxis == KBVector3::kY) { SetX(j); return; }
-  else if (fReferenceAxis == KBVector3::kX) { SetZ(j); return; }
-  else if (fReferenceAxis == KBVector3::kZ) { SetX(j); return; }
-  else if (fReferenceAxis == KBVector3::kY) { SetZ(j); return; }
-  else if (fReferenceAxis == KBVector3::kX) { SetY(j); return; }
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return;
-  }
-}
-
-void KBVector3::SetK(Double_t k)
-{
-       if (fReferenceAxis == KBVector3::kZ)  { SetZ(k);  return; }
-  else if (fReferenceAxis == KBVector3::kY)  { SetY(k);  return; }
-  else if (fReferenceAxis == KBVector3::kX)  { SetX(k);  return; }
-  else if (fReferenceAxis == KBVector3::kMZ) { SetZ(-k); return; }
-  else if (fReferenceAxis == KBVector3::kMY) { SetY(-k); return; }
-  else if (fReferenceAxis == KBVector3::kMX) { SetX(-k); return; }
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return;
-  }
-}
-
-Double_t KBVector3::I() const
-{
-       if (fReferenceAxis == KBVector3::kZ)  return X();
-  else if (fReferenceAxis == KBVector3::kY)  return Z();
-  else if (fReferenceAxis == KBVector3::kX)  return Y();
-  else if (fReferenceAxis == KBVector3::kMZ) return Y();
-  else if (fReferenceAxis == KBVector3::kMY) return X();
-  else if (fReferenceAxis == KBVector3::kMX) return Z();
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return -999;
-  }
-}
-
-Double_t KBVector3::J() const
-{
-       if (fReferenceAxis == KBVector3::kZ)  return Y();
-  else if (fReferenceAxis == KBVector3::kY)  return X();
-  else if (fReferenceAxis == KBVector3::kX)  return Z();
-  else if (fReferenceAxis == KBVector3::kMZ) return X();
-  else if (fReferenceAxis == KBVector3::kMY) return Z();
-  else if (fReferenceAxis == KBVector3::kMX) return Y();
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return -999;
-  }
-}
-
-Double_t KBVector3::K() const
-{
-       if (fReferenceAxis == KBVector3::kZ)  return Z();
-  else if (fReferenceAxis == KBVector3::kY)  return Y();
-  else if (fReferenceAxis == KBVector3::kX)  return X();
-  else if (fReferenceAxis == KBVector3::kMZ) return -Z();
-  else if (fReferenceAxis == KBVector3::kMY) return -Y();
-  else if (fReferenceAxis == KBVector3::kMX) return -X();
-  else {
-    kr_error(0) << "Reference axis should be one of; kX(1), kMX(2), kY(3), kMY(4), kZ(5), kMZ(6)" << endl;
-    return -999;
-  }
-}
-
-TVector3 KBVector3::GetXYZ() { return TVector3(X(), Y(), Z()); }
-TVector3 KBVector3::GetIJK() { return TVector3(I(), J(), K()); }
-
-TArrow *KBVector3::ArrowXY() {
-  auto v3 = KBGeoLine(TVector3(),GetXYZ());
-  return v3.DrawArrowXY();
-}
-
-TArrow *KBVector3::ArrowYZ() {
-  auto v3 = KBGeoLine(TVector3(),GetXYZ());
-  return v3.DrawArrowYZ();
-}
-
-TArrow *KBVector3::ArrowZX() {
-  auto v3 = KBGeoLine(TVector3(),GetXYZ());
-  return v3.DrawArrowZX();
+  if (ka==kNon) ka = fReferenceAxis;
+  KBVector3 rotationVector(fReferenceAxis);
+  rotationVector.SetAt(1,GetGlobalAxis(ka));
+  TVector3::Rotate(angle, rotationVector.GetXYZ());
 }
 
 KBVector3 operator - (const KBVector3 &a, const KBVector3 &b) {
@@ -415,6 +358,7 @@ KBVector3::Axis operator ++ (const KBVector3::Axis &a)
   return KBVector3::kNon;
 }
 
+/*
 Int_t KBVector3::Compare(const TObject *obj) const
 {
   auto compare = ((KBVector3 *) obj) -> SortBy();
@@ -423,7 +367,9 @@ Int_t KBVector3::Compare(const TObject *obj) const
   else if (fSortBy < compare) return -1;
   else                        return 0;
 }
+*/
 
+/*
 Double_t KBVector3::Angle2(const KBVector3 &q, TVector3 ref) const
 {
   Double_t ptot2 = Mag2()*q.Mag2();
@@ -439,3 +385,4 @@ Double_t KBVector3::Angle2(const KBVector3 &q, TVector3 ref) const
       return -TMath::ACos(arg);
   }
 }
+*/

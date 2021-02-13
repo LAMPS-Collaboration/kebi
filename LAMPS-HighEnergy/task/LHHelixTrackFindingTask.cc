@@ -12,7 +12,7 @@ bool LHHelixTrackFindingTask::Init()
   auto run = KBRun::GetRun();
   fPar = run -> GetParameterContainer();
   fTpc = (LHTpc *) (run -> GetDetectorSystem() -> GetTpc());
-  fPadPlane = (LHPadPlane *) fTpc -> GetPadPlane();
+  fPadPlane = (KBPadPlane *) fTpc -> GetPadPlane();
 
   fHitArray = (TClonesArray *) run -> GetBranch(fBranchNameHit);
 

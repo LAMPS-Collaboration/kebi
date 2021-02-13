@@ -33,6 +33,7 @@
 #include "KBContainer.hh"
 #include "KBTracklet.hh"
 #include "KBMCStep.hh"
+#include "KBPulseGenerator.hh"
 
 #include <unistd.h>
 #include <iostream>
@@ -57,8 +58,8 @@ KBRun::KBRun()
   fCvsDetectorPlaneArray = new TObjArray();
   fTemporaryBranchArray = new TObjArray();
   fEveEventManagerArray = new TObjArray();
-  fBranchPtr = new TObject*[1000];
-  for (Int_t iBranch = 0; iBranch < 1000; ++iBranch)
+  fBranchPtr = new TObject*[100];
+  for (Int_t iBranch = 0; iBranch < 100; ++iBranch)
     fBranchPtr[iBranch] = nullptr;
 
   fDetectorSystem = new KBDetectorSystem();
@@ -82,14 +83,15 @@ KBRun::KBRun()
       continue;
     else {
       fListOfGitHashTags.push_back(hashTag);
-      revListOfVersionMarks.push_back(TString(branchName+"."+(numTags+1)+"."+hashTag));
+      //revListOfVersionMarks.push_back(TString(branchName+"."+(numTags+1)+"."+hashTag));
+      revListOfVersionMarks.push_back(hashTag);
       numTags++;
     }
   }
   if (numTags>=0)
     fListOfNumTagsInGitBranches.push_back(numTags);
 
-  auto numBranches = fListOfGitBranches.size();
+  Int_t numBranches = fListOfGitBranches.size();
   auto idx1 = 0;
   auto idx2 = 0;
   for (auto iBranch=0; iBranch<numBranches; ++iBranch)
@@ -100,6 +102,8 @@ KBRun::KBRun()
     }
     idx1 = idx2+1;
   }
+
+  CreateParameterContainer();
 }
 
 TString KBRun::GetKEBIVersion()       { return TString(KEBI_VERSION); }
@@ -121,7 +125,11 @@ void KBRun::PrintKEBI()
   cout << "===========================================================================================" << endl;
 }
 
-void KBRun::SetRunName(TString name) { fRunName = name; }
+void KBRun::SetRunName(TString name, Int_t id) {
+  fRunName = name;
+  if (id>-999)
+    SetRunID(id);
+}
 TString KBRun::GetRunName() const { return fRunName; }
 
 void KBRun::SetRunID(Int_t id) { fRunID = id; }
@@ -141,7 +149,7 @@ void KBRun::Print(Option_t *option) const
   kb_out << endl;
   kb_out << "===========================================================================================" << endl;
   kb_info << "Run" << endl;
-  if (fPar != nullptr && option_print.Index("p") >= 0) {
+  if (option_print.Index("p") >= 0) {
     kb_out << "-------------------------------------------------------------------------------------------" << endl;
     fPar -> Print();
   }
@@ -200,73 +208,84 @@ void KBRun::Print(Option_t *option) const
   kb_out << "===========================================================================================" << endl;
 }
 
-TString KBRun::ConfigureDataPath(TString &name, bool search)
+TString KBRun::GetFileVersion(TString name)
 {
-  name = ConfigureEnv(name);
-  TString softwareVersion;
+  auto array = name.Tokenize(".");
+  if (array -> GetEntries()>=2) {
+    TString kbversion = ((TObjString *) array->At(array->GetEntriesFast()-2)) -> GetString();
+    if (kbversion.Sizeof()==8)
+      return kbversion;
+  }
+  return "";
+}
 
-  TString pathPWD = getenv("PWD"); pathPWD = pathPWD + "/";
-  TString pathKEBI = TString(KEBI_PATH) + "/data/";
+TString KBRun::ConfigureDataPath(TString name, bool search, TString dataPath, bool isRootFile)
+{
+  if (name == "last") {
+    name = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
+    return name;
+  }
 
   TString fullName;
+  //TString softwareVersion;
 
-  if (name == "last") {
-    fullName = TString(KEBI_PATH) + "/data/LAST_OUTPUT";
-    name = fullName;
-    return softwareVersion;
+  name = KBRun::ConfigureEnv(name);
+  dataPath = KBRun::ConfigureEnv(dataPath);
+  if (isRootFile) {
+    if (!name.EndsWith(".root"))
+      name = name + ".root";
   }
-
-  if (name.Index(".root") != name.Sizeof()-6)
-    name = name + ".root";
 
   bool hasVersion = false;
-  auto array = name.Tokenize(".");
-  if (array->GetEntries()>=5) {
-    auto numEntries = array -> GetEntries();
-    auto branchName = ((TObjString *) array->At(numEntries-4)) -> GetString();
-    bool foundBranch = false;
-    for (auto bname : fListOfGitBranches) {
-      if (branchName==bname) {
-        foundBranch = true;
-        auto version1 = ((TObjString *) array->At(numEntries-4)) -> GetString();
-        auto version2 = ((TObjString *) array->At(numEntries-3)) -> GetString();
-        auto version3 = ((TObjString *) array->At(numEntries-2)) -> GetString();
-        softwareVersion = version1 + "." + version2 + "." + version3;
-        break;
-      }
-    }
-    if (foundBranch)
-      hasVersion = true;
-  }
+  //auto array = name.Tokenize(".");
+
+  TString pathKEBIData = TString(KEBI_PATH) + "/data/";
 
   if (search)
   {
+    string line;
+    TString hashTag, branchName;
+    ifstream log_branch_list(TString(KEBI_PATH)+"/log/KBBranchList.log");
+    std::vector<TString> listOfHashVersions;
+    while (getline(log_branch_list, line)) {
+      istringstream ss(line);
+      ss >> hashTag;
+      if (hashTag=="__BRANCH__") continue;
+      else if (hashTag.IsNull() || hashTag.Sizeof() !=8) continue;
+      else listOfHashVersions.push_back(hashTag);
+    }
+
     if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
       bool found = false;
 
-      TString pathList[] = {fDataPath, pathPWD, pathPWD+"data/", pathKEBI};
+      TString pathPWD = getenv("PWD"); pathPWD = pathPWD + "/";
+      TString pathPWDData = pathPWD + "/data/";
+      TString pathList[] = {dataPath, pathPWD, pathPWDData, pathKEBIData};
 
       for (auto path : pathList) {
         fullName = path + name;
-        if (CheckFileExistence(fullName,0)) {
-          kb_info << fullName << " is found!" << endl;
+        if (KBRun::CheckFileExistence(fullName)) {
+          //kb_info << fullName << " is found!" << endl;
           found = true;
-          softwareVersion = "";
+          //softwareVersion = "";
           break;
         }
 
         TString vxName = fullName;
         bool breakFlag = false;
-        for (auto versionMark : fListOfVersionMarks)
-        {
-          fullName = vxName;
-          fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
-          if (CheckFileExistence(fullName,0)) {
-            kb_info << fullName << " is found!" << endl;
-            found = true;
-            breakFlag = true;
-            softwareVersion = versionMark;
-            break;
+        if (fullName.EndsWith(".root")) {
+          for (auto iv=int(listOfHashVersions.size())-1; iv>=0; --iv)
+          //for (auto versionMark : listOfHashVersions)
+          {
+            auto versionMark = listOfHashVersions.at(iv);
+            fullName = vxName;
+            fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
+            if (KBRun::CheckFileExistence(fullName)) {
+              found = true;
+              breakFlag = true;
+              //softwareVersion = versionMark;
+              break;
+            }
           }
         }
         if (breakFlag)
@@ -276,60 +295,69 @@ TString KBRun::ConfigureDataPath(TString &name, bool search)
 
       if (found) {
         name = fullName;
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
       else {
         name = "";
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
     }
     else {
       fullName = name;
-      if (CheckFileExistence(fullName,0)) {
-        kb_info << fullName << " is found!" << endl;
+      if (KBRun::CheckFileExistence(fullName)) {
+        //kb_info << fullName << " is found!" << endl;
         name = fullName;
-        return softwareVersion;
+        //return softwareVersion;
+        return name;
       }
 
       TString vxName = fullName;
-      for (TString versionMark : fListOfVersionMarks)
+      for (TString versionMark : listOfHashVersions)
       {
         fullName = vxName;
         fullName.ReplaceAll(".root",TString(".")+versionMark+".root");
-        if (CheckFileExistence(fullName,0)) {
-          kb_info << fullName << " is found!" << endl;
+        if (KBRun::CheckFileExistence(fullName)) {
+          //kb_info << fullName << " is found!" << endl;
           name = fullName;
-          softwareVersion = versionMark;
-          return softwareVersion;
+          //softwareVersion = versionMark;
+          //return softwareVersion;
+          return name;
         }
       }
 
       name = "";
-      return softwareVersion;
+      //return softwareVersion;
+      return name;
     }
   }
   else {
     if (name[0] != '.' && name[0] != '/' && name[0] != '$' && name != '~') {
-      if (fDataPath.IsNull())
-        fullName = pathKEBI + name;
+      if (dataPath.IsNull())
+        fullName = pathKEBIData + name;
       else
-        fullName = fDataPath + "/" + name;
+        fullName = dataPath + "/" + name;
     }
     else
       fullName = name;
 
     if (!hasVersion) {
-      fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION+".root");
-      softwareVersion = KEBI_VERSION;
+      fullName.ReplaceAll(".root",TString(".")+KEBI_VERSION_SHORT+".root");
+      //softwareVersion = KEBI_VERSION_SHORT;
     }
 
     name = fullName;
-    return softwareVersion;
+    //return softwareVersion;
+    return name;
   }
 }
 
 TString KBRun::ConfigureEnv(TString name)
 {
+  if (name.Index("$") < 0)
+    return name;
+
   TString head;
   if (name[0] == '/') head = "/";
   TString fullName = head;
@@ -337,10 +365,16 @@ TString KBRun::ConfigureEnv(TString name)
   TObjArray *tokens = name.Tokenize("/");
 
   for (auto iToken = 0; iToken < tokens -> GetEntries(); ++iToken) {
+
     TString token = ((TObjString *) tokens -> At(iToken)) -> GetString();
     if (token[0] == '$') {
-      TString envName = token(1,token.Sizeof()-2);
-      token = gSystem -> Getenv(envName);
+      TString tokenIn = TString(token(1,token.Sizeof()-1-1));
+      TString tokenOut = gSystem -> Getenv(tokenIn);
+      if (tokenOut.IsNull()) {
+        tokenIn = TString(token(2,token.Sizeof()-2-2));
+        tokenOut = gSystem -> Getenv(tokenIn);
+      }
+      token = tokenOut;
     }
     fullName += token + "/";
   }
@@ -349,7 +383,7 @@ TString KBRun::ConfigureEnv(TString name)
     fullName = fullName + "/";
 
   if (fullName.Index("$") >= 0)
-    return ConfigureEnv(fullName);
+    return KBRun::ConfigureEnv(fullName);
 
   return fullName;
 }
@@ -358,22 +392,24 @@ void KBRun::SetDataPath(TString path) { fDataPath = path; }
 TString KBRun::GetDataPath() { return fDataPath; }
 
 void KBRun::SetInputFile(TString fileName, TString treeName) {
-  fInputFileName = fileName;
-  fInputVersion = ConfigureDataPath(fInputFileName,true);
+  fInputFileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
+  fInputVersion = GetFileVersion(fInputFileName);
   fInputTreeName = treeName;
 }
 
-void KBRun::AddInput(TString fileName) {
-  ConfigureDataPath(fileName,true);
+void KBRun::AddInputFile(TString fileName, TString treeName) {
+  fileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
   fInputFileNameArray.push_back(fileName);
+  fInputTreeName = treeName;
 }
 void KBRun::AddFriend(TString fileName) {
-  ConfigureDataPath(fileName,true);
+  fileName = KBRun::ConfigureDataPath(fileName,true,fDataPath);
   fFriendFileNameArray.push_back(fileName);
 }
 void KBRun::SetInputTreeName(TString treeName) { fInputTreeName = treeName; }
 
 TFile *KBRun::GetInputFile() { return fInputFile; }
+TTree *KBRun::GetInputTree() const { return (TTree *) fInputTree; }
 TChain *KBRun::GetInputChain()  const { return fInputTree; }
 TChain *KBRun::GetFriendChain(Int_t iFriend)  const { return ((TChain *) fFriendTrees -> At(iFriend)); }
 
@@ -398,7 +434,7 @@ bool KBRun::Init()
   if (fInitialized)
   fInitialized = false;
 
-  kb_print << "Initializing" << endl;
+  kb_info << "Initializing" << endl;
 
   GetDatabasePDG();
 
@@ -408,10 +444,10 @@ bool KBRun::Init()
     idxInput = 1;
   }
 
-  if (fInputFileName.IsNull() == false) {
+  if (!fInputFileName.IsNull()) {
     kb_out << endl;
-    if (!CheckFileExistence(fInputFileName)) {
-      kb_print << "given input file deos not exist!" << endl;
+    if (!KBRun::CheckFileExistence(fInputFileName)) {
+      kb_info << "given input file deos not exist!" << endl;
       return false;
     }
     fInputFile = new TFile(fInputFileName, "read");
@@ -421,12 +457,12 @@ bool KBRun::Init()
 
     fInputTree = new TChain(fInputTreeName);
     fInputTree -> AddFile(fInputFileName);
-    kb_print << "Input file : " << fInputFileName << endl;
+    kb_info << "Input file : " << fInputFileName << endl;
 
     Int_t nInputs = fInputFileNameArray.size();
     for (Int_t iInput = idxInput; iInput < nInputs; iInput++) {
       fInputTree -> AddFile(fInputFileNameArray[iInput]);
-      kb_print << "Input file : " << fInputFileNameArray[iInput] << endl;
+      kb_info << "Input file : " << fInputFileNameArray[iInput] << endl;
     }
 
     fNumFriends = fFriendFileNameArray.size();
@@ -485,16 +521,23 @@ bool KBRun::Init()
       }
     }
   }
+  else {
+    kb_warning << "Input file is not set!" << endl;
+  }
 
-  if (fPar == nullptr) {
+  //if (fPar->IsEmpty())
+  {
     if (fInputFile != nullptr && fInputFile -> Get("ParameterContainer") != nullptr) {
-      fPar = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
+      auto par = (KBParameterContainer *) fInputFile -> Get("ParameterContainer");
+      AddParameterContainer(par);
       kb_info << "Parameter container found in " << fInputFileName << endl;
     }
     else {
-      kb_error << "FAILED to load parameter container." << endl;
-      return false;
+      kb_warning << "FAILED to load parameter container from the input file." << endl;
+      //return false;
     }
+
+    fPar -> AddPar(&fTempPar);
   }
 
   if (fInputFile != nullptr) {
@@ -539,13 +582,19 @@ bool KBRun::Init()
   fRunHeader -> SetPar("RunID",fRunID);
   if (fInputFileName.IsNull() == false)
     fRunHeader -> SetPar("InputFile",fInputFileName);
+  if (fOutputFileName.IsNull() == false)
+    fRunHeader -> SetPar("OutputFile",fOutputFileName);
+  if (fSplit>0) {
+    fRunHeader -> SetPar("Split",fSplit);
+    fRunHeader -> SetPar("NumEventsInSplit",int(fNumSplitEntries));
+  }
 
   if (fDetectorSystem -> GetEntries() != 0) {
     fDetectorSystem -> SetParameterContainer(fPar);
     fDetectorSystem -> Init();
     fDetectorSystem -> SetTransparency(80);
-    kb_print << fDetectorSystem -> GetName() << " initialized" << endl;
-    kb_out << endl;
+    kb_info << fDetectorSystem -> GetName() << " initialized" << endl;
+    fDetectorSystem -> Print();
   }
 
   if (fOutputFileName.IsNull()) {
@@ -556,29 +605,29 @@ bool KBRun::Init()
 
       if (!fTag.IsNull())
         fOutputFileName = fOutputFileName + "." + fTag;
-      else
-        fOutputFileName = fOutputFileName + ".out";
 
       if (fSplit != -1)
-        fOutputFileName = fOutputFileName + Form(".%d",fSplit);
+        fOutputFileName = fOutputFileName + Form(".s%d",fSplit);
 
-      fOutputVersion = ConfigureDataPath(fOutputFileName);
+      fOutputFileName = KBRun::ConfigureDataPath(fOutputFileName,false);
+      fOutputVersion = GetFileVersion(fOutputFileName);
     }
     else {
       kb_warning << "Output file is not set!" << endl;
       kb_warning << "Set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
     }
   }
-  else
-    fOutputVersion = ConfigureDataPath(fOutputFileName);
+  else {
+    fOutputFileName = KBRun::ConfigureDataPath(fOutputFileName,false);
+    fOutputVersion = GetFileVersion(fOutputFileName);
+  }
 
   fKBLogFileName = TString(KEBI_PATH) + "/data/kbrun.log";
 
   if (!fOutputFileName.IsNull())
   {
-    if (CheckFileExistence(fOutputFileName)) {}
+    if (KBRun::CheckFileExistence(fOutputFileName)) {}
 
-    kb_out << endl;
     kb_info << "Output file : " << fOutputFileName << endl;
     fOutputFile = new TFile(fOutputFileName, "recreate");
     fOutputTree = new TTree("event", "");
@@ -593,10 +642,9 @@ bool KBRun::Init()
 
   fInitialized = InitTasks();
 
-  kb_out << endl;
   if (fInitialized) {
     kb_info << fNumEntries << " input entries" << endl;
-    kb_print << "KBRun initialized" << endl;
+    kb_info << "KBRun initialized!" << endl;
   }
   else
     kb_error << "[KBRun] FAILED initializing tasks." << endl;
@@ -618,7 +666,7 @@ TDatabasePDG *KBRun::GetDatabasePDG()
 
   if (db->GetParticle("deuteron")==nullptr)
   {
-    kb_print << "Adding ions to TDatabasePDG" << endl;
+    kb_info << "Adding ions to TDatabasePDG" << endl;
 
     db -> AddParticle("deuteron","", 1.87561 ,1,0, 3,"Ion",1000010020);
     db -> AddParticle("triton"  ,"", 2.80892 ,1,0, 3,"Ion",1000010030);
@@ -663,17 +711,40 @@ void KBRun::CreateParameterFile(TString name)
 
   fPar -> SetDebugMode(true);
   Init();
-  if (name.Index(".par") < 0)
-    name = name + ".par";
+  if (name.Index(".conf") < 0)
+    name = name + ".conf";
   fPar -> SaveAs(name);
 
   if (fAutoTerminate) Terminate(this);
+}
+
+void KBRun::AddParameterContainer(KBParameterContainer *par) {
+  fTempPar.AddPar(par);
+}
+
+void KBRun::AddParameterContainer(TString fname) {
+  fTempPar.AddFile(fname);
 }
 
 bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
 {
   if (fBranchPtrMap[name] != nullptr)
     return false;
+
+  TString persistentParName = name+"__PERSISTENCY";
+  if (fPar -> CheckPar(persistentParName)) {
+    persistent = fPar -> GetParBool(persistentParName);
+    if (persistent)
+      persistentParName = TString("(persistent by par. ") + persistentParName + ")";
+    else
+      persistentParName = TString("(temporary by par. ") + persistentParName + ")";
+  }
+  else {
+    if (persistent)
+      persistentParName = "(persistent)";
+    else
+      persistentParName = "(temporary)";
+  }
 
   fBranchPtr[fNumBranches] = obj;
   fBranchPtrMap[name] = fBranchPtr[fNumBranches];
@@ -684,11 +755,10 @@ bool KBRun::RegisterBranch(TString name, TObject *obj, bool persistent)
     if (fOutputTree != nullptr)
       fOutputTree -> Branch(name, &obj);
     fPersistentBranchArray -> Add(obj);
-    kb_info << "Output branch " << name << " (persistent)" << endl;
   } else {
     fTemporaryBranchArray -> Add(obj);
-    kb_info << "Output branch " << name << " (temporary)" << endl;
   }
+  kb_info << "Output branch " << name << " " << persistentParName << endl;
 
   return true;
 }
@@ -728,9 +798,6 @@ Int_t KBRun::GetEntry(Long64_t entry, Int_t getall)
   if (fInputTree == nullptr)
     return -1;
 
-  fCurrentEventID = entry;
-  fEventCount = entry;
-
   for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++)
     GetFriendChain(iFriend) -> GetEntry(entry, getall);
 
@@ -747,28 +814,10 @@ Long64_t KBRun::GetEventCount() const { return fEventCount; }
 
 bool KBRun::Event(Long64_t eventID)
 {
-  kb_out << endl;
-  if (fInitialized == false) {
-    kb_info << "KBRun is not Initialized!" << endl;
-    kb_info << "Exit run" << endl;
-    return false;
-  }
-
-  if (eventID < 0 || eventID > fNumEntries-1) {
-    kb_info << "Event-ID(" << eventID << ") is out of range: " << endl;
-    kb_info << "Exit event" << endl;
-    return false;
-  }
-
   fCurrentEventID = eventID;
-  if (fInputTree != nullptr) {
-    fInputTree -> GetEntry(eventID);
+  auto entries = GetEntry(fCurrentEventID);
 
-    for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++)
-      GetFriendChain(iFriend) -> GetEntry(eventID);
-  }
-
-  kb_info << "Execute Event " << eventID << "    (X persistent)" << endl;
+  kb_info << "Execute Event " << fCurrentEventID << endl;
   ExecuteTask("");
 
   return true;
@@ -812,15 +861,10 @@ void KBRun::Run(Long64_t endEventID)
 
   for (fIdxEntry = fStartEventID; fIdxEntry <= fEndEventID; ++fIdxEntry) {
     fCurrentEventID = fIdxEntry;
-    if (fInputTree != nullptr) {
-      fInputTree -> GetEntry(fIdxEntry);
-      ///TODO @todo fCurrentEventID = EventHeader -> GetEventID();
-      for (Int_t iFriend = 0; iFriend < fNumFriends; iFriend++)
-        GetFriendChain(iFriend) -> GetEntry(fIdxEntry);
-    }
+    GetEntry(fCurrentEventID);
 
     kb_out << endl;
-    kb_info << "Execute Event " << fIdxEntry << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
+    kb_info << "Execute Event " << fCurrentEventID << " (" << fEventCount << "/" << numRunEntries << ")" << endl;
     ExecuteTask("");
 
     if (fSignalEndOfRun)
@@ -888,7 +932,7 @@ void KBRun::SignalInterrupt()
 
   CheckOut();
 
-  if (fAutoTerminate) Terminate(this,Form("Interrupted at event %lld",fEventCount));
+  if (fAutoTerminate) Terminate(this,Form("Interrupted at event %lld",fCurrentEventID));
 }
 
 void KBRun::SignalEndOfRun() { fSignalEndOfRun = true; }
@@ -921,12 +965,8 @@ void KBRun::RunInRange(Long64_t startID, Long64_t endID)
   Run();
 }
 
-void KBRun::RunInEventRange(Long64_t, Long64_t)
-{
-}
-
 #ifdef ACTIVATE_EVE
-void KBRun::OpenEventDisplay()
+void KBRun::ConfigureEventDisplay()
 {
   if (fDetectorSystem -> GetEntries() == 0)
     kb_warning << "Cannot open event display: detector is not set." << endl;
@@ -1004,20 +1044,343 @@ void KBRun::OpenEventDisplay()
   gEve -> GetBrowser() -> GetTabRight() -> SetTab(1);
   */
 
-  for (Int_t iPlane = 0; iPlane < fDetectorSystem -> GetNumPlanes(); iPlane++) {
-    KBDetectorPlane *plane = fDetectorSystem -> GetDetectorPlane(iPlane);
-    TCanvas *cvs = plane -> GetCanvas();
-    cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
-    fCvsDetectorPlaneArray -> Add(cvs);
-    cvs -> cd();
-    plane -> GetHist() -> Draw("colz");
-  }
-
   gEve -> GetBrowser() -> HideBottomTab();
   gEve -> ElementSelect(gEve -> GetCurrentEvent());
   gEve -> GetWindowManager() -> HideAllEveDecorations();
 }
+#endif
 
+void KBRun::DrawEve3D()
+{
+#ifdef ACTIVATE_EVE
+  if (gEve!=nullptr) {
+    auto numEveEvents = fEveEventManagerArray -> GetEntries();
+    for (auto iEveEvent=0; iEveEvent<numEveEvents; ++iEveEvent) {
+      ((TEveEventManager *) fEveEventManagerArray -> At(iEveEvent)) -> RemoveElements();
+    }
+  }
+
+  if (gEve == nullptr)
+    ConfigureEventDisplay();
+
+  bool removePointTrack = (fPar->CheckPar("eveRemovePointTrack")) ? (fPar->GetParBool("eveRemovePointTrack")) : false;
+
+  for (Int_t iBranch = 0; iBranch < fNumSelectedBranches; ++iBranch)
+  {
+    TString branchName = fSelBranchNames.at(iBranch);
+    auto branch = (TObjArray *) fBranchPtrMap[branchName];
+    if (branch == nullptr) {
+      kb_error << "No eve-branch name " << branchName << endl;
+      continue;
+    }
+    if (branch -> GetEntries() == 0)
+      continue;
+
+    auto objSample = branch -> At(0);
+    if (objSample -> InheritsFrom("KBContainer") == false)
+      continue;
+
+    bool isTracklet = (objSample -> InheritsFrom("KBTracklet")) ? true : false;
+    bool isHit = (objSample -> InheritsFrom("KBHit")) ? true : false;
+
+    KBContainer *eveObj = (KBContainer *) objSample;
+    //if (fSelBranchNames.size() == 0 && !eveObj -> DrawByDefault())
+    if (fSelBranchNames.size() == 0 || !eveObj -> DrawByDefault())
+      continue;
+
+    auto eveEvent = (TEveEventManager *) fEveEventManagerArray -> FindObject(branchName);
+    if (eveEvent==nullptr) {
+      eveEvent = new TEveEventManager(branchName);
+      fEveEventManagerArray -> Add(eveEvent);
+      gEve -> AddEvent(eveEvent);
+    }
+
+    int numSelected = 0;
+
+    Int_t nObjects = branch -> GetEntries();
+    if (isTracklet)
+    {
+      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+        KBTracklet *tracklet = (KBTracklet *) branch -> At(iObject);
+
+        if (removePointTrack)
+          if (tracklet -> InheritsFrom("KBMCTrack"))
+            if (((KBMCTrack *) tracklet) -> GetNumVertices() < 2)
+              continue;
+
+        if (!SelectTrack(tracklet))
+          continue;
+
+        auto eveLine = (TEveLine *) tracklet -> CreateEveElement();
+        tracklet -> SetEveElement(eveLine, fEveScale);
+        SetEveLineAtt(eveLine,branchName);
+        eveEvent -> AddElement(eveLine);
+        numSelected++;
+      }
+    }
+    else if (eveObj -> IsEveSet())
+    {
+      auto eveSet = (TEvePointSet *) eveObj -> CreateEveElement();
+      TString name = Form("%s_%s",eveSet->GetElementName(),branchName.Data());
+      eveSet -> SetElementName(name);
+      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+        eveObj = (KBContainer *) branch -> At(iObject);
+
+        if (isHit)  {
+          KBHit *hit = (KBHit *) branch -> At(iObject);
+          hit -> SetSortValue(1);
+
+          if (!SelectHit(hit))
+            continue;
+        }
+
+        eveObj -> AddToEveSet(eveSet, fEveScale);
+        numSelected++;
+      }
+      SetEveMarkerAtt(eveSet, branchName);
+      eveEvent -> AddElement(eveSet);
+    }
+    else {
+      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+        eveObj = (KBContainer *) branch -> At(iObject);
+        auto eveElement = eveObj -> CreateEveElement();
+        eveObj -> SetEveElement(eveElement, fEveScale);
+        TString name = Form("%s_%d",eveElement -> GetElementName(),iObject);
+        eveElement -> SetElementName(name);
+        eveEvent -> AddElement(eveElement);
+        numSelected++;
+      }
+    }
+
+    kb_info << "Drawing " << branchName << " [" << branch -> At(0) -> ClassName() << "] " << numSelected << "(" << branch -> GetEntries() << ")" << endl;
+  }
+
+  if (fPar->CheckPar("eveAxisOrigin")) {
+    Double_t length = 100.;
+    if (fPar->CheckPar("eveAxisLength"))
+      length = fPar->GetParDouble("eveAxisLength");
+    TVector3 origin = fPar -> GetParV3("eveAxisOrigin");
+    for (auto kaxis : {KBVector3::kX,KBVector3::kY,KBVector3::kZ}) {
+      KBVector3 direction(0,0,0);
+      direction.AddAt(length,kaxis);
+      auto axis = new TEveArrow(direction.X(),direction.Y(),direction.Z(),origin.X(),origin.Y(),origin.Z()); // TODO
+      axis -> SetElementName(KBVector3::AxisName(KBVector3::kX) + " axis");
+      if (kaxis==KBVector3::kX) axis -> SetMainColor(kRed);
+      if (kaxis==KBVector3::kY) axis -> SetMainColor(kBlue);
+      if (kaxis==KBVector3::kZ) axis -> SetMainColor(kBlack);
+      ((TEveEventManager *) fEveEventManagerArray -> At(0)) -> AddElement(axis);
+    }
+  }
+
+  gEve -> Redraw3D();
+#endif
+#ifndef ACTIVATE_EVE
+  kb_warning << "ACTIVATE_EVE is OFF!" << endl;
+#endif
+}
+
+void KBRun::ConfigureDetectorPlanes()
+{
+  if (fCvsDetectorPlaneArray->GetEntries()>0)
+    return;
+
+  auto numPlanes = fDetectorSystem -> GetNumPlanes();
+  for (Int_t iPlane = 0; iPlane < numPlanes; iPlane++) {
+    KBDetectorPlane *plane = fDetectorSystem -> GetDetectorPlane(iPlane);
+    TCanvas *cvs = plane -> GetCanvas();
+    cvs -> AddExec("ex", "KBRun::ClickSelectedPadPlane()");
+    fCvsDetectorPlaneArray -> Add(cvs);
+  }
+}
+
+void KBRun::DrawDetectorPlanes()
+{
+  ConfigureDetectorPlanes();
+
+  if (fGraphChannelBoundaryNb[0] == nullptr) { // TODO
+    for (Int_t iGraph = 0; iGraph < 20; ++iGraph) {
+      fGraphChannelBoundaryNb[iGraph] = new TGraph();
+      fGraphChannelBoundaryNb[iGraph] -> SetLineColor(kGreen);
+      fGraphChannelBoundaryNb[iGraph] -> SetLineWidth(2);
+    }
+  }
+
+  auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
+  auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
+
+  auto ppHistMin = 0.01;
+  if (fPar->CheckPar("evePPHistMin"))
+    ppHistMin = fPar -> GetParDouble("evePPHistMin");
+
+  auto numPlanes = fDetectorSystem -> GetNumPlanes();
+  for (auto iPlane = 0; iPlane < numPlanes; ++iPlane)
+  {
+    auto plane = fDetectorSystem -> GetDetectorPlane(iPlane);
+    kb_info << "Drawing " << plane -> GetName() << endl;
+
+    auto histPlane = plane -> GetHist();
+    histPlane -> SetMinimum(ppHistMin);
+    histPlane -> Reset();
+
+    auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
+
+    if (plane -> InheritsFrom("KBPadPlane"))
+    {
+      auto padplane = (KBPadPlane *) plane;
+
+      bool exist_hit = false;
+      bool exist_pad = false;
+
+      if (hitArray != nullptr)
+        exist_hit = true;
+      else {
+        for (Int_t iBranch = 0; iBranch < fNumSelectedBranches; ++iBranch)
+        {
+          TString branchName = fSelBranchNames.at(iBranch);
+          if (branchName.Index("Hit")==0) {
+            kb_info << branchName << " is to be filled to pad plane" << endl;
+            hitArray = (TClonesArray *) fBranchPtrMap[branchName];
+            hitArray -> Print();
+            exist_hit = true;
+            break;
+          }
+        }
+      }
+      if (padArray != nullptr)
+        exist_pad = true;
+
+      if (!exist_hit && !exist_pad) {
+        cvs -> cd();
+        histPlane -> Draw();
+        plane -> DrawFrame();
+        continue;
+      }
+
+      if (exist_hit)
+      {
+        kb_info << "Filling Hits to PadPlane" << endl;
+        padplane -> Clear();
+        padplane -> SetHitArray(hitArray);
+        if (!exist_pad)
+          padplane -> FillDataToHist("hit");
+      }
+
+      if (exist_pad)
+      {
+        kb_info << "Filling Pads to PadPlane" << endl;
+        if (!exist_hit)
+          padplane -> Clear();
+        padplane -> SetPadArray(padArray);
+        padplane -> FillDataToHist("raw");
+        padplane -> FillDataToHist("out");
+      }
+    }
+
+    cvs -> Clear();
+    cvs -> cd();
+    histPlane -> DrawClone("colz");
+    histPlane -> Reset();
+    histPlane -> Draw("same");
+    plane -> DrawFrame();
+
+    KBVector3::Axis axis1 = plane -> GetAxis1();
+    KBVector3::Axis axis2 = plane -> GetAxis2();
+
+    for (Int_t iBranch = 0; iBranch < fNumSelectedBranches; ++iBranch)
+    {
+      TClonesArray *branch = nullptr;
+      if (fNumSelectedBranches != 0) {
+        TString branchName = fSelBranchNames.at(iBranch);
+        //TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
+        branch = (TClonesArray *) fBranchPtrMap[branchName];
+      }
+      else
+        branch = (TClonesArray *) fBranchPtr[iBranch];
+
+      TObject *objSample = nullptr;
+
+      Int_t numTracklets = branch -> GetEntries();
+      if (numTracklets != 0) {
+        objSample = branch -> At(0);
+        if (objSample -> InheritsFrom("KBContainer") == false || objSample -> InheritsFrom("KBTracklet") == false)
+          continue;
+      }
+      else
+        continue;
+
+      auto trackletSample = (KBTracklet *) objSample;
+      if (trackletSample -> DoDrawOnDetectorPlane())
+      {
+        for (auto iTracklet = 0; iTracklet < numTracklets; ++iTracklet) {
+          auto tracklet = (KBTracklet *) branch -> At(iTracklet);
+          if (!SelectTrack(tracklet))
+            continue;
+
+          tracklet -> TrajectoryOnPlane(axis1, axis2) -> Draw("samel");
+        }
+      }
+    }
+  }
+
+  // @todo palette is changed when drawing top node because of TGeoMan(?)
+  gStyle -> SetPalette(kBird);
+}
+
+void KBRun::SetEveLineAtt(TEveElement *el, TString branchName)
+{
+  TString colorPar = Form("eveLineColor__%s",branchName.Data());
+  if (fPar->CheckPar(colorPar)) {
+    auto color = fPar -> GetParColor(colorPar);
+    ((TEveLine *) el) -> SetLineColor(color);
+  }
+
+  TString widthPar = Form("eveLineWidth__%s",branchName.Data());
+  if (fPar->CheckPar(widthPar)) {
+    auto width = fPar -> GetParInt(widthPar);
+    ((TEveLine *) el) -> SetLineWidth(width);
+  }
+}
+
+void KBRun::SetEveMarkerAtt(TEveElement *el, TString branchName)
+{
+  TString colorPar = Form("eveMarkerColor__%s",branchName.Data());
+  if (fPar->CheckPar(colorPar)) {
+    auto color = fPar -> GetParColor(colorPar);
+    ((TEvePointSet *) el) -> SetMarkerColor(color);
+  }
+
+  TString sizePar = Form("eveMarkerSize__%s",branchName.Data());
+  if (fPar->CheckPar(sizePar)) {
+    auto size = fPar -> GetParSize(sizePar);
+    ((TEvePointSet *) el) -> SetMarkerSize(size);
+  }
+}
+
+bool KBRun::SelectTrack(KBTracklet *tracklet)
+{
+  bool isGood = 1;
+  if (fSelTrkIDs.size()!=0) { isGood = 0; for (auto id : fSelTrkIDs) { if (tracklet->GetTrackID()==id)  { isGood = 1; break; }}} if (!isGood) return false;
+  if (fIgnTrkIDs.size()!=0) { isGood = 1; for (auto id : fIgnTrkIDs) { if (tracklet->GetTrackID()==id)  { isGood = 0; break; }}} if (!isGood) return false;
+  if (fSelPntIDs.size()!=0) { isGood = 0; for (auto id : fSelPntIDs) { if (tracklet->GetParentID()==id) { isGood = 1; break; }}} if (!isGood) return false;
+  if (fIgnPntIDs.size()!=0) { isGood = 1; for (auto id : fIgnPntIDs) { if (tracklet->GetParentID()==id) { isGood = 0; break; }}} if (!isGood) return false;
+  if (fSelPDGs.size()!=0)   { isGood = 0; for (auto id : fSelPDGs)   { if (tracklet->GetPDG()==id)      { isGood = 1; break; }}} if (!isGood) return false;
+  if (fIgnPDGs.size()!=0)   { isGood = 1; for (auto id : fIgnPDGs)   { if (tracklet->GetPDG()==id)      { isGood = 0; break; }}} if (!isGood) return false;
+  if (fSelMCIDs.size()!=0)  { isGood = 0; for (auto id : fSelMCIDs)  { if (tracklet->GetMCID()==id)     { isGood = 1; break; }}} if (!isGood) return false;
+  if (fIgnMCIDs.size()!=0)  { isGood = 1; for (auto id : fIgnMCIDs)  { if (tracklet->GetMCID()==id)     { isGood = 0; break; }}} if (!isGood) return false;
+  return true;
+}
+
+bool KBRun::SelectHit(KBHit *hit)
+{
+  bool isGood = 1;
+  if (fSelHitPntIDs.size()!=0) { isGood = 0; for (auto id : fSelHitPntIDs) { if (hit->GetTrackID()==id) { isGood = 1; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
+  if (fIgnHitPntIDs.size()!=0) { isGood = 1; for (auto id : fIgnHitPntIDs) { if (hit->GetTrackID()==id) { isGood = 0; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
+  if (fSelMCIDs.size()!=0)     { isGood = 0; for (auto id : fSelMCIDs)     { if (hit->GetMCID()==id)    { isGood = 1; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
+  if (fIgnMCIDs.size()!=0)     { isGood = 1; for (auto id : fIgnMCIDs)     { if (hit->GetMCID()==id)    { isGood = 0; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
+  return true;
+}
+
+#ifdef ACTIVATE_EVE
 void KBRun::AddEveElementToEvent(KBContainer *eveObj, bool permanent)
 {
   if (eveObj -> IsEveSet()) {
@@ -1034,516 +1397,62 @@ void KBRun::AddEveElementToEvent(KBContainer *eveObj, bool permanent)
 
 void KBRun::AddEveElementToEvent(TEveElement *element, bool permanent)
 {
-  //gEve -> AddElement(element);
   ((TEveEventManager *) fEveEventManagerArray -> At(0)) -> AddElement(element);
   if (permanent) fPermanentEveElementList.push_back(element);
-  //else fEveElementList.push_back(element);
   gEve -> Redraw3D();
 }
 #endif
 
 void KBRun::RunEve(Long64_t eveEventID, TString option)
 {
-  if (fEveOption.IsNull() || (!fEveOption.IsNull() && option.Index("0")<0))
+  if (option.Index("e")<0 && option.Index("p")<0) {
+    if (fEveOption.IsNull())
+      fEveOption = "ep";
+  }
+  else
     fEveOption = option;
 
-  Bool_t drawEve3D = false;
-  if (fEveOption.Index("e")>=0) {
-    kb_info << "3D event display activated" << endl;
-    drawEve3D = true;
-  }
-
-  Bool_t drawDetectorPlanes = false;
-  if (fEveOption.Index("p")>=0) {
-    kb_info << "Detector plane display activated" << endl;
-    drawDetectorPlanes = true;
-  }
-
-
-  //if (fGraphChannelBoundaryNb[0] == nullptr) // TODO
-  for (Int_t iGraph = 0; iGraph < 20; ++iGraph) {
-    fGraphChannelBoundaryNb[iGraph] = new TGraph();
-    fGraphChannelBoundaryNb[iGraph] -> SetLineColor(kGreen);
-    fGraphChannelBoundaryNb[iGraph] -> SetLineWidth(2);
-  }
+  Bool_t drawEve3D = (fEveOption.Index("e")>=0) ? true : false;
+  Bool_t drawDetectorPlanes = (fEveOption.Index("p")>=0) ? true : false;
 
   if (eveEventID>=0 && fCurrentEventID!=eveEventID)
-    this -> GetEntry(eveEventID);
+    Event(eveEventID);
 
-#ifdef ACTIVATE_EVE
-  /*
-  Int_t nEveElements = fEveElementList.size();
-  for (Int_t iEl = 0; iEl < nEveElements; ++iEl) {
-    TEveElement *el = fEveElementList.back();
-    gEve -> RemoveElement(el,gEve->GetCurrentEvent());
-    fEveElementList.pop_back();
+  fSelTrkIDs    = fPar -> GetParVInt("eveSelectTrackIDs");
+  fIgnTrkIDs    = fPar -> GetParVInt("eveIgnoreTrackIDs");
+  fSelPntIDs    = fPar -> GetParVInt("eveSelectTrackParentIDs");
+  fIgnPntIDs    = fPar -> GetParVInt("eveIgnoreTrackParentIDs");
+  fSelPDGs      = fPar -> GetParVInt("eveSelectTrackPDGs");
+  fIgnPDGs      = fPar -> GetParVInt("eveIgnoreTrackPDGs");
+  fSelMCIDs     = fPar -> GetParVInt("eveSelectMCIDs");
+  fIgnMCIDs     = fPar -> GetParVInt("eveIgnoreMCIDs");
+  fSelHitPntIDs = fPar -> GetParVInt("eveSelectHitParentIDs");
+  fIgnHitPntIDs = fPar -> GetParVInt("eveIgnoreHitParentIDs");
+  fSelBranchNames = fPar -> GetParVString("eveSelectBranches");
+
+  fNumSelectedBranches = fSelBranchNames.size();
+  if (fNumSelectedBranches==0) {
+    fNumSelectedBranches = fNumBranches;
+    for (auto iBranch=0; iBranch<fNumSelectedBranches; ++iBranch)
+      fSelBranchNames.push_back(fBranchNames[iBranch]);
   }
-  */
-  if (gEve!=nullptr) {
-    auto numEveEvents = fEveEventManagerArray -> GetEntries();
-    for (auto iEveEvent=0; iEveEvent<numEveEvents; ++iEveEvent) {
-      ((TEveEventManager *) fEveEventManagerArray -> At(iEveEvent)) -> RemoveElements();
-    }
-    //fEveElementList.clear();
-  }
-#endif
-
-  Int_t filterTrackIDs = 0;
-  vector<Int_t> choosenTrackIDs;
-  while (fPar -> CheckPar("eveSelectTrackIDs"))
-  {
-    TString eveTIDOption = fPar -> GetParString("eveSelectTrackIDs");
-    TObjArray *eveTIDs = eveTIDOption.Tokenize(":");
-    auto numEveTIDs = eveTIDs -> GetEntries();
-    if (numEveTIDs < 2)
-      break;
-
-    TString pm = ((TObjString *) eveTIDs -> At(0)) -> GetString();
-         if (pm=="+") filterTrackIDs = +1;
-    else if (pm=="-") filterTrackIDs = -1;
-    else break;
-
-    TString message = "Tracklet ID selection("+pm+"): ";
-    for (Int_t iID = 1; iID < numEveTIDs; ++iID) {
-      TString tID = ((TObjString *) eveTIDs -> At(iID)) -> GetString();
-      choosenTrackIDs.push_back(tID.Atoi());
-      message = message + tID + " ";
-    }
-    kb_info << message << endl;
-    break;
-  }
-
-  Int_t filterTrackParentIDs = 0;
-  vector<Int_t> choosenTrackParentIDs;
-  while (fPar -> CheckPar("eveSelectTrackParentIDs"))
-  {
-    TString eveTIDOption = fPar -> GetParString("eveSelectTrackParentIDs");
-    TObjArray *eveTIDs = eveTIDOption.Tokenize(":");
-    auto numEveTIDs = eveTIDs -> GetEntries();
-    if (numEveTIDs < 2)
-      break;
-
-    TString pm = ((TObjString *) eveTIDs -> At(0)) -> GetString();
-         if (pm=="+") filterTrackParentIDs = +1;
-    else if (pm=="-") filterTrackParentIDs = -1;
-    else break;
-
-    TString message = "Tracklet Parent ID selection("+pm+"): ";
-    for (Int_t iID = 1; iID < numEveTIDs; ++iID) {
-      TString tID = ((TObjString *) eveTIDs -> At(iID)) -> GetString();
-      choosenTrackParentIDs.push_back(tID.Atoi());
-      message = message + tID + " ";
-    }
-    kb_info << message << endl;
-    break;
-  }
-
-  Int_t filterTrackPDGs = 0;
-  vector<Int_t> choosenTrackPDGs;
-  while (fPar -> CheckPar("eveSelectTrackPDGs"))
-  {
-    TString eveTIDOption = fPar -> GetParString("eveSelectTrackPDGs");
-    TObjArray *eveTIDs = eveTIDOption.Tokenize(":");
-    auto numEveTIDs = eveTIDs -> GetEntries();
-    if (numEveTIDs < 2)
-      break;
-
-    TString pm = ((TObjString *) eveTIDs -> At(0)) -> GetString();
-         if (pm=="+") filterTrackPDGs = +1;
-    else if (pm=="-") filterTrackPDGs = -1;
-    else break;
-
-    TString message = "Tracklet PDG selection("+pm+"): ";
-    for (Int_t iID = 1; iID < numEveTIDs; ++iID) {
-      TString tID = ((TObjString *) eveTIDs -> At(iID)) -> GetString();
-      choosenTrackPDGs.push_back(tID.Atoi());
-      message = message + tID + " ";
-    }
-    kb_info << message << endl;
-    break;
-  }
-
-  Int_t filterHitParentIDs = 0;
-  vector<Int_t> choosenHitParentIDs;
-  while (fPar -> CheckPar("eveSelectHitParentIDs"))
-  {
-    TString eveTIDOption = fPar -> GetParString("eveSelectHitParentIDs");
-    TObjArray *eveTIDs = eveTIDOption.Tokenize(":");
-    auto numEveTIDs = eveTIDs -> GetEntries();
-    if (numEveTIDs < 2)
-      break;
-
-    TString pm = ((TObjString *) eveTIDs -> At(0)) -> GetString();
-         if (pm=="+") filterHitParentIDs = +1;
-    else if (pm=="-") filterHitParentIDs = -1;
-    else break;
-
-    TString message = "Hit Parent-ID(Track-ID) selection("+pm+"): ";
-    for (Int_t iID = 1; iID < numEveTIDs; ++iID) {
-      TString tID = ((TObjString *) eveTIDs -> At(iID)) -> GetString();
-      choosenHitParentIDs.push_back(tID.Atoi());
-      message = message + tID + " ";
-    }
-    kb_info << message << endl;
-    break;
-  }
-
-  Int_t filterMCIDs = 0;
-  vector<Int_t> choosenMCIDs;
-  while (fPar -> CheckPar("eveSelectMCIDs"))
-  {
-    TString eveTIDOption = fPar -> GetParString("eveSelectMCIDs");
-    TObjArray *eveTIDs = eveTIDOption.Tokenize(":");
-    auto numEveTIDs = eveTIDs -> GetEntries();
-    if (numEveTIDs < 2)
-      break;
-
-    TString pm = ((TObjString *) eveTIDs -> At(0)) -> GetString();
-         if (pm=="+") filterMCIDs = +1;
-    else if (pm=="-") filterMCIDs = -1;
-    else break;
-
-    TString message = "Hit Parent-ID(Track-ID) selection("+pm+"): ";
-    for (Int_t iID = 1; iID < numEveTIDs; ++iID) {
-      TString tID = ((TObjString *) eveTIDs -> At(iID)) -> GetString();
-      choosenMCIDs.push_back(tID.Atoi());
-      message = message + tID + " ";
-    }
-    kb_info << message << endl;
-    break;
-  }
-
-  bool removePointTrack = false;
-  if (fPar -> CheckPar("eveRemovePointTrack"))
-    removePointTrack = fPar -> GetParBool("eveRemovePointTrack");
-
-  TObjArray *eveBranchNames = fEveBranches.Tokenize(":");
-  auto numSelectedBranches = eveBranchNames -> GetEntries();
-  auto numEveBranches = numSelectedBranches;
-
-  if (numSelectedBranches == 0) {
-    numEveBranches = fNumBranches;
-    for (auto iBranch=0; iBranch<numEveBranches; ++iBranch) {
-      TString branchName = fBranchNames[iBranch];
-      if (iBranch==0)
-        fEveBranches = branchName;
-      else
-        fEveBranches = fEveBranches + ":" + branchName;
-    }
-    eveBranchNames = fEveBranches.Tokenize(":");
-    numSelectedBranches = eveBranchNames -> GetEntries();
-  }
-
-  kb_info << "Branches: " << fEveBranches << " (" << numSelectedBranches << ")" << endl;
-
-#ifdef ACTIVATE_EVE
-  if (drawEve3D)
-  {
-    if (gEve == nullptr)
-      OpenEventDisplay();
-
-    for (Int_t iBranch = 0; iBranch < numEveBranches; ++iBranch)
-    {
-      TObjArray *branch = nullptr;
-      TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
-
-      if (numSelectedBranches != 0) {
-        branch = (TObjArray *) fBranchPtrMap[branchName];
-        if (branch == nullptr) {
-          kb_error << "No eve-branch name " << branchName << endl;
-          continue;
-        }
-      }
-      else
-        branch = (TObjArray *) fBranchPtr[iBranch];
-
-      if (branch -> GetEntries() == 0)
+  else {
+    vector<TString> tempBranchNames;
+    for (auto iBranch=0; iBranch<fNumSelectedBranches; ++iBranch) {
+      TString branchName = fSelBranchNames.at(iBranch);
+      if (fBranchPtrMap[branchName] == nullptr) {
+        kb_error << "No eve-branch name " << branchName << endl;
         continue;
-
-      auto objSample = branch -> At(0);
-      if (objSample -> InheritsFrom("KBContainer") == false)
-        continue;
-
-      bool isTracklet = false;
-      if (objSample -> InheritsFrom("KBTracklet"))
-        isTracklet = true;
-
-      bool isHit = false;
-      if (objSample -> InheritsFrom("KBHit"))
-        isHit = true;
-
-      KBContainer *eveObj = (KBContainer *) objSample;
-      if (numSelectedBranches == 0 || !eveObj -> DrawByDefault())
-        continue;
-
-      auto eveEvent = (TEveEventManager *) fEveEventManagerArray -> FindObject(branchName);
-      if (eveEvent==nullptr) {
-        eveEvent = new TEveEventManager(branchName);
-        fEveEventManagerArray -> Add(eveEvent);
-        gEve -> AddEvent(eveEvent);
       }
-
-      int numSelected = 0;
-
-      Int_t nObjects = branch -> GetEntries();
-      if (isTracklet)
-      {
-        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
-          KBTracklet *eveTrk = (KBTracklet *) branch -> At(iObject);
-
-          if (removePointTrack)
-            if (eveTrk -> InheritsFrom("KBMCTrack"))
-              if (((KBMCTrack *) eveTrk) -> GetNumVertices() < 2)
-                continue;
-
-          bool isGood = 1;
-               if (filterTrackIDs ==  1) { isGood = 0; for (auto id : choosenTrackIDs) { if (eveTrk->GetTrackID()==id) { isGood = 1; break; } } }
-          else if (filterTrackIDs == -1) { isGood = 1; for (auto id : choosenTrackIDs) { if (eveTrk->GetTrackID()==id) { isGood = 0; break; } } }
-          if (!isGood)
-            continue;
-
-               if (filterTrackParentIDs==  1) { isGood = 0; for (auto id : choosenTrackParentIDs) { if (eveTrk->GetParentID()==id) { isGood = 1; break; } } }
-          else if (filterTrackParentIDs== -1) { isGood = 1; for (auto id : choosenTrackParentIDs) { if (eveTrk->GetParentID()==id) { isGood = 0; break; } } }
-          if (!isGood)
-            continue;
-
-               if (filterTrackPDGs   ==  1) { isGood = 0; for (auto id : choosenTrackPDGs) { if (eveTrk->GetPDG()==id) { isGood = 1; break; } } }
-          else if (filterTrackPDGs   == -1) { isGood = 1; for (auto id : choosenTrackPDGs) { if (eveTrk->GetPDG()==id) { isGood = 0; break; } } }
-          if (!isGood)
-            continue;
-
-               if (filterMCIDs   ==  1) { isGood = 0; for (auto id : choosenMCIDs) { if (eveTrk->GetMCID()==id) { isGood = 1; break; } } }
-          else if (filterMCIDs   == -1) { isGood = 1; for (auto id : choosenMCIDs) { if (eveTrk->GetMCID()==id) { isGood = 0; break; } } }
-          if (!isGood)
-            continue;
-
-          numSelected++;
-
-          TEveLine *eveElement = (TEveLine *) eveTrk -> CreateEveElement();
-          eveTrk -> SetEveElement(eveElement, fEveScale);
-
-          TString eveLineColorPar = Form("eveLineColor__%s",branchName.Data());
-          if (fPar->CheckPar(eveLineColorPar))
-            eveElement -> SetLineColor(fPar->GetParColor(eveLineColorPar));
-          else if (fPar->CheckPar("eveLineColorAuto"))
-            eveElement -> SetLineColor(GetColor());
-
-          if (fPar->CheckPar("eveTrackLineWidth"))
-            eveElement -> SetLineWidth(fPar->GetParInt("eveTrackLineWidth"));
-
-          eveEvent -> AddElement(eveElement);
-        }
-      }
-      else if (eveObj -> IsEveSet())
-      {
-        TEveElement *eveSet = eveObj -> CreateEveElement();
-        TString name = Form("%s_%s",eveSet->GetElementName(),branchName.Data());
-        eveSet -> SetElementName(name);
-        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
-          eveObj = (KBContainer *) branch -> At(iObject);
-
-          if (isHit)  {
-            KBHit *eveHit = (KBHit *) branch -> At(iObject);
-            bool isGood = 1;
-            eveHit -> SetSortValue(1);
-
-                 if (filterHitParentIDs ==  1) { isGood = 0; for (auto id : choosenHitParentIDs)  { if (eveHit->GetTrackID()==id) { isGood = 1; break; } } }
-            else if (filterHitParentIDs == -1) { isGood = 1; for (auto id : choosenHitParentIDs)  { if (eveHit->GetTrackID()==id) { isGood = 0; break; } } }
-            if (!isGood) {
-              eveHit -> SetSortValue(-1);
-              continue;
-            }
-
-                 if (filterMCIDs ==  1) { isGood = 0; for (auto id : choosenMCIDs)  { if (eveHit->GetMCID()==id) { isGood = 1; break; } } }
-            else if (filterMCIDs == -1) { isGood = 1; for (auto id : choosenMCIDs)  { if (eveHit->GetMCID()==id) { isGood = 0; break; } } }
-            if (!isGood) {
-              eveHit -> SetSortValue(-1);
-              continue;
-            }
-          }
-
-          numSelected++;
-
-          eveObj -> AddToEveSet(eveSet, fEveScale);
-        }
-        eveEvent -> AddElement(eveSet);
-        //fEveElementList.push_back(eveSet);
-
-        TString namePar = Form("eveColor__%s",branchName.Data());
-        if (fPar->CheckPar(namePar)) {
-          auto evePointSet = (TEvePointSet *) eveSet;
-          auto color = fPar -> GetParColor(namePar);
-          evePointSet -> SetMarkerColor(color);
-        }
-
-        namePar = Form("eveSize__%s",branchName.Data());
-        if (fPar->CheckPar(namePar)) {
-          auto evePointSet = (TEvePointSet *) eveSet;
-          auto size = fPar -> GetParSize(namePar);
-          evePointSet -> SetMarkerSize(size);
-        }
-      }
-      else {
-        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
-          eveObj = (KBContainer *) branch -> At(iObject);
-          TEveElement *eveElement = eveObj -> CreateEveElement();
-          eveObj -> SetEveElement(eveElement, fEveScale);
-          TString name = Form("%s_%d",eveElement -> GetElementName(),iObject);
-          eveElement -> SetElementName(name);
-          eveEvent -> AddElement(eveElement);
-          //fEveElementList.push_back(eveElement);
-          numSelected++;
-        }
-      }
-
-      kb_info << "Drawing " << branchName << " [" << branch -> At(0) -> ClassName() << "] " << numSelected << "(" << branch -> GetEntries() << ")" << endl;
+      tempBranchNames.push_back(branchName);
     }
-
-    if (fPar->CheckPar("eveAxisX")) {
-      Double_t length = 100.;
-      if (fPar->CheckPar("eveAxisL"))
-        length = fPar->GetParDouble("eveAxisL");
-      TVector3 origin(fPar->GetParDouble("eveAxisX"), fPar->GetParDouble("eveAxisY"), fPar->GetParDouble("eveAxisZ"));
-      for (auto kaxis : {KBVector3::kX,KBVector3::kY,KBVector3::kZ}) {
-        KBVector3 direction(0,0,0);
-        direction.AddAt(length,kaxis);
-        auto axis = new TEveArrow(direction.X(),direction.Y(),direction.Z(),origin.X(),origin.Y(),origin.Z()); // TODO
-        if (kaxis==KBVector3::kX) axis -> SetMainColor(kRed);
-        if (kaxis==KBVector3::kY) axis -> SetMainColor(kBlue);
-        if (kaxis==KBVector3::kZ) axis -> SetMainColor(kBlack);
-        ((TEveEventManager *) fEveEventManagerArray -> At(0)) -> AddElement(axis);
-        //fEveElementList.push_back(axis);
-      }
-    }
-
-    gEve -> Redraw3D();
+    fSelBranchNames.clear();
+    for (auto branchName : tempBranchNames)
+      fSelBranchNames.push_back(branchName);
   }
-#endif
 
-  if (drawDetectorPlanes)
-  {
-    auto hitArray = (TClonesArray *) fBranchPtrMap[TString("Hit")];
-    auto padArray = (TClonesArray *) fBranchPtrMap[TString("Pad")];
-
-    auto numPlanes = fDetectorSystem -> GetNumPlanes();
-    for (auto iPlane = 0; iPlane < numPlanes; ++iPlane)
-    {
-      auto plane = fDetectorSystem -> GetDetectorPlane(iPlane);
-      kb_info << "Drawing " << plane -> GetName() << endl;
-
-      auto histPlane = plane -> GetHist();
-      histPlane -> Reset();
-
-      if (plane -> InheritsFrom("KBPadPlane"))
-      {
-        auto padplane = (KBPadPlane *) plane;
-
-        bool exist_hit = false;
-        bool exist_pad = false;
-
-        if (hitArray != nullptr)
-          exist_hit = true;
-        else {
-          for (Int_t iBranch = 0; iBranch < numEveBranches; ++iBranch)
-          {
-            TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
-            if (branchName.Index("Hit")==0) {
-              cout << branchName << " is to be filled to pad plane" << endl;
-              hitArray = (TClonesArray *) fBranchPtrMap[branchName];
-              hitArray -> Print();
-              exist_hit = true;
-              break;
-            }
-          }
-        }
-        if (padArray != nullptr)
-          exist_pad = true;
-
-        if (!exist_hit && !exist_pad)
-          continue;
-
-        if (exist_hit)
-        {
-          kb_info << "Filling Hits to PadPlane" << endl;
-          padplane -> Clear();
-          padplane -> SetHitArray(hitArray);
-          if (!exist_pad)
-            padplane -> FillDataToHist("hit");
-        }
-
-        if (exist_pad)
-        {
-          kb_info << "Filling Pads to PadPlane" << endl;
-          if (!exist_hit)
-            padplane -> Clear();
-          padplane -> SetPadArray(padArray);
-          padplane -> FillDataToHist("raw");
-          padplane -> FillDataToHist("out");
-        }
-      }
-
-      auto cvs = (TCanvas *) fCvsDetectorPlaneArray -> At(iPlane);
-      cvs -> cd();
-      histPlane -> SetMaximum(5000);
-      histPlane -> SetMinimum(1);
-      histPlane -> Draw("colz");
-      plane -> DrawFrame();
-
-      KBVector3::Axis axis1 = plane -> GetAxis1();
-      KBVector3::Axis axis2 = plane -> GetAxis2();
-
-      for (Int_t iBranch = 0; iBranch < numEveBranches; ++iBranch)
-      {
-        TClonesArray *branch = nullptr;
-        if (numSelectedBranches != 0) {
-          TString branchName = ((TObjString *) eveBranchNames -> At(iBranch)) -> GetString();
-          branch = (TClonesArray *) fBranchPtrMap[branchName];
-        }
-        else
-          branch = (TClonesArray *) fBranchPtr[iBranch];
-
-        TObject *objSample = nullptr;
-
-        Int_t numTracklets = branch -> GetEntries();
-        if (numTracklets != 0) {
-          objSample = branch -> At(0);
-          if (objSample -> InheritsFrom("KBContainer") == false || objSample -> InheritsFrom("KBTracklet") == false)
-            continue;
-        }
-        else
-          continue;
-
-        auto trackletSample = (KBTracklet *) objSample;
-        if (trackletSample -> DoDrawOnDetectorPlane())
-        {
-          for (auto iTracklet = 0; iTracklet < numTracklets; ++iTracklet) {
-            auto tracklet = (KBTracklet *) branch -> At(iTracklet);
-            {
-              bool isGood = 1;
-              if (filterTrackIDs ==  1) { isGood = 0; for (auto id : choosenTrackIDs)  { if (tracklet->GetTrackID() ==id) { isGood = 1; break; } } }
-              else if (filterTrackIDs == -1) { isGood = 1; for (auto id : choosenTrackIDs)  { if (tracklet->GetTrackID() ==id) { isGood = 0; break; } } }
-              if (!isGood)
-                continue;
-
-              if (filterTrackParentIDs==  1) { isGood = 0; for (auto id : choosenTrackParentIDs) { if (tracklet->GetParentID()==id) { isGood = 1; break; } } }
-              else if (filterTrackParentIDs== -1) { isGood = 1; for (auto id : choosenTrackParentIDs) { if (tracklet->GetParentID()==id) { isGood = 0; break; } } }
-              if (!isGood)
-                continue;
-
-              if (filterTrackPDGs   ==  1) { isGood = 0; for (auto id : choosenTrackPDGs)    { if (tracklet->GetPDG()     ==id) { isGood = 1; break; } } }
-              else if (filterTrackPDGs   == -1) { isGood = 1; for (auto id : choosenTrackPDGs)    { if (tracklet->GetPDG()     ==id) { isGood = 0; break; } } }
-              if (!isGood)
-                continue;
-            }
-            tracklet -> TrajectoryOnPlane(axis1, axis2) -> Draw("samel");
-          }
-        }
-      }
-    }
-
-    // @todo palette is changed when drawing top node because of TGeoMan(?)
-    gStyle -> SetPalette(kBird);
-  }
+  if (drawEve3D) DrawEve3D();
+  if (drawDetectorPlanes) DrawDetectorPlanes();
 }
 
 void KBRun::WriteCvsDetectorPlanes(TString format)
@@ -1556,19 +1465,7 @@ void KBRun::WriteCvsDetectorPlanes(TString format)
 
 void KBRun::SetEveScale(Double_t scale) { fEveScale = scale; }
 
-void KBRun::SelectEveBranches(TString option) { fEveBranches = option; }
-
-Color_t KBRun::GetColor()
-{
-  //Color_t colors[] = {kOrange, kTeal, kViolet, kSpring, kPink, kAzure};
-  //Color_t colors[] = {kPink, kAure, kSpring, kViolet, kTeal, kGreen, kRed, kBlue, kMagenta};
-  //Color_t color = colors[index%6] + ((index/6)%20);
-  //Color_t colors[] = {kRed, kPink, kMagenta, kViolet, kBlue, kAzure, kCyan, kTeal, kGreen, kSpring, kYellow, kOrange};
-  //Color_t color = colors[((Int_t)gRandom -> Uniform(12))] + ((Int_t) gRandom -> Uniform(10)) - 9;
-  Color_t colors[] = {kRed, kPink, kBlue, kAzure, kTeal, kSpring};
-  Color_t color = colors[((Int_t)gRandom -> Uniform(6))] + ((Int_t) gRandom -> Uniform(10)) - 9;
-  return color;
-}
+//void KBRun::SelectEveBranches(TString option) { fEveBranches = option; }
 
 void KBRun::SetAutoTermination(Bool_t val) { fAutoTerminate = val; }
 
@@ -1581,9 +1478,14 @@ void KBRun::Terminate(TObject *obj, TString message)
 void KBRun::ClickSelectedPadPlane()
 {
   TObject* select = ((TCanvas*)gPad) -> GetClickSelected();
-
-  if (select == NULL || (!(select -> InheritsFrom(TH2::Class())) && !(select -> InheritsFrom(TGraph::Class()))))
+  if (select == nullptr)
     return;
+
+  bool isNotH2 = !(select -> InheritsFrom(TH2::Class()));
+  bool isNotGraph = !(select -> InheritsFrom(TGraph::Class()));
+  if (isNotH2 && isNotGraph)
+    return;
+
 
   TH2D* hist = (TH2D*) select;
 
@@ -1616,6 +1518,7 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   KBTpc *tpc = (KBTpc *) fDetectorSystem -> GetTpc();
   if (tpc == nullptr)
     return;
+
   KBPadPlane *padplane = tpc -> GetPadPlane();
   Int_t id = padplane -> FindPadID(x, y);
   if (id < 0) {
@@ -1623,45 +1526,49 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
     return;
   }
 
-
   KBPad *pad = padplane -> GetPad(id);
   pad -> SetHist(fHistChannelBuffer,"pao");
   pad -> Print();
-  {
-    if (fGraphChannelBoundary == nullptr) {
-      fGraphChannelBoundary = new TGraph();
-      fGraphChannelBoundary -> SetLineColor(kRed);
-      fGraphChannelBoundary -> SetLineWidth(2);
-    }
-    fGraphChannelBoundary -> Set(0);
 
-    auto corners = pad -> GetPadCorners();
-    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
-      TVector2 corner = corners -> at(iCorner);
-      fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
-    }
-    TVector2 corner = corners -> at(0);
+  if (fGraphChannelBoundary == nullptr) {
+    fGraphChannelBoundary = new TGraph();
+    fGraphChannelBoundary -> SetLineColor(kRed);
+    fGraphChannelBoundary -> SetLineWidth(2);
+  }
+  fGraphChannelBoundary -> Set(0);
+
+  auto corners = pad -> GetPadCorners();
+  for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
+    TVector2 corner = corners -> at(iCorner);
     fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
   }
-
-  for (Int_t iBLine = 0; iBLine < 20; ++iBLine)
-    fGraphChannelBoundaryNb[iBLine] -> Set(0);
+  TVector2 corner = corners -> at(0);
+  fGraphChannelBoundary -> SetPoint(fGraphChannelBoundary -> GetN(), corner.X(), corner.Y());
 
   auto nbs = pad -> GetNeighborPadArray();
   Int_t numNbs = nbs -> size();
-  for (auto iNb = 0; iNb < numNbs; ++iNb) {
-    auto nb = (KBPad *) nbs -> at(iNb);
-    auto corners = nb -> GetPadCorners();
-    for (UInt_t iCorner = 0; iCorner < corners -> size(); ++iCorner) {
-      TVector2 corner = corners -> at(iCorner);
-      fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
-    }
-    TVector2 corner = corners -> at(0);
-    fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), corner.X(), corner.Y());
 
+  for (Int_t iBLine = 0; iBLine < numNbs; ++iBLine)
+    fGraphChannelBoundaryNb[iBLine] -> Set(0);
+
+  for (Int_t iBLine = numNbs; iBLine < 20; ++iBLine)
+    fGraphChannelBoundaryNb[iBLine] -> Set(1);
+
+  for (auto iNb = 0; iNb < numNbs; ++iNb)
+  {
+    auto padNb = (KBPad *) nbs -> at(iNb);
+    auto cornersNb = padNb -> GetPadCorners();
+    for (UInt_t iCorner = 0; iCorner < cornersNb -> size(); ++iCorner) {
+      TVector2 cornerNb = cornersNb -> at(iCorner);
+      fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), cornerNb.X(), cornerNb.Y());
+    }
+    TVector2 cornerNb = cornersNb -> at(0);
+    fGraphChannelBoundaryNb[iNb] -> SetPoint(fGraphChannelBoundaryNb[iNb] -> GetN(), cornerNb.X(), cornerNb.Y());
   }
 
   fHistChannelBuffer -> Draw("hist");
+
+  KBPulseGenerator::GetPulseGenerator(fPar);
 
   for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
     auto hit = pad -> GetHit(iHit);
@@ -1676,10 +1583,15 @@ void KBRun::DrawPadByPosition(Double_t x, Double_t y)
   fCvsChannelBuffer -> Modified();
   fCvsChannelBuffer -> Update();
 
-  ((TCanvas *) fCvsDetectorPlaneArray -> At(0)) -> cd();
+  auto cvsDetectorPlane = (TCanvas *) fCvsDetectorPlaneArray -> At(0);
+  cvsDetectorPlane -> cd();
   fGraphChannelBoundary -> Draw("samel");
-  for (auto iNb = 0; iNb < numNbs; ++iNb)
-    fGraphChannelBoundaryNb[iNb] -> Draw("samel");
+  for (auto iNb = 0; iNb < numNbs; ++iNb) {
+    if (fGraphChannelBoundaryNb[iNb] -> GetN() > 0)
+      fGraphChannelBoundaryNb[iNb] -> Draw("samel");
+  }
+  cvsDetectorPlane -> Modified();
+  cvsDetectorPlane -> Update();
 }
 
 void KBRun::SetLogFile(TString name) {
@@ -1694,16 +1606,9 @@ void KBRun::SetLogFile(TString name) {
 TString KBRun::GetLogFile() { return fRunLogFileName; }
 //std::ofstream &KBRun::GetLogFileStream() { return &fRunLogFileStream; }
 
-bool KBRun::CheckFileExistence(TString fileName, bool print)
+bool KBRun::CheckFileExistence(TString fileName)
 {
   TString name = gSystem -> Which(".", fileName.Data());
-  if (print) {
-    if (name.IsNull())
-      kb_info << fileName << " IS NEW." << endl;
-    else
-      kb_info << fileName << " EXIST!" << endl;
-  }
-
   if (name.IsNull())
     return false;
   return true;

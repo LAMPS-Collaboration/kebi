@@ -4,22 +4,21 @@
 #include "TF1.h"
 #include "Rtypes.h"
 #include "KBSamplePoint.hh"
+#include "KBParameterContainer.hh"
 #include "TGraph.h"
 
 class KBPulseGenerator
 {
   public:
-    static KBPulseGenerator* GetPulseGenerator(TString fileName = "pulser_464ns.dat");
-
-    /** Construct KBPulseGenerator with default setting */
-    KBPulseGenerator();
+    static KBPulseGenerator* GetPulseGenerator(TString fileName="");
+    static KBPulseGenerator* GetPulseGenerator(KBParameterContainer *par);
 
     /**
      * Construct KBPulseGenerator with fileName and step.
      * step is the difference of the time-bucket between data points.
      * See fStepSize.
      */
-    KBPulseGenerator(TString fileName);
+    KBPulseGenerator(TString fileName="");
 
     virtual ~KBPulseGenerator() {}
 
@@ -27,7 +26,7 @@ class KBPulseGenerator
     Double_t Pulse(Double_t x, Double_t amp, Double_t tb0);
 
     /** Get Pulse with inialtial parameter (0,0) */
-    TF1* GetPulseFunction(TString name = "");
+    TF1* GetPulseFunction(TString name="");
 
        Int_t  GetShapingTime();
     Double_t  GetTbAtThreshold();
@@ -37,6 +36,7 @@ class KBPulseGenerator
     Double_t  GetThresholdTbStep();
        Int_t  GetNumDataPoints();
     Double_t  GetStepSize();
+       Int_t  GetNDFTbs();
 
     KBSamplePoint **GetPulseData();
 
@@ -46,7 +46,7 @@ class KBPulseGenerator
 
   private:
     /** Initialize data and parameters. */
-    void Initialize(TString fileName);
+    bool Initialize(TString fileName);
 
     /** A general C++ function object (functor) with parameters */
     Double_t PulseF1(Double_t *x, Double_t *par);

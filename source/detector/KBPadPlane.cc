@@ -48,6 +48,20 @@ KBPad *KBPadPlane::GetPad(Int_t idx)
   return (KBPad *) obj;
 }
 
+/*
+KBPad *KBPadPlane::GetPadByPadID(Int_t padID)
+{
+  Int_t numPads = fChannelArray -> GetEntriesFast();
+  for (Int_t i = 0; i < numPads; ++i) {
+    auto pad = (KBPad *) fChannelArray -> At(i);
+    if (pad && padID==pad->GetPadID())
+      return pad;
+  }
+
+  return (KBPad *) nullptr;
+}
+*/
+
 void KBPadPlane::SetPadArray(TClonesArray *padArray)
 {
   TIter iterPads(padArray);
@@ -99,10 +113,8 @@ void KBPadPlane::FillBufferIn(Double_t i, Double_t j, Double_t tb, Double_t val,
 
 void KBPadPlane::FillDataToHist(Option_t *option)
 {
-  if (fH2Plane == nullptr) {
-    kb_info << "Pad plane histogram does not exist! Run GetHist(option) before filling buffer." << endl;
-    return;
-  }
+  if (fH2Plane == nullptr)
+    GetHist();
 
   TString optionString = TString(option);
 
@@ -112,41 +124,73 @@ void KBPadPlane::FillDataToHist(Option_t *option)
   TIter iterPads(fChannelArray);
 
   if (optionString == "hit") {
+    fH2Plane -> SetTitle("Hit charge distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
-      if (pad -> GetNumHits() == 0) continue;
-
+      if (pad -> GetNumHits() == 0)
+        continue;
       auto charge = 0.;
       for (auto iHit = 0; iHit < pad -> GetNumHits(); ++iHit) {
         auto hit = pad -> GetHit(iHit);
         if (charge < hit -> GetCharge()) {
-          if (hit -> GetSortValue() > 0)
+          if (hit -> GetSortValue() >= 0)
             charge += hit -> GetCharge();
         }
       }
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),charge);
-
     }
-  } else if (optionString == "out") {
+  }
+  else if (optionString == "out") {
+    fH2Plane -> SetTitle("pad calibrated output distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferOut();
       Double_t val = *max_element(buffer,buffer+512);
       if (val < 1) val = 0;
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
-  } else if (optionString == "raw") {
+  }
+  else if (optionString == "raw") {
+    fH2Plane -> SetTitle("pad raw input distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferRaw();
       Double_t val = *max_element(buffer,buffer+512);
       if (val < 1) val = 0;
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
-  } else if (optionString == "in") {
+  }
+  else if (optionString == "in") {
+    fH2Plane -> SetTitle("pad calibrated input distribution");
     while ((pad = (KBPad *) iterPads.Next())) {
       auto buffer = pad -> GetBufferIn();
       Double_t val = *max_element(buffer,buffer+512);
       if (val < 1) val = 0;
       fH2Plane -> Fill(pad->GetI(),pad->GetJ(),val);
     }
+  }
+
+  else if (optionString == "section") {
+    fH2Plane -> SetTitle("pad section");
+    while ((pad = (KBPad *) iterPads.Next()))
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetSection());
+  }
+  else if (optionString == "row") {
+    fH2Plane -> SetTitle("pad raw");
+    while ((pad = (KBPad *) iterPads.Next()))
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetRow());
+  }
+  else if (optionString == "layer") {
+    fH2Plane -> SetTitle("pad layer");
+    while ((pad = (KBPad *) iterPads.Next()))
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetLayer());
+  }
+  else if (optionString == "padid") {
+    fH2Plane -> SetTitle("pad id");
+    while ((pad = (KBPad *) iterPads.Next()))
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetPadID());
+  }
+  else if (optionString == "nhit") {
+    fH2Plane -> SetTitle("pad nhit");
+    while ((pad = (KBPad *) iterPads.Next()))
+      fH2Plane -> Fill(pad->GetI(),pad->GetJ(),pad->GetNumHits());
   }
 }
 
@@ -337,24 +381,24 @@ bool KBPadPlane::PadPositionChecker(bool checkCorners)
     }
     auto center0 = pad -> GetPosition();
     auto padID0 = pad -> GetPadID();
-    auto padID1 = FindPadID(center0.X(),center0.Y());
+    auto padID1 = FindPadID(center0.I(),center0.J());
 
     if (padID1 != padID0) {
       auto pad1 = (KBPad *) fChannelArray -> At(padID1);
       auto center1 = pad1 -> GetPosition();
-      kb_warning << "Bad! Pad:" << padID0 << "(" << center0.X() << "," << center0.Y() << "|" << pad -> GetSection() << "," << pad -> GetRow() << "," << pad -> GetLayer() << ")"
-                 << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
+      kb_warning << "Bad! Pad:" << padID0 << "(" << center0.I() << "," << center0.J() << "|" << pad -> GetSection() << "," << pad -> GetRow() << "," << pad -> GetLayer() << ")"
+                 << " --> Pad:" << padID1 << "(" << center1.I() << "," << center1.J() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
       ++countBad;
     }
     if (checkCorners) {
       for (auto corner : *(pad->GetPadCorners())) {
-        auto pos = 0.1*center0 + 0.9*corner;
+        auto pos = 0.1*TVector2(center0.I(),center0.J()) + 0.9*corner;
         padID1 = FindPadID(pos.X(),pos.Y());
         if (padID1 != padID0) {
           auto pad1 = (KBPad *) fChannelArray -> At(padID1);
           auto center1 = pad1 -> GetPosition();
           kb_info << "     Corner(" << pos.X() << "," << pos.Y() << ")"
-                  << " --> Pad:" << padID1 << "(" << center1.X() << "," << center1.Y() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
+                  << " --> Pad:" << padID1 << "(" << center1.I() << "," << center1.J() << "|" << pad1-> GetSection() << "," << pad1-> GetRow() << "," << pad1-> GetLayer() << ")" << endl;
           ++countBad;
         }
       }
@@ -422,8 +466,8 @@ bool KBPadPlane::PadNeighborChecker()
       }
       if (!neighborToEachOther)
         kb_info << "Pad:" << padID << " and Pad:" << padIDnb << " are not neighbor to each other!" << endl;
-      auto dx = pos.X() - posnb.X();
-      auto dy = pos.Y() - posnb.Y();
+      auto dx = pos.I() - posnb.I();
+      auto dy = pos.J() - posnb.J();
       auto dist = sqrt(dx*dx + dy*dy);
       if (dist > distMax) {
         distMax = dist;
@@ -434,9 +478,9 @@ bool KBPadPlane::PadNeighborChecker()
   }
 
   kb_info << "=================== Maximum distance between neighbor pads: " << distMax << endl;
-  kb_info << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetPosition().X() << "," << pad0->GetPosition().Y() 
+  kb_info << "               1 --> Pad:" << pad0->GetPadID() << "(" << pad0->GetI() << "," << pad0->GetJ()
           << "|" << pad0-> GetSection() << "," << pad0 -> GetRow() << "," << pad0 -> GetLayer() << ")" << endl;
-  kb_info << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetPosition().X() << "," << pad1->GetPosition().Y()
+  kb_info << "               2 --> Pad:" << pad1->GetPadID() << "(" << pad1->GetI() << "," << pad1->GetJ()
           << "|" << pad1-> GetSection() << "," << pad1 -> GetRow() << "," << pad1 -> GetLayer() << ")" << endl;
 
 
@@ -446,15 +490,25 @@ bool KBPadPlane::PadNeighborChecker()
   }
   cout << endl;
 
-  kb_info << "No. of pads with 1 neighbors = " << ids1Neighbors.size() << endl;
-  kb_info << "No. of pads with 2 neighbors = " << ids2Neighbors.size() << endl;
-  kb_info << "No. of pads with 3 neighbors = " << ids3Neighbors.size() << endl;
-  kb_info << "No. of pads with 4 neighbors = " << ids4Neighbors.size() << endl;
-  kb_info << "No. of pads with 5 neighbors = " << ids5Neighbors.size() << endl;
-  kb_info << "No. of pads with 6 neighbors = " << ids6Neighbors.size() << endl;
-  kb_info << "No. of pads with 7 neighbors = " << ids7Neighbors.size() << endl;
-  kb_info << "No. of pads with 8 neighbors = " << ids8Neighbors.size() << endl;
-  kb_info << "No. of pads with > neighbors = " << ids9Neighbors.size() << endl;
+  TString examples1; for (auto ii=0; ii<int(ids1Neighbors.size()); ++ii) { if (ii>4) break; examples1 += Form(" %d",ids1Neighbors[ii]); }
+  TString examples2; for (auto ii=0; ii<int(ids2Neighbors.size()); ++ii) { if (ii>4) break; examples2 += Form(" %d",ids2Neighbors[ii]); }
+  TString examples3; for (auto ii=0; ii<int(ids3Neighbors.size()); ++ii) { if (ii>4) break; examples3 += Form(" %d",ids3Neighbors[ii]); }
+  TString examples4; for (auto ii=0; ii<int(ids4Neighbors.size()); ++ii) { if (ii>4) break; examples4 += Form(" %d",ids4Neighbors[ii]); }
+  TString examples5; for (auto ii=0; ii<int(ids5Neighbors.size()); ++ii) { if (ii>4) break; examples5 += Form(" %d",ids5Neighbors[ii]); }
+  TString examples6; for (auto ii=0; ii<int(ids6Neighbors.size()); ++ii) { if (ii>4) break; examples6 += Form(" %d",ids6Neighbors[ii]); }
+  TString examples7; for (auto ii=0; ii<int(ids7Neighbors.size()); ++ii) { if (ii>4) break; examples7 += Form(" %d",ids7Neighbors[ii]); }
+  TString examples8; for (auto ii=0; ii<int(ids8Neighbors.size()); ++ii) { if (ii>4) break; examples8 += Form(" %d",ids8Neighbors[ii]); }
+  TString examples9; for (auto ii=0; ii<int(ids9Neighbors.size()); ++ii) { if (ii>4) break; examples9 += Form(" %d",ids9Neighbors[ii]); }
+
+  kb_info << "No. of pads with 1 neighbors = " << ids1Neighbors.size() << "(" << examples1 << " )" << endl;
+  kb_info << "No. of pads with 2 neighbors = " << ids2Neighbors.size() << "(" << examples2 << " )" << endl;
+  kb_info << "No. of pads with 3 neighbors = " << ids3Neighbors.size() << "(" << examples3 << " )" << endl;
+  kb_info << "No. of pads with 4 neighbors = " << ids4Neighbors.size() << "(" << examples4 << " )" << endl;
+  kb_info << "No. of pads with 5 neighbors = " << ids5Neighbors.size() << "(" << examples5 << " )" << endl;
+  kb_info << "No. of pads with 6 neighbors = " << ids6Neighbors.size() << "(" << examples6 << " )" << endl;
+  kb_info << "No. of pads with 7 neighbors = " << ids7Neighbors.size() << "(" << examples7 << " )" << endl;
+  kb_info << "No. of pads with 8 neighbors = " << ids8Neighbors.size() << "(" << examples8 << " )" << endl;
+  kb_info << "No. of pads with > neighbors = " << ids9Neighbors.size() << "(" << examples9 << " )" << endl;
 
   return true;
 }

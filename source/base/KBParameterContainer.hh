@@ -6,6 +6,9 @@
 #include "TNamed.h"
 #include "TParameter.h"
 #include "KBVector3.hh"
+#include <vector>
+
+using std::vector;
 
 /**
  * List of parameters <[parameter name], [parameter values]>
@@ -36,6 +39,8 @@
  * getting non-existing paramter, but print message and create empty parameter.
  *
 */
+
+typedef KBVector3::Axis kbaxis;
 
 class KBParameterContainer : public TObjArray
 {
@@ -69,19 +74,34 @@ class KBParameterContainer : public TObjArray
     Bool_t SetPar(TString name, const char* val, Bool_t overwrite = false);  ///< Set TString  type parameter with given name
     Bool_t SetParColor(TString name, TString valColor, Bool_t overwrite = false);
 
-    Bool_t   GetParBool(TString name);   ///< Get Bool_t   type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
-    Int_t    GetParInt(TString name);    ///< Get Int_t    type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
-    Double_t GetParDouble(TString name); ///< Get Double_t type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
-    TString  GetParString(TString name); ///< Get TString  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
-    KBVector3::Axis  GetParAxis(TString name);   ///< Get KBVector3::Axis  type parameter by given name. Terminate if (parameter does-not-exist && fDebugMode == false).
+    Int_t    GetParN     (TString name);                ///< Get number of parameters in array of given name.
+    Bool_t   GetParBool  (TString name, Int_t idx=-1);  ///< Get Bool_t   type parameter by given name.
+    Int_t    GetParInt   (TString name, Int_t idx=-1);  ///< Get Int_t    type parameter by given name.
+    Double_t GetParDouble(TString name, Int_t idx=-1);  ///< Get Double_t type parameter by given name.
+    TString  GetParString(TString name, Int_t idx=-1);  ///< Get TString  type parameter by given name.
+    kbaxis   GetParAxis  (TString name, Int_t idx=-1);  ///< Get KBVector3::Axis type parameter by given name.
 
-    Int_t GetParWidth(TString name) { return GetParInt(name); }
-    Int_t GetParColor(TString name) { return GetParInt(name); }
+    vector<Bool_t>   GetParVBool  (TString name);
+    vector<Int_t>    GetParVInt   (TString name);
+    vector<Double_t> GetParVDouble(TString name);
+    vector<TString>  GetParVString(TString name);
+    vector<kbaxis>   GetParVAxis  (TString name);
+
+    TVector3 GetParV3(TString name);
+
+    Double_t GetParX(TString name) { return GetParDouble(name,0); }
+    Double_t GetParY(TString name) { return GetParDouble(name,1); }
+    Double_t GetParZ(TString name) { return GetParDouble(name,2); }
+
+    Int_t GetParWidth(TString name)   { return GetParInt(name); }
+    Int_t GetParColor(TString name)   { return GetParInt(name); }
     Double_t GetParSize(TString name) { return GetParDouble(name); }
 
     Bool_t CheckPar(TString name);
 
     void ReplaceEnvironmentVariable(TString &val);
+
+    bool IsEmpty() const;
 
   private:
     Bool_t fDebugMode = false;
