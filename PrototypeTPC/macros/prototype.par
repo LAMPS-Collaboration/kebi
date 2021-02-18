@@ -38,7 +38,7 @@ tbStart             int      0    # start tb of the psa analysis
 nTbs                int      512  # number of time buckets
 tbTime              double   20   # [ns]
 dynamicRange        double   5000 # should be set but not used @todo
-gasDriftVelocity    double   0.0542411  # [mm/ns]
+#gasDriftVelocity    double   0.0542411  # [mm/ns]
 ADCThreshold        double   100 # hit is not reconstructed if charge (height of the pulse) is samller than this value
 
 # LAPNoiseSubtractionTask

@@ -1,17 +1,15 @@
-void run_reco_KOMAC(Int_t runID = 36, Int_t numberOfEvents = 100)
+void run_reco_KOMAC(Int_t runID = 36)
 {
   auto run = new KBRun();
   run -> SetRunName("komac",runID);
   run -> SetTag("reco");
   run -> AddPar("prototype_KOMAC.par");
   run -> AddDetector(new LAPTpc());
-  run -> SetNumEvents(numberOfEvents);
 
   auto decoder = new LAPDecoderFromRootTask();
   decoder -> SetPadPersistency(true);
 
   auto noiseSubtraction = new LAPNoiseSubtractionTask();
-  noiseSubtraction -> SkipNoiseSubtraction(true);
 
   auto psa = new KBPSATask();
   psa -> SetHitPersistency(true);
