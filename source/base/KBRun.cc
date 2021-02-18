@@ -790,6 +790,7 @@ void KBRun::SetGeoTransparency(Int_t transparency)
 }
 
 void KBRun::SetEntries(Long64_t num) { fNumEntries = num; }
+void KBRun::SetNumEvents(Long64_t num) { fNumEntries = num; }
 Long64_t KBRun::GetEntries() const { return fNumEntries; }
 Long64_t KBRun::GetNumEvents() const { return fNumEntries; }
 
@@ -1256,22 +1257,24 @@ void KBRun::DrawDetectorPlanes()
         continue;
       }
 
-      if (exist_hit)
+      padplane -> Clear();
+      if (exist_hit) padplane -> SetHitArray(hitArray);
+      if (exist_pad) padplane -> SetPadArray(padArray);
+
+      if (fPar -> CheckPar("evePPFillOption"))
+      {
+        auto fillOption = fPar -> GetParString("evePPFillOption");
+        kb_info << "Filling " << fillOption << " to PadPlane" << endl;
+        padplane -> FillDataToHist(fillOption);
+      }
+      else if (exist_hit)
       {
         kb_info << "Filling Hits to PadPlane" << endl;
-        padplane -> Clear();
-        padplane -> SetHitArray(hitArray);
-        if (!exist_pad)
-          padplane -> FillDataToHist("hit");
+        padplane -> FillDataToHist("hit");
       }
-
-      if (exist_pad)
+      else if (exist_pad)
       {
         kb_info << "Filling Pads to PadPlane" << endl;
-        if (!exist_hit)
-          padplane -> Clear();
-        padplane -> SetPadArray(padArray);
-        padplane -> FillDataToHist("raw");
         padplane -> FillDataToHist("out");
       }
     }

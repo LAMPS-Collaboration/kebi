@@ -27,6 +27,34 @@ bool LAPDecoderTask::Init()
   fPadArray = new TClonesArray("KBPad");
   run -> RegisterBranch("Pad", fPadArray, fPersistency);
 
+  auto pathToRawData  = fPar -> GetParString("pathToRawData");
+  auto pathToMetaData = fPar -> GetParString("pathToMetaData");
+  LoadData(pathToRawData, pathToMetaData);
+
+  if (fPar -> CheckPar("expRunSummary"))
+  {
+    Int_t runID = run -> GetRunID();
+    Int_t runID0, numEventsNalval=0, numEventsVME=0;
+    std::ifstream summary(fPar -> GetParString("expRunSummary"));
+    string line;
+    std::getline(summary,line);
+    std::getline(summary,line);
+    std::getline(summary,line);
+    while (1) {
+      std::getline(summary,line);
+      if (line.empty())
+        break;
+      istringstream ss(line);
+      ss >> runID0;
+      if (runID0==runID) {
+        ss >> numEventsNalval >> numEventsVME;
+        break;
+      }
+    }
+    Int_t numEventsInRun = (numEventsNalval<numEventsVME) ? numEventsNalval : numEventsVME;
+    SetNumEvents(numEventsInRun);
+  }
+
   if (fPar -> CheckPar("skipAAID")) {
     auto nAsAds = fPar -> GetParN("skipAAID");
     for (auto i=0; i<nAsAds; ++i)

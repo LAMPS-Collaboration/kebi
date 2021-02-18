@@ -48,6 +48,24 @@ KBPad *KBPadPlane::GetPad(Int_t idx)
   return (KBPad *) obj;
 }
 
+KBPad *KBPadPlane::GetPad(Double_t i, Double_t j)
+{
+  KBPad *pad = nullptr;
+  auto id = FindPadID(i,j);
+  if (id>=0)
+    pad = GetPad(id);
+  return pad;
+}
+
+KBPad *KBPadPlane::GetPad(Int_t section, Int_t row, Int_t layer)
+{
+  KBPad *pad = nullptr;
+  auto id = FindPadID(section, row, layer);
+  if (id>=0)
+    pad = GetPad(id);
+  return pad;
+}
+
 /*
 KBPad *KBPadPlane::GetPadByPadID(Int_t padID)
 {
