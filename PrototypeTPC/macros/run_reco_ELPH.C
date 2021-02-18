@@ -7,32 +7,8 @@ void run_reco_ELPH(Int_t runID = 98, Int_t split = 0, Int_t numEventsPerSplit=20
   run -> AddPar("prototype_ELPH.par");
   run -> AddDetector(new LAPTpc());
 
-  auto pathToRawData  = run -> GetPar() -> GetParString("pathToRawData");
-  auto pathToMetaData = run -> GetPar() -> GetParString("pathToMetaData");
-
-  string line;
-  Int_t runID0, numEventsNalval=0, numEventsVME=0;
-  std::ifstream summary(run -> GetPar() -> GetParString("expRunSummary"));
-  std::getline(summary,line);
-  std::getline(summary,line);
-  std::getline(summary,line);
-  while (1) {
-    std::getline(summary,line);
-    if (line.empty())
-      break;
-    istringstream ss(line);
-    ss >> runID0;
-    if (runID0==runID) {
-      ss >> numEventsNalval >> numEventsVME;
-      break;
-    }
-  }
-  Int_t numEventsInRun = (numEventsNalval<numEventsVME) ? numEventsNalval : numEventsVME;
-
   auto decoder = new LAPDecoderTask();
   decoder -> SetPadPersistency(true);
-  decoder -> LoadData(pathToRawData, pathToMetaData);
-  decoder -> SetNumEvents(numEventsInRun);
   run -> Add(decoder);
 
   auto noiseSubtraction = new LAPNoiseSubtractionTask();
