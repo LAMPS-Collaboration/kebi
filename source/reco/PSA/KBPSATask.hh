@@ -35,6 +35,7 @@ class KBPSATask : public KBTask
     Double_t fDriftVelocity;
     Double_t fTbTime;
     Double_t fADCThreshold;
+    Double_t fTbLengthOffset = 0;
 
     KBPadPlane *fPadPlane[2];
 

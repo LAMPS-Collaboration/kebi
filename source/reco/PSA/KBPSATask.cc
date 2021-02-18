@@ -24,6 +24,8 @@ bool KBPSATask::Init()
 
   fDriftVelocity = fPar -> GetParDouble("gasDriftVelocity");
   fTbTime = fPar -> GetParDouble("tbTime");
+  if (fPar -> CheckPar("tbLengthOffset"))
+    fTbLengthOffset = fPar -> GetParDouble("tbLengthOffset");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 
@@ -67,11 +69,7 @@ void KBPSATask::Exec(Option_t*)
     for (auto channelHit : hitArray) {
 
       ///@todo build pad plane dependent code
-      Double_t k;
-      if (pad -> GetPlaneID() == 0)
-        k = kPlane - (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
-      else
-        k = kPlane + (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+      Double_t k = kPlane - (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity + fTbLengthOffset;
 
       KBVector3 pos(fTpc->GetEFieldAxis(),pad->GetI(),pad->GetJ(),k);
 
