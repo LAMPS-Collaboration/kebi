@@ -1,0 +1,8 @@
+# 
+prototypeBase file prototype.par
+
+# Run
+pathToData    string     /home/samba.old/jwlee_temporary/KOMAC_LAMPS_Experiment/tpc/analysis/ana3/
+ADCThreshold  o double   1000
+padMap        o string   $KEBIPATH/PrototypeTPC/macros/data_KOMAC/padMap.KOMAC.dat
+pulserData    o string   deltaFunction
