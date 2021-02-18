@@ -142,7 +142,7 @@ Int_t LAPPadPlane::FindPadID(Double_t i, Double_t j)
   KBVector3 posInput(fAxis1%fAxis2, i, j, 0);
   posInput.Rotate(-fSectionAngle[section]);
 
-  Int_t layer = Int_t((posInput.J()-fRBaseLine[section]+fPadHeight[section]/2.)/fPadHeight[section]);
+  Int_t layer = Int_t((posInput.J()-fRBaseLine[section]+fPadHeight[section]/2.)/(fPadGap+fPadHeight[section]));
   Int_t nLayers = fNRowsInLayer[section].size();
   if (layer < 0 || layer >= nLayers)
     return -1;
