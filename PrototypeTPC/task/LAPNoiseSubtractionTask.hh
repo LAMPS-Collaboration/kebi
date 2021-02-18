@@ -24,6 +24,7 @@ class LAPNoiseSubtractionTask : public KBTask
   private:
     void FindReferencePad();
     void CopyRaw(Short_t *in, Double_t *out);
+    void Set0(Double_t *out);
     Double_t BaseLineCorrection(Double_t *out, Int_t tbi, Int_t tbf);
     Double_t NoiseAmplitudeCorrection(Double_t *out, Double_t *ref, Int_t tbi, Int_t tbf);
     void SaturationCorrection(Double_t *out, Short_t *raw, Double_t baseLine);
@@ -32,6 +33,11 @@ class LAPNoiseSubtractionTask : public KBTask
     TClonesArray* fPadArray;
 
     bool fSkipNoiseSubtraction = false;
+
+    int fMethodFindRef = 0;
+
+    vector<int> fSkipAsadIDs;
+    vector<int> fSkipAGETIDs;
 
     Int_t fIdxPadRef = -1;
     Int_t fTbSamplingNoiseStart = 0;

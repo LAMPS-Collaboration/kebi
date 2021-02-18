@@ -62,8 +62,10 @@ bool LAPDecoderFromRootTask::Init()
     kb_warning << "Number of event is changed from " << fNumEvents << " to " << numEventsInTree << endl;
     fNumEvents = numEventsInTree;
   }
-  else if (fNumEvents<0)
+  else if (fNumEvents<=0) {
     fNumEvents = numEventsInTree;
+    kb_warning << "Number of event is set to " << fNumEvents << endl;
+  }
   run -> SetEntries(fNumEvents);
   
   return true;
