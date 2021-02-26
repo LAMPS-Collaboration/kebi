@@ -33,10 +33,6 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
   auto par = runManager -> GetParameterContainer();
 
-	G4double tpcInnerRadius = par -> GetParDouble("TPCrMin");
-	G4double tpcOuterRadius = par -> GetParDouble("TPCrMax");
-	G4double tpcLength = par -> GetParDouble("TPCLength");
-  G4double tpcZOffset = par -> GetParDouble("zOffset");
 
   G4double bfieldx = par -> GetParDouble("bfieldx");
   G4double bfieldy = par -> GetParDouble("bfieldy");
@@ -81,32 +77,112 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
     matGas -> AddMaterial(matMethaneGas, 0.2*densityMethane/densityGas);
   }
 
-  G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
+	G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
+	G4Material *matVac = nist -> FindOrBuildMaterial("G4_Galactic");
+	G4Material *matSC = nist -> FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+	G4Material *matSn = nist -> FindOrBuildMaterial("G4_Sn");
 
 
   G4double worlddX = par -> GetParDouble("worlddX");
   G4double worlddY = par -> GetParDouble("worlddY");
   G4double worlddZ = par -> GetParDouble("worlddZ");
 
-
+	//World
   G4Box *solidWorld = new G4Box("World", worlddX, worlddY, worlddZ);
-  G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
+  //G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
+  G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matVac, "World");
   G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
 
-  G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
-  G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matGas, "TPC");
-  {
-    G4VisAttributes * attTPC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
-    attTPC -> SetForceWireframe(true);
-    logicTPC -> SetVisAttributes(attTPC);
-  }
-  logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
-  auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 0, true);
-  runManager -> SetSensitiveDetector(pvp);
+	//TPC
+	G4double tpcInnerRadius = par -> GetParDouble("TPCrMin");
+	G4double tpcOuterRadius = par -> GetParDouble("TPCrMax");
+	G4double tpcLength = par -> GetParDouble("TPCLength");
+  G4double tpcZOffset = par -> GetParDouble("zOffset");
+
+	if ( par -> GetParBool("TPCIn") )
+	{
+		G4Tubs *solidTPC = new G4Tubs("TPC", tpcInnerRadius, tpcOuterRadius, .5*tpcLength, 0., 360*deg);
+		G4LogicalVolume *logicTPC = new G4LogicalVolume(solidTPC, matGas, "TPC");
+		{
+			G4VisAttributes * attTPC = new G4VisAttributes(G4Colour(G4Colour::Gray()));
+			attTPC -> SetForceWireframe(true);
+			logicTPC -> SetVisAttributes(attTPC);
+		}
+		logicTPC -> SetUserLimits(new G4UserLimits(1.*mm));
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicTPC, "TPC", logicWorld, false, 10, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
 
 
+	//B-TOF
+	G4double btofX = par -> GetParDouble("BTOFlength");
+	G4double btofY = par -> GetParDouble("BTOFx");
+	G4double btofZ = par -> GetParDouble("BTOFy");
+	G4int btofNum = par -> GetParInt("BTOFnum");
+	G4int btofOpt = par -> GetParInt("BTOFopt");
 
+	if ( par -> GetParBool("BTOFIn") )
+	{
+		G4double dphi = 2*M_PI/btofNum, half_dphi = 0.5*dphi;
+		G4double cosdphi = cos(half_dphi);
+		G4double tandphi = tan(half_dphi);
+
+		G4double radiusIn = 0.5*btofY/tandphi;
+		G4double radiusOut = (radiusIn + btofZ)/cosdphi;
+
+		G4cout << "Radius In: " << radiusIn << ", RadiusOut: " << radiusOut << G4endl;
+
+		G4double dz = btofX;
+
+		G4Tubs *solidBTOF = new G4Tubs("BTOF", radiusIn, radiusOut, 0.5*dz, 0., 360*deg);
+		G4LogicalVolume *logicBTOF = new G4LogicalVolume(solidBTOF, matVac, "BTOF");
+		logicBTOF -> SetVisAttributes (G4VisAttributes::GetInvisible());
+		/*
+		{
+			G4VisAttributes * attBTOF = new G4VisAttributes(G4Colour(G4Colour::Red()));
+			attBTOF -> SetForceWireframe(true);
+			logicBTOF -> SetVisAttributes(attBTOF);
+		}
+		*/
+
+		G4Box *solidBTOFScint = new G4Box("BTOFScintillator", 0.5*btofX, 0.5*btofY, 0.5*btofZ);
+		G4LogicalVolume *logicBTOFScint = new G4LogicalVolume(solidBTOFScint, matSC, "BTOFScintillator"); 
+		{
+			G4VisAttributes * attBTOFScint = new G4VisAttributes(G4Colour(G4Colour::Red()));
+			attBTOFScint -> SetForceWireframe(true);
+			logicBTOFScint -> SetVisAttributes(attBTOFScint);
+		}
+
+		for (int ii=0; ii<btofNum; ii++){
+			if ( btofOpt>0 && abs(ii-36)==btofOpt ) continue;
+
+			G4double phi = ii*2*M_PI/btofNum;
+			G4RotationMatrix rotm  = G4RotationMatrix();
+			rotm.rotateY(90*deg);
+			rotm.rotateZ(phi);
+
+			G4ThreeVector uz = G4ThreeVector(std::cos(phi),  std::sin(phi),0.);
+			G4ThreeVector position = (radiusIn + 0.5*btofZ)*uz;
+			G4Transform3D transform = G4Transform3D(rotm, position);
+
+			new G4PVPlacement(
+					transform, //rotation,position
+					logicBTOFScint,        //its logical volume
+					Form("BTOFScintillator_%02d",ii), //its name
+					logicBTOF, //its mother  volume
+					false, //no boolean operation
+					//200+ii, //copy number
+					20, //copy number
+					false); // checking overlaps
+		}
+
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset), logicBTOF, "BTOF", logicWorld, false, 20, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
+
+
+	//Neutron
   bool checkWall = par -> CheckPar("numNeutronWall");
   if (checkWall)
   {
@@ -139,6 +215,25 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
       }
     }
   }
+
+	//Target
+	G4double targetX = par -> GetParDouble("Targetx");
+	G4double targetY = par -> GetParDouble("Targety");
+	G4double targetZ = par -> GetParDouble("Targetz");
+
+	if ( par -> GetParBool("TargetIn") )
+	{
+		G4double targetR = sqrt(targetX*targetX + targetY*targetY);
+		G4Tubs *solidTarget = new G4Tubs("Target", 0, targetR, 0.5*targetZ, 0., 360*deg);
+		//G4Box *solidTarget = new G4Box("Target", 0.5*targetX, 0.5*targetY, 0.5*targetZ);
+		G4LogicalVolume *logicTarget = new G4LogicalVolume(solidTarget, matSn, "Traget");
+		{
+			G4VisAttributes * attTarget = new G4VisAttributes(G4Colour(G4Colour::Green()));
+			logicTarget -> SetVisAttributes(attTarget);
+		}
+		new G4PVPlacement(0, G4ThreeVector(0,0,0), logicTarget, "Target", logicWorld, false, 1, true);
+		//runManager -> SetSensitiveDetector(pvp);
+	}
 
   new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
 
