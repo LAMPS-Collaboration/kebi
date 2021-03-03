@@ -18,6 +18,9 @@
 #include "G4UniformMagField.hh"
 #include "G4GlobalMagFieldMessenger.hh"
 
+#include "LHMagneticField.hh"
+#include "LHMagneticFieldSetup.hh"
+
 LHDetectorConstruction::LHDetectorConstruction()
 : G4VUserDetectorConstruction()
 {
@@ -37,10 +40,6 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 	G4double tpcOuterRadius = par -> GetParDouble("TPCrMax");
 	G4double tpcLength = par -> GetParDouble("TPCLength");
   G4double tpcZOffset = par -> GetParDouble("zOffset");
-
-  G4double bfieldx = par -> GetParDouble("bfieldx");
-  G4double bfieldy = par -> GetParDouble("bfieldy");
-  G4double bfieldz = par -> GetParDouble("bfieldz");
 
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;
@@ -140,7 +139,44 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
     }
   }
 
-  new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
+	if ( par -> GetParBool("bfieldmap") )
+	{
+
+		TString name = par -> GetParString("bfieldmapfile");
+		G4cout << "Use bfield map, name: " << name << G4endl;
+
+		LHMagneticField* bField = new LHMagneticField();
+		//bField->SetVerbosity(3);
+		//bField->SetFieldBoundX(-worldXYZ.getX(), worldXYZ.getX());
+		//bField->SetFieldBoundY(-worldXYZ.getY(), worldXYZ.getY());
+		//bField->SetFieldBoundZ(-worldXYZ.getZ(), worldXYZ.getZ());
+		//bField->SetFieldOffset(1, 1, 1);
+		//bField->SetUniformField(0, 0, 1.);
+		//bField->SetUnitDistance(cm);
+		//bField->SetUnitField(kilogauss);
+		bField->MakeFieldMap(name.Data());
+
+		LHMagneticFieldSetup* bFieldSetup = new LHMagneticFieldSetup();
+		//bFieldSetup->SetStepperType(2);
+		//bFieldSetup->SetStepMin(1 * mm);
+		//bFieldSetup->SetDeltaChord(0.1 * mm);
+		//bFieldSetup->SetDeltaIntersection(1.e-4);
+		//bFieldSetup->SetDeltaOneStep(1.e-3);
+		//bFieldSetup->SetEpsilonMax(1.e-4);
+		//bFieldSetup->SetEpsilonMin(1.e-6);
+		//bFieldSetup->SetFieldManager(G4TransportationManager::GetTransportationManager()->GetFieldManager());
+		bFieldSetup->MakeSetup(bField);
+		fFieldCache.Put(bFieldSetup);
+		logicWorld->SetFieldManager(fFieldCache.Get()->GetFieldManager(), true);
+	}
+	else
+	{
+		G4double bfieldx = par -> GetParDouble("bfieldx");
+		G4double bfieldy = par -> GetParDouble("bfieldy");
+		G4double bfieldz = par -> GetParDouble("bfieldz");
+
+		new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
+	}
 
   return physWorld;
 }
