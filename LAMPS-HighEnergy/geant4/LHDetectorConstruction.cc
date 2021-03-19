@@ -6,6 +6,7 @@
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
+#include "G4Trap.hh"
 #include "G4Tubs.hh"
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
@@ -17,6 +18,9 @@
 #include "G4TransportationManager.hh"
 #include "G4UniformMagField.hh"
 #include "G4GlobalMagFieldMessenger.hh"
+
+#include "LHMagneticField.hh"
+#include "LHMagneticFieldSetup.hh"
 
 LHDetectorConstruction::LHDetectorConstruction()
 : G4VUserDetectorConstruction()
@@ -32,11 +36,6 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 
   auto par = runManager -> GetParameterContainer();
-
-
-  G4double bfieldx = par -> GetParDouble("bfieldx");
-  G4double bfieldy = par -> GetParDouble("bfieldy");
-  G4double bfieldz = par -> GetParDouble("bfieldz");
 
   G4NistManager *nist = G4NistManager::Instance();
   G4double STPTemperature = 273.15;
@@ -77,12 +76,12 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
     matGas -> AddMaterial(matMethaneGas, 0.2*densityMethane/densityGas);
   }
 
-	G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
+  G4Material *matAir = nist -> FindOrBuildMaterial("G4_AIR");
 	G4Material *matVac = nist -> FindOrBuildMaterial("G4_Galactic");
 	G4Material *matSC = nist -> FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
-	G4Material *matSn = nist -> FindOrBuildMaterial("G4_Sn");
 
 
+	//World
   G4double worlddX = par -> GetParDouble("worlddX");
   G4double worlddY = par -> GetParDouble("worlddY");
   G4double worlddZ = par -> GetParDouble("worlddZ");
@@ -182,6 +181,71 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 	}
 
 
+	//F-TOF
+	G4double ftofX1 = par -> GetParDouble("FTOFx1");
+	G4double ftofX2 = par -> GetParDouble("FTOFx2");
+	G4double ftofLength = par -> GetParDouble("FTOFlength");
+	G4double ftofThickness = par -> GetParDouble("FTOFthickness");
+	G4double ftofzOffset = par -> GetParDouble("FTOFzOffset");
+
+	if ( par -> GetParBool("FTOFIn") )
+	{
+
+		G4double dphi = 2*M_PI/btofNum, half_dphi = 0.5*dphi;
+		G4double cosdphi = cos(half_dphi);
+		G4double tandphi = tan(half_dphi);
+
+		G4double radiusIn = 0.5*btofY/tandphi;
+		G4double radiusOut = (radiusIn + btofZ)/cosdphi;
+
+		G4Tubs *solidFTOF = new G4Tubs("FTOF", 0, radiusOut, 0.5*5, 0., 360*deg);
+		G4LogicalVolume *logicFTOF = new G4LogicalVolume(solidFTOF, matVac, "FTOF");
+		logicFTOF -> SetVisAttributes (G4VisAttributes::GetInvisible());
+		/*
+		{
+			G4VisAttributes * attFTOF = new G4VisAttributes(G4Colour(G4Colour::Red()));
+			attFTOF -> SetForceWireframe(true);
+			logicFTOF -> SetVisAttributes(attFTOF);
+		}
+		*/
+
+
+		G4Trap *solidFTOFScint = new G4Trap("FTOFScintillator", 0.5*ftofX1, 0.5*ftofX2, 0.5*ftofThickness, 0.5*ftofThickness, 0.5*ftofLength);
+		G4LogicalVolume *logicFTOFScint = new G4LogicalVolume(solidFTOFScint, matSC, "FTOFScintillator"); 
+		{
+			G4VisAttributes * attFTOFScint = new G4VisAttributes(G4Colour(G4Colour::Blue()));
+			attFTOFScint -> SetForceWireframe(true);
+			logicFTOFScint -> SetVisAttributes(attFTOFScint);
+		}
+
+		for (int ii=0; ii<btofNum; ii++){
+
+			G4double phi = ii*2*M_PI/btofNum;
+			G4RotationMatrix rotm  = G4RotationMatrix();
+			rotm.rotateX(90*deg);
+			rotm.rotateZ(-90*deg + phi);
+
+			G4ThreeVector uz = G4ThreeVector(std::cos(phi),  std::sin(phi),0.);
+			G4ThreeVector position = (radiusOut - 0.5*ftofLength)*uz;
+			G4Transform3D transform = G4Transform3D(rotm, position);
+
+			new G4PVPlacement(
+					transform, //rotation,position
+					logicFTOFScint,        //its logical volume
+					Form("FTOFScintillator_%02d",ii), //its name
+					logicFTOF, //its mother  volume
+					false, //no boolean operation
+					//200+ii, //copy number
+					30, //copy number
+					false); // checking overlaps
+
+		}
+
+		auto pvp = new G4PVPlacement(0, G4ThreeVector(0,0,tpcZOffset+ftofzOffset), logicFTOF, "FTOF", logicWorld, false, 30, true);
+		runManager -> SetSensitiveDetector(pvp);
+	}
+
+
 	//Neutron
   bool checkWall = par -> CheckPar("numNeutronWall");
   if (checkWall)
@@ -216,26 +280,44 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
     }
   }
 
-	//Target
-	G4double targetX = par -> GetParDouble("Targetx");
-	G4double targetY = par -> GetParDouble("Targety");
-	G4double targetZ = par -> GetParDouble("Targetz");
-
-	if ( par -> GetParBool("TargetIn") )
+	if ( par -> GetParBool("bfieldmap") )
 	{
-		G4double targetR = sqrt(targetX*targetX + targetY*targetY);
-		G4Tubs *solidTarget = new G4Tubs("Target", 0, targetR, 0.5*targetZ, 0., 360*deg);
-		//G4Box *solidTarget = new G4Box("Target", 0.5*targetX, 0.5*targetY, 0.5*targetZ);
-		G4LogicalVolume *logicTarget = new G4LogicalVolume(solidTarget, matSn, "Traget");
-		{
-			G4VisAttributes * attTarget = new G4VisAttributes(G4Colour(G4Colour::Green()));
-			logicTarget -> SetVisAttributes(attTarget);
-		}
-		new G4PVPlacement(0, G4ThreeVector(0,0,0), logicTarget, "Target", logicWorld, false, 1, true);
-		//runManager -> SetSensitiveDetector(pvp);
-	}
 
-  new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
+		TString name = par -> GetParString("bfieldmapfile");
+		G4cout << "Use bfield map, name: " << name << G4endl;
+
+		LHMagneticField* bField = new LHMagneticField();
+		//bField->SetVerbosity(3);
+		//bField->SetFieldBoundX(-worldXYZ.getX(), worldXYZ.getX());
+		//bField->SetFieldBoundY(-worldXYZ.getY(), worldXYZ.getY());
+		//bField->SetFieldBoundZ(-worldXYZ.getZ(), worldXYZ.getZ());
+		//bField->SetFieldOffset(1, 1, 1);
+		//bField->SetUniformField(0, 0, 1.);
+		//bField->SetUnitDistance(cm);
+		//bField->SetUnitField(kilogauss);
+		bField->MakeFieldMap(name.Data());
+
+		LHMagneticFieldSetup* bFieldSetup = new LHMagneticFieldSetup();
+		//bFieldSetup->SetStepperType(2);
+		//bFieldSetup->SetStepMin(1 * mm);
+		//bFieldSetup->SetDeltaChord(0.1 * mm);
+		//bFieldSetup->SetDeltaIntersection(1.e-4);
+		//bFieldSetup->SetDeltaOneStep(1.e-3);
+		//bFieldSetup->SetEpsilonMax(1.e-4);
+		//bFieldSetup->SetEpsilonMin(1.e-6);
+		//bFieldSetup->SetFieldManager(G4TransportationManager::GetTransportationManager()->GetFieldManager());
+		bFieldSetup->MakeSetup(bField);
+		fFieldCache.Put(bFieldSetup);
+		logicWorld->SetFieldManager(fFieldCache.Get()->GetFieldManager(), true);
+	}
+	else
+	{
+		G4double bfieldx = par -> GetParDouble("bfieldx");
+		G4double bfieldy = par -> GetParDouble("bfieldy");
+		G4double bfieldz = par -> GetParDouble("bfieldz");
+
+		new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
+	}
 
   return physWorld;
 }
