@@ -86,10 +86,13 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
   G4double worlddY = par -> GetParDouble("worlddY");
   G4double worlddZ = par -> GetParDouble("worlddZ");
 
-	//World
   G4Box *solidWorld = new G4Box("World", worlddX, worlddY, worlddZ);
-  //G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
-  G4LogicalVolume *logicWorld = new G4LogicalVolume(solidWorld, matVac, "World");
+	G4LogicalVolume *logicWorld;
+	if ( par -> GetParInt("worldOpt")==0 ) {
+		logicWorld = new G4LogicalVolume(solidWorld, matVac, "World");
+	}else {
+		logicWorld = new G4LogicalVolume(solidWorld, matAir, "World");
+	}
   G4PVPlacement *physWorld = new G4PVPlacement(0, G4ThreeVector(), logicWorld, "World", 0, false, -1, true);
 
 
@@ -171,8 +174,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 					Form("BTOFScintillator_%02d",ii), //its name
 					logicBTOF, //its mother  volume
 					false, //no boolean operation
-					//200+ii, //copy number
-					20, //copy number
+					2000+ii, //copy number
 					false); // checking overlaps
 		}
 
@@ -235,8 +237,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 					Form("FTOFScintillator_%02d",ii), //its name
 					logicFTOF, //its mother  volume
 					false, //no boolean operation
-					//200+ii, //copy number
-					30, //copy number
+					3000+ii, //copy number
 					false); // checking overlaps
 
 		}
