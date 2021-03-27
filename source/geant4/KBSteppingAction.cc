@@ -34,7 +34,7 @@ void KBSteppingAction::UserSteppingAction(const G4Step* step)
     fRunManager -> AddTrackVertex(mom.x(),mom.y(),mom.z(),preNo,pos.x(),pos.y(),pos.z());
 
   G4double edep = step -> GetTotalEnergyDeposit(); 
-  if (edep <= 0)
+  if (edep <= 1e-10)
     return;
 
   G4double time = step -> GetPreStepPoint() -> GetGlobalTime();
