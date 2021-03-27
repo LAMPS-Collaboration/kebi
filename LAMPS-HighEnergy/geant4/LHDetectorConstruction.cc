@@ -133,7 +133,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 		G4double radiusIn = 0.5*btofY/tandphi;
 		G4double radiusOut = (radiusIn + btofZ)/cosdphi;
 
-		G4cout << "Radius In: " << radiusIn << ", RadiusOut: " << radiusOut << G4endl;
+		G4cout << "B-TOF Radius In: " << radiusIn << ", RadiusOut: " << radiusOut << G4endl;
 
 		G4double dz = btofX;
 
@@ -197,10 +197,13 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 		G4double cosdphi = cos(half_dphi);
 		G4double tandphi = tan(half_dphi);
 
-		G4double radiusIn = 0.5*btofY/tandphi;
-		G4double radiusOut = (radiusIn + btofZ)/cosdphi;
+		G4double radiusIn = 0.5*ftofX2/tandphi;
+		G4double radiusOut = 0.5*ftofX1/tandphi;
+		ftofLength = radiusOut - radiusIn;
 
-		G4Tubs *solidFTOF = new G4Tubs("FTOF", 0, radiusOut, 0.5*5, 0., 360*deg);
+		G4cout << "F-TOF Radius In: " << radiusIn << ", RadiusOut: " << radiusOut << G4endl;
+
+		G4Tubs *solidFTOF = new G4Tubs("FTOF", radiusIn, radiusOut, 0.5*5, 0., 360*deg);
 		G4LogicalVolume *logicFTOF = new G4LogicalVolume(solidFTOF, matVac, "FTOF");
 		logicFTOF -> SetVisAttributes (G4VisAttributes::GetInvisible());
 		/*
@@ -221,6 +224,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 		}
 
 		for (int ii=0; ii<btofNum; ii++){
+			if ( btofOpt>0 && abs(ii-36)==btofOpt ) continue;
 
 			G4double phi = ii*2*M_PI/btofNum;
 			G4RotationMatrix rotm  = G4RotationMatrix();
