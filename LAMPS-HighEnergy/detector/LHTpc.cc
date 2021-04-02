@@ -89,9 +89,9 @@ bool LHTpc::BuildDetectorPlane()
 
   if (fPar->CheckPar("TPCPadPlaneType"))
   {
-    if (fPar->GetParString("PadPlaneType") == "LHPadPlaneRPad")
+    if (fPar->GetParString("TPCPadPlaneType") == "LHPadPlaneRPad")
       padplane = new LHPadPlaneRPad();
-    else if (fPar->GetParString("PadPlaneType") == "LHPadPlane3")
+    else if (fPar->GetParString("TPCPadPlaneType") == "LHPadPlane3")
       padplane = new LHPadPlane3();
   }
   else

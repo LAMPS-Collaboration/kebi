@@ -1,8 +1,8 @@
 int run_g4sim(const char *name);
 
-void run(const char *name="single_particle"){
+void run(const char *name="g4event"){
 
-	const bool bG4SIM = true;
+	const bool bG4SIM = false;
 	const bool bDIGI = true;
 	const bool bRECO = true;
 
@@ -10,31 +10,35 @@ void run(const char *name="single_particle"){
 		if ( !run_g4sim(name) ) return;
 	}
 
-	auto run = KBRun::GetRun();
-	run->SetIOFile(Form("%s.mc",name), Form("%s.reco",name));
-	run->AddDetector(new LHTpc());
+	if ( bDIGI || bRECO ){
 
-	if ( bDIGI ){
-		auto drift = new LHDriftElectronTask();
-		drift->SetPadPersistency(true);
-		run->Add(drift);
+		auto run = KBRun::GetRun();
+		run->SetIOFile(Form("./data/%s.mc",name), Form("./data/%s.reco",name));
+		run->AddDetector(new LHTpc());
 
-		auto electronics = new LHElectronicsTask(true);
-		run->Add(electronics);
+		if ( bDIGI ){
+			auto drift = new LHDriftElectronTask();
+			drift->SetPadPersistency(true);
+			drift->SetDetID(10);
+			run->Add(drift);
+
+			auto electronics = new LHElectronicsTask(true);
+			run->Add(electronics);
+		}
+
+
+		if ( bDIGI && bRECO ){
+			auto psa = new KBPSATask();
+			psa -> SetPSA(new KBPSAFastFit());
+			run->Add(psa);
+
+			run->Add(new LHHelixTrackFindingTask());
+			//run->Add(new LHVertexFindingTask());
+		}
+
+		run->Init();
+		run->Run();
 	}
-
-
-	if ( bDIGI && bRECO ){
-		auto psa = new KBPSATask();
-		psa -> SetPSA(new KBPSAFastFit());
-		run->Add(psa);
-
-		run->Add(new LHHelixTrackFindingTask());
-		//run->Add(new LHVertexFindingTask());
-	}
-
-	run->Init();
-	run->Run();
 
 
 }
