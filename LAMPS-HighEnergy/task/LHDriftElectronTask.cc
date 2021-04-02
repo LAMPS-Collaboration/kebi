@@ -21,7 +21,7 @@ bool LHDriftElectronTask::Init()
 {
   KBRun *run = KBRun::GetRun();
 
-  fMCStepArray = (TClonesArray *) run -> GetBranch("MCStep0");
+  fMCStepArray = (TClonesArray *) run -> GetBranch(Form("MCStep%d",fDetID));
   fTpc = (LHTpc *) run -> GetDetectorSystem() -> GetTpc();
 
   fNPlanes = fTpc -> GetNumPlanes();

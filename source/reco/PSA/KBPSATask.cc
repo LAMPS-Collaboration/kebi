@@ -24,7 +24,7 @@ bool KBPSATask::Init()
 
   fNPlanes = fTpc -> GetNumPlanes();
   fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
-  fTbTime = par -> GetParDouble("tbTime");
+  fTbTime = par -> GetParDouble("TPCtbTime");
 
   fPadArray = (TClonesArray *) run -> GetBranch("Pad");
 

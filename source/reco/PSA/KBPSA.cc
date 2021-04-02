@@ -28,9 +28,9 @@ void KBPSA::SetThreshold(Double_t val) { fThreshold = val; }
 
 void KBPSA::SetParameters(KBParameterContainer *par)
 {
-  fTbStart = par -> GetParInt("tbStart");
-  auto nTbs = par -> GetParInt("nTbs");
+  fTbStart = par -> GetParInt("TPCtbStart");
+  auto nTbs = par -> GetParInt("TPCnTbs");
   fTbEnd = fTbStart + nTbs - 1;
-  fThreshold = par -> GetParDouble("ADCThreshold");
-  fDynamicRange = par -> GetParDouble("dynamicRange");
+  fThreshold = par -> GetParDouble("TPCADCThreshold");
+  fDynamicRange = par -> GetParDouble("TPCdynamicRange");
 }
