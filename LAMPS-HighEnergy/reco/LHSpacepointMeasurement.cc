@@ -23,9 +23,12 @@ namespace genfit {
     rawHitCoords_(1) = pos.Y()/10.;
     rawHitCoords_(2) = pos.Z()/10.;
 
-    rawHitCov_(0,0) = 0.01;
-    rawHitCov_(1,1) = 0.01;
-    rawHitCov_(2,2) = 0.01;
+    //rawHitCov_(0,0) = 0.01;
+    //rawHitCov_(1,1) = 0.01;
+    //rawHitCov_(2,2) = 0.01;
+    rawHitCov_(0,0) = 1;
+    rawHitCov_(1,1) = 1;
+    rawHitCov_(2,2) = 1;
     rawHitCov_(0,1) = 0;
     rawHitCov_(1,2) = 0;
     rawHitCov_(2,0) = 0;
