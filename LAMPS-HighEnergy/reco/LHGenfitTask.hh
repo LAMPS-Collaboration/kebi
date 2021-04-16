@@ -25,6 +25,8 @@ class LHGenfitTask : public KBTask
 
     genfit::Track* FitTrack(KBHelixTrack *helixTrack, Int_t pdg);
 
+		void SetDetID(int detID){ fDetectorID = detID; }
+
   private:
     TClonesArray* fTrackArray = nullptr;
 
