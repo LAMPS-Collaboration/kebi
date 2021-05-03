@@ -19,7 +19,7 @@ void run(const char *name="g4event"){
 		if ( bDIGI ){
 			auto drift = new LHDriftElectronTask();
 			drift->SetPadPersistency(true);
-			drift->SetDetID(10);
+			drift->SetDetID(10); //TPC
 			run->Add(drift);
 
 			auto electronics = new LHElectronicsTask(true);
@@ -33,6 +33,9 @@ void run(const char *name="g4event"){
 			run->Add(psa);
 
 			run->Add(new LHHelixTrackFindingTask());
+			auto gfTask = new LHGenfitTask();
+			gfTask->SetDetID(10); //TPC
+			run->Add(gfTask);
 			//run->Add(new LHVertexFindingTask());
 		}
 
