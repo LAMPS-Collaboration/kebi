@@ -4,6 +4,7 @@
 #include "KBTask.hh"
 #include "KBHelixTrack.hh"
 #include "KBHit.hh"
+#include "KBVertex.hh"
 
 #include "TClonesArray.h"
 
@@ -13,6 +14,7 @@
 #include "genfit2/RKTrackRep.h"
 #include "genfit2/MeasurementFactory.h"
 #include "genfit2/MeasurementProducer.h"
+#include "genfit2/GFRaveVertexFactory.h"
 
 class LHGenfitTask : public KBTask
 { 
@@ -29,6 +31,7 @@ class LHGenfitTask : public KBTask
 
   private:
     TClonesArray* fTrackArray = nullptr;
+		TClonesArray* fVertexArray = nullptr;
 
     TClonesArray *fGFTrackHitClusterArray;
     TClonesArray *fGenfitTrackArray;
@@ -46,6 +49,10 @@ class LHGenfitTask : public KBTask
     genfit::MeasuredStateOnPlane fCurrentFitState;
     TVector3 fCurrentMomTargetPlane;
     TVector3 fCurrentPosTargetPlane;
+
+		genfit::GFRaveVertexFactory* fVertexFinder;
+
+		bool fPersistency = true;
 
   ClassDef(LHGenfitTask, 1)
 };
