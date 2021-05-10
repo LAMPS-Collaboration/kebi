@@ -16,6 +16,8 @@ using namespace std;
 #include "genfit2/TGeoMaterialInterface.h"
 #include "genfit2/TrackCand.h"
 
+#include "genfit2/GFRaveVertex.h"
+
 #include "TRandom.h"
 
 ClassImp(LHGenfitTask)
@@ -32,6 +34,9 @@ bool LHGenfitTask::Init()
 
   fGFTrackHitClusterArray = new TClonesArray("KBHit");
   //fGenfitTrackArray = new TClonesArray("genfit::Track");
+
+	fVertexArray = new TClonesArray("KBVertex");
+	run -> RegisterBranch("Vertex", fVertexArray, fPersistency);
 
 	KBParameterContainer *par = run -> GetParameterContainer();
 	double bfieldx = par -> GetParDouble("bfieldx");
@@ -56,18 +61,57 @@ bool LHGenfitTask::Init()
   TVector3 normalTarget(0, 0, 1);
   fTargetPlane = genfit::SharedPlanePtr(new genfit::DetPlane(posTarget, normalTarget));
 
+	fVertexFinder = new genfit::GFRaveVertexFactory();
+	fVertexFinder->setMethod("avf-smoothing:1");
+
   return true;
 }
 
 void LHGenfitTask::Exec(Option_t*)
 {
+
+	fVertexArray -> Clear("C");
+
+	std::vector<genfit::GFRaveVertex*> rave_vertices;
+	rave_vertices.clear();
+
+	vector<genfit::Track*> gf_tracks;
+	gf_tracks.clear();
+
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++)
   {
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
     auto genfitTrack = FitTrack(track, 2212);
     track -> SetGenfitMomentum(fCurrentMomTargetPlane);
+
+		if ( genfitTrack )
+		{
+			gf_tracks.push_back(genfitTrack);
+		}
   }
+
+
+	if ( gf_tracks.size()>= 2 )
+	{
+		fVertexFinder->findVertices(&rave_vertices, gf_tracks);
+	}
+
+	KBVertex *vertex = (KBVertex *) fVertexArray -> ConstructedAt(0);
+
+	if ( rave_vertices.size()>0 )
+	{
+		genfit::GFRaveVertex* rave_vtx = rave_vertices[0];
+		vertex->SetX(rave_vtx->getPos().X());
+		vertex->SetY(rave_vtx->getPos().Y());
+		vertex->SetZ(rave_vtx->getPos().Z());
+	}else{
+		vertex->SetX(-999);
+		vertex->SetY(-999);
+		vertex->SetZ(-999);
+	}
+
+	cout << "Vertex size: " << rave_vertices.size() << endl; 
 
   kb_info << "..." << endl;
 
