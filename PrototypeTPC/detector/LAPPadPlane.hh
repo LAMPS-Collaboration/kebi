@@ -26,8 +26,13 @@ class LAPPadPlane : public KBPadPlane
 
     virtual TCanvas *GetCanvas(Option_t *optiont = "");
 
+    //virtual void ResetHitMap();
+    //virtual void ResetEvent();
+    //virtual KBTpcHit *PullOutNextFreeHit();
+
   private:
     Int_t FindSection(Double_t i, Double_t j);
+    void SetNeighborPads(KBPad *pad0, KBPad *pad1);
 
     Double_t fTanPi1o8;
     Double_t fTanPi3o8;

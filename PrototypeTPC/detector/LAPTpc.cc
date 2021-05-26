@@ -1,5 +1,4 @@
 #include "LAPTpc.hh"
-#include "LAPPadPlane.hh"
 
 LAPTpc::LAPTpc()
 :KBTpc("LampsTpcPrototype","LAMPS TPC Prototype")

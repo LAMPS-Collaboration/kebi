@@ -75,7 +75,6 @@ bool LAPPadPlane::Init()
 
         pad -> SetPlaneID(fPlaneID);
         pad -> SetPadID(padID);
-        //pad -> SetSortValue(padID);
         pad -> SetAsAdID(asadID);
         pad -> SetAGETID(agetID);
         pad -> SetChannelID(channelID);
@@ -88,8 +87,6 @@ bool LAPPadPlane::Init()
       }
     }
   }
-
-  //fChannelArray -> Sort();
 
   Int_t nPads = fChannelArray -> GetEntriesFast();
   for (Int_t iPad = 0; iPad < nPads; iPad++) {
@@ -104,19 +101,56 @@ bool LAPPadPlane::Init()
     fPadMap.insert(std::pair<std::vector<Int_t>, Int_t>(key,iPad));
   }
 
+  for (Int_t section=0; section<fNumSections; section++) {
+    Int_t nLayers = fNRowsInLayer[section].size();
+    for (Int_t layer = 0; layer < nLayers; layer++) {
+      Int_t nRowsHalf = (fNRowsInLayer[section][layer]-1)/2;
+      for (Int_t row = -nRowsHalf; row < nRowsHalf; row++) {
+        auto pad1 = (KBPad *) fChannelArray -> At(FindPadID(section,row  ,layer));
+        auto pad2 = (KBPad *) fChannelArray -> At(FindPadID(section,row+1,layer));
+        SetNeighborPads(pad1,pad2);
+      }
+    }
+  }
+
+  for (Int_t section=0; section<fNumSections; section++) {
+    Int_t nLayers = fNRowsInLayer[section].size();
+    for (Int_t layer = 0; layer < nLayers-1; layer++) {
+      Int_t nRowsHalf = (fNRowsInLayer[section][layer]-1)/2;
+      for (Int_t row = -nRowsHalf; row <= nRowsHalf; row++) {
+        auto pad1 = (KBPad *) fChannelArray -> At(FindPadID(section,row,layer  ));
+        auto pad2 = (KBPad *) fChannelArray -> At(FindPadID(section,row,layer+1));
+        SetNeighborPads(pad1,pad2);
+
+        auto padID3 = FindPadID(section,row+1,layer+1);
+        if (padID3>=0) {
+          auto pad3 = (KBPad *) fChannelArray -> At(padID3);
+          SetNeighborPads(pad1,pad3);
+        }
+
+        auto padID4 = FindPadID(section,row-1,layer+1);
+        if (padID4>=0) {
+          auto pad4 = (KBPad *) fChannelArray -> At(padID4);
+          SetNeighborPads(pad1,pad4);
+        }
+      }
+    }
+  }
+
+
   return true;
 }
 
 Int_t LAPPadPlane::FindPadID(Int_t section, Int_t row, Int_t layer)
 {
-  if (section < 0 || section > fNumSections)
+  if (section < 0 || section >= fNumSections)
     return -1;
 
   Int_t nLayers = fNRowsInLayer[section].size();
   if (layer < 0 || layer >= nLayers)
     return -1;
 
-  if (std::abs(row) > (fNRowsInLayer[section][layer]-1)/2)
+  if (std::abs(row) > (fNRowsInLayer[section][layer])/2)
     return -1;
 
   std::vector<Int_t> key;
@@ -184,10 +218,14 @@ Double_t LAPPadPlane::PadDisplacement() const
 
 bool LAPPadPlane::IsInBoundary(Double_t i, Double_t j)
 {
-  if (TMath::Sqrt(i*i+j*j) < 300.)
-    return true;
+  if (FindSection(i,j)<0)
+    return false;
 
-  return false;
+  Double_t r = TMath::Sqrt(i*i+j*j);
+  if (r < fRMin || r > fRMax)
+    return false;
+
+  return true;
 }
 
 TH2* LAPPadPlane::GetHist(Option_t *)
@@ -311,4 +349,50 @@ TCanvas *LAPPadPlane::GetCanvas(Option_t *)
   }
 
   return fCanvas;
+}
+
+/*
+void LAPPadPlane::ResetEvent()
+{
+  KBPad *pad;
+  TIter iterPads(fChannelArray);
+  while ((pad = (KBPad *) iterPads.Next())) {
+    pad -> LetGo();
+  }
+
+  fFreePadIdx = fChannelArray -> GetEntriesFast() - 1;
+}
+
+void LAPPadPlane::ResetHitMap()
+{
+  KBPad *pad;
+  TIter iterPads(fChannelArray);
+  while ((pad = (KBPad *) iterPads.Next())) {
+    pad -> ClearHits();
+    pad -> LetGo();
+  }
+
+  fFreePadIdx = fChannelArray -> GetEntriesFast() - 1;
+}
+
+KBTpcHit *LAPPadPlane::PullOutNextFreeHit()
+{
+  if (fFreePadIdx < 0)
+    return nullptr;
+
+  auto pad = (KBPad *) fChannelArray -> At(fFreePadIdx);
+  auto hit = pad -> PullOutNextFreeHit();
+  if (hit == nullptr) {
+    --fFreePadIdx;
+    return PullOutNextFreeHit();
+  }
+
+  return hit;
+}
+*/
+
+void LAPPadPlane::SetNeighborPads(KBPad *pad0, KBPad *pad1)
+{
+  pad0 -> AddNeighborPad(pad1);
+  pad1 -> AddNeighborPad(pad0);
 }
