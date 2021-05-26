@@ -1,0 +1,12 @@
+base_parameter file prototype_komac.par
+
+runCopyBranchToOuput  string[]  Hit
+
+laptf_defaultScale          double    2.5
+laptf_trackWCutLL           double    15. 
+laptf_trackWCutHL           double    20.
+laptf_minNumHitsInitTrack   int       4
+laptf_minNumHitsFinalTrack  int       5
+laptf_trackLegnthCutScale   double    2.5
+laptf_firstNeighborRange    int       1
+laptf_angleDivisionArray    double[]  0,10,30,60

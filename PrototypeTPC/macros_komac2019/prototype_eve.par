@@ -1,0 +1,18 @@
+# eve
+eveAxisOrigin       v3         0, -200, -400
+eveAxisLength       double     150
+#selectBranchNames   string[]   MCTrack MCStep0
+#evePPFillOption     string     raw
+
+eveLineColor__Tracklet color kRed
+eveLineWidth__Tracklet w 2
+
+drawHitsByTracks b true
+
+eveMarkerColor__Hit color[] kBlack, kRed, kBlue, kSpring-6, kOrange-3, kViolet-5
+eveMarkerSize__Hit size 1.5
+
+eveMarkerColor__TrackHit color kBlack
+eveMarkerColor__CandHit  color kGray+2
+eveMarkerColor__GoodHit  color kBlue
+eveMarkerColor__BadHit   color kRed
