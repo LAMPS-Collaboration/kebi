@@ -95,17 +95,60 @@ void KBTracklet::Clear(Option_t *option)
   fPDG = -1;
 
   fHitArray.Clear();  //!
+  fHitIDArray.clear();
 }
 
 void KBTracklet::AddHit(KBHit *hit)
 {
   fHitArray.AddHit(hit);
+  fHitIDArray.push_back(hit->GetHitID());
 }
 
 void KBTracklet::RemoveHit(KBHit *hit)
 {
+  auto id = hit -> GetHitID();
   fHitArray.RemoveHit(hit);
+  auto numHits = fHitIDArray.size();
+  for (auto iHit=0; iHit<numHits; ++iHit) {
+    if (fHitIDArray[iHit]==id) {
+      fHitIDArray.erase(fHitIDArray.begin()+iHit);
+      break;
+    }
+  }
 }
+
+void KBTracklet::FinalizeHits()
+{
+  TIter next(&fHitArray);
+  KBHit *hit;
+  while ((hit = (KBHit *) next()))
+    hit -> SetTrackID(fTrackID);
+
+  PropagateMC();
+}
+
+void KBTracklet::SortHits(bool increasing)
+{
+  TIter next(&fHitArray);
+  KBHit *hit;
+  if (increasing)
+    while ((hit = (KBHit *) next()))
+      hit -> SetSortValue(LengthAt(hit->GetPosition()));
+  else
+    while ((hit = (KBHit *) next()))
+      hit -> SetSortValue(-LengthAt(hit->GetPosition()));
+  fHitArray.Sort();
+}
+
+
+/*
+ * HITS
+ */
+Int_t KBTracklet::GetNumHits() const { return fHitIDArray.size(); }
+KBHit *KBTracklet::GetHit(Int_t idx) const { return fHitArray.GetHit(idx); }
+Int_t KBTracklet::GetHitID(Int_t idx) const { return fHitIDArray[idx]; }
+KBHitArray *KBTracklet::GetHitArray() { return &fHitArray; }
+std::vector<Int_t> *KBTracklet::GetHitIDArray() { return &fHitIDArray; }
 
 #ifdef ACTIVATE_EVE
 bool KBTracklet::DrawByDefault() { return true; }

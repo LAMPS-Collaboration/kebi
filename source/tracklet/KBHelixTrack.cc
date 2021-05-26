@@ -46,7 +46,6 @@ void KBHelixTrack::Clear(Option_t *option)
   fIsPositiveChargeParticle = true;
 
   fHitArray.Clear();
-  fHitIDArray.clear();
 
   fdEdxArray.clear();
 }
@@ -269,25 +268,6 @@ bool KBHelixTrack::FitPlane()
   return false;
 }
 
-void KBHelixTrack::AddHit(KBHit *hit)
-{
-  fHitArray.AddHit(hit);
-  fHitIDArray.push_back(hit->GetHitID());
-}
-
-void KBHelixTrack::RemoveHit(KBHit *hit)
-{
-  auto id = hit -> GetHitID();
-  fHitArray.RemoveHit(hit);
-  auto numHits = fHitIDArray.size();
-  for (auto iHit=0; iHit<numHits; ++iHit) {
-    if (fHitIDArray[iHit]==id) {
-      fHitIDArray.erase(fHitIDArray.begin()+iHit);
-      break;
-    }
-  }
-}
-
 /*
 void KBHelixTrack::DeleteHits()
 {
@@ -313,16 +293,6 @@ void KBHelixTrack::SortHits(bool increasing)
 }
 
 void KBHelixTrack::SortHitsByTimeOrder() { SortHits(fIsPositiveChargeParticle); }
-
-void KBHelixTrack::FinalizeHits()
-{
-  TIter next(&fHitArray);
-  KBHit *hit;
-  while ((hit = (KBHit *) next()))
-    hit -> SetTrackID(fTrackID);
-
-  PropagateMC();
-}
 
 void KBHelixTrack::SetFitStatus(KBFitStatus value)  { fFitStatus = value; }
 void KBHelixTrack::SetIsBad()          { fFitStatus = KBHelixTrack::kBad; }
@@ -452,15 +422,6 @@ void KBHelixTrack::DetermineParticleCharge(TVector3 vertex)
   }
 }
 
-
-/*
- * HITS
- */
-Int_t KBHelixTrack::GetNumHits() const { return fHitIDArray.size(); }
-KBHit *KBHelixTrack::GetHit(Int_t idx) const { return fHitArray.GetHit(idx); }
-Int_t KBHelixTrack::GetHitID(Int_t idx) const { return fHitIDArray[idx]; }
-KBHitArray *KBHelixTrack::GetHitArray() { return &fHitArray; }
-std::vector<Int_t> *KBHelixTrack::GetHitIDArray() { return &fHitIDArray; }
 
 /*
  * dE/dx

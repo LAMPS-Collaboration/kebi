@@ -312,7 +312,7 @@ KBTpcHit *KBPad::PullOutNextFreeHit()
 
   for (auto i = 0; i < n; i++) {
     auto hit = fHitArray[i];
-    if (hit -> GetNumTrackCands() == 0) {
+    if (hit->IsFreeHit()) {
       fHitArray.erase(fHitArray.begin()+i);
       return hit;
     }

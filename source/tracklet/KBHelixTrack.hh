@@ -52,7 +52,7 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     std::vector<Double_t> fdEdxArray;  ///< dE/dx array;
 
     //KBHitArray fHitArray; //!
-    vector<Int_t> fHitIDArray;
+    //vector<Int_t> fHitIDArray;
 
   public:
     virtual void Clear(Option_t *option = "");
@@ -71,14 +71,9 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     virtual bool Fit();
     virtual bool FitPlane();
 
-    void AddHit(KBHit *hit);
-    void RemoveHit(KBHit *hit);
     //void DeleteHits();
     void SortHits(bool increasing = true);
     void SortHitsByTimeOrder();
-
-    void FinalizeHits();
-    void FinalizeClusters();
 
     void SetFitStatus(KBFitStatus value);
     void SetIsBad();
@@ -144,14 +139,6 @@ class KBHelixTrack : public KBTracklet, public KBGeoHelix
     Bool_t IsPositiveChargeParticle() const;
 
     void DetermineParticleCharge(TVector3 vertex); //@todo TODO
-
-    /*
-     */
-    Int_t GetNumHits() const;
-    KBHit *GetHit(Int_t idx) const;
-    Int_t GetHitID(Int_t idx) const;
-    KBHitArray *GetHitArray();
-    std::vector<Int_t> *GetHitIDArray();
 
     /*
      */

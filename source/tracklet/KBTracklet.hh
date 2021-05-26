@@ -20,6 +20,7 @@ class KBTracklet : public KBMCTagged
     Int_t fPDG = -1;
 
     KBHitArray fHitArray; //!
+    vector<Int_t> fHitIDArray;
 
     TGraph *fTrajectoryOnPlane = nullptr; //!
 
@@ -40,10 +41,21 @@ class KBTracklet : public KBMCTagged
     void SetPDG(Int_t val) { fPDG = val; }
     Int_t GetPDG() const { return fPDG; }
 
-    KBHitArray *GetHitArray() { return &fHitArray; }
+    //KBHitArray *GetHitArray() { return &fHitArray; }
+
+    /*
+     */
+    Int_t GetNumHits() const;
+    KBHit *GetHit(Int_t idx) const;
+    Int_t GetHitID(Int_t idx) const;
+    KBHitArray *GetHitArray();
+    std::vector<Int_t> *GetHitIDArray();
+
 
     virtual void AddHit(KBHit *hit);
     virtual void RemoveHit(KBHit *hit);
+    virtual void SortHits(bool increasing = true);
+    void FinalizeHits();
 
     virtual bool Fit() { return true; }
 

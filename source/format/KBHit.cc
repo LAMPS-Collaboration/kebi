@@ -22,8 +22,11 @@ void KBHit::Clear(Option_t *option)
   fDZ = -999;
   fSortValue = 0;
 
+  fHitStatus = kFreeHit;
+
   fHitArray.Clear("C");
   fTrackCandArray.clear();
+  fTrackQualityArray.clear();
 }
 
 void KBHit::Print(Option_t *option) const
@@ -93,31 +96,31 @@ void KBHit::SetSortValue(Double_t val) { fSortValue = val; }
 Double_t KBHit::GetSortValue() const { return fSortValue; }
 
 void KBHit::SetSortByX(bool sortEarlierIfSmaller) {
-  if (sortEarlierIfSmaller) fSortValue =  fX;
-  else                      fSortValue = -fX;
+  if (sortEarlierIfSmaller) fSortValue = -fX;
+  else                      fSortValue = +fX;
 }
 
 void KBHit::SetSortByY(bool sortEarlierIfSmaller) {
-  if (sortEarlierIfSmaller) fSortValue =  fY;
-  else                      fSortValue = -fY;
+  if (sortEarlierIfSmaller) fSortValue = -fY;
+  else                      fSortValue = +fY;
 }
 
 void KBHit::SetSortByZ(bool sortEarlierIfSmaller) {
-  if (sortEarlierIfSmaller) fSortValue =  fZ;
-  else                      fSortValue = -fZ;
+  if (sortEarlierIfSmaller) fSortValue = -fZ;
+  else                      fSortValue = +fZ;
 }
 
 void KBHit::SetSortByCharge(bool sortEarlierIfSmaller)
 {
-  if (sortEarlierIfSmaller) fSortValue =  fW;
-  else                      fSortValue = -fW;
+  if (sortEarlierIfSmaller) fSortValue = -fW;
+  else                      fSortValue = +fW;
 }
 
 void KBHit::SetSortByDistanceTo(TVector3 point, bool sortEarlierIfCloser)
 {
   auto dist = (point - GetPosition()).Mag();
-  if (sortEarlierIfCloser) fSortValue =  dist;
-  else                     fSortValue = -dist;
+  if (sortEarlierIfCloser) fSortValue = -dist;
+  else                     fSortValue =  dist;
 }
 
 Bool_t KBHit::IsSortable() const { return true; }
@@ -280,18 +283,49 @@ KBVector3 KBHit::GetCoSquaredMean(kbaxis ref) const { return fHitArray.GetCoSqua
 
 std::vector<Int_t> *KBHit::GetTrackCandArray() { return &fTrackCandArray; }
 Int_t KBHit::GetNumTrackCands() { return fTrackCandArray.size(); }
-void KBHit::AddTrackCand(Int_t id) { fTrackCandArray.push_back(id); }
+void KBHit::AddTrackCand(Int_t id, double quality) { fTrackCandArray.push_back(id); fTrackQualityArray.push_back(quality); }
 
 void KBHit::RemoveTrackCand(Int_t trackID)
 {
   Int_t n = fTrackCandArray.size();
   for (auto i = 0; i < n; i++) {
     if (fTrackCandArray[i] == trackID) {
-      fTrackCandArray.erase(fTrackCandArray.begin()+i); 
+      fTrackCandArray.erase(fTrackCandArray.begin()+i);
+      fTrackQualityArray.erase(fTrackQualityArray.begin()+i);
       return;
     }
   }
-  fTrackCandArray.push_back(-1);
+}
+
+void KBHit::SetFreeHit() {
+  fTrackID = -1;
+  fHitStatus = kFreeHit;
+  fTrackCandArray.clear();
+}
+
+void KBHit::SetUsedHit() { fHitStatus = kUsedHit; }
+void KBHit::SetTrackHit(int trackID) {
+  fHitStatus = kTrackHit;
+  if (trackID>=0)
+    fTrackID = trackID;
+}
+
+void KBHit::SetTrackHitCand(int trackID, double quality)
+{
+  fHitStatus = kTrackHitCand;
+  if (trackID>=0) {
+    Int_t n = fTrackCandArray.size();
+    bool foundID = false;
+    for (auto i = 0; i < n; i++) {
+      if (fTrackCandArray[i] == trackID) {
+        fTrackQualityArray[i] = quality;
+        foundID = true;
+        return;
+      }
+    }
+    if (!foundID)
+      AddTrackCand(trackID,quality);
+  }
 }
 
 #ifdef ACTIVATE_EVE

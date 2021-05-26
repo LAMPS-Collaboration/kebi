@@ -234,6 +234,7 @@ void KBPadPlane::ResetEvent()
   TIter iterPads(fChannelArray);
   while ((pad = (KBPad *) iterPads.Next())) {
     pad -> LetGo();
+    pad -> SetActive(false);
   }
 
   fFreePadIdx = 0;
@@ -266,17 +267,40 @@ KBTpcHit *KBPadPlane::PullOutNextFreeHit()
   return hit;
 }
 
-void KBPadPlane::PullOutNeighborHits(KBHitArray *hits, KBHitArray *neighborHits)
+void KBPadPlane::PullOutNeighborHits(KBHitArray *hits, KBHitArray *neighborHits, Int_t range)
 {
+  vector<KBPad *> neighborsUsed;
+  vector<KBPad *> neighborsTemp;
+  vector<KBPad *> neighborsNew;
+
   auto numHits = hits -> GetEntries();
-  for (auto iHit=0; iHit<numHits; ++iHit){
+  for (auto iHit=0; iHit<numHits; ++iHit) {
     auto hit = (KBTpcHit *) hits -> GetHit(iHit);
     auto pad = (KBPad *) fChannelArray -> At(hit -> GetPadID());
-    auto neighbors = pad -> GetNeighborPadArray();
-    for (auto neighbor : *neighbors) {
-      neighbor -> PullOutHits(neighborHits);
-    }
+    neighborsTemp.push_back(pad);
+    pad -> Grab();
   }
+
+  while (range > 0) {
+    neighborsNew.clear();
+    GrabNeighborPads(&neighborsTemp, &neighborsNew);
+
+    for (auto neighbor : neighborsTemp)
+      neighborsUsed.push_back(neighbor);
+    neighborsTemp.clear();
+
+    for (auto neighbor : neighborsNew) {
+      neighbor -> PullOutHits(neighborHits);
+      neighborsTemp.push_back(neighbor);
+    }
+    range--;
+  }
+
+  for (auto neighbor : neighborsUsed)
+    neighbor -> LetGo();
+
+  for (auto neighbor : neighborsNew)
+    neighbor -> LetGo();
 }
 
 void KBPadPlane::PullOutNeighborHits(Double_t x, Double_t y, Int_t range, KBHitArray *neighborHits)

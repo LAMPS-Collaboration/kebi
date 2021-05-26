@@ -165,7 +165,7 @@ void KBODRFitter::ChooseEigenValue(Int_t iEV)
   (*fNormal) = TMatrixDColumn((*fEigenVectors), iEV);
 
   fRMSLine = (fSumOfPC2 - (*fEigenValues)[iEV]) / (fWeightSum - 2*fWeightSum/fNumPoints);
-  fRMSLine = TMath::Sqrt(fRMSLine);
+  fRMSLine = TMath::Sqrt(TMath::Abs(fRMSLine));
 
   fRMSPlane = (*fEigenValues)[iEV] / (fWeightSum - 2*fWeightSum/fNumPoints);
   if (fRMSPlane < 0) fRMSPlane = 0;

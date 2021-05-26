@@ -171,22 +171,30 @@ void KBHitArray::PrintHits(Int_t rank) const
 
 KBGeoLine KBHitArray::FitLine()
 {
-  if (fODRFitter == nullptr)
-    fODRFitter = KBODRFitter::GetFitter();
-
   KBGeoLine line;
   line.SetRMS(-1);
 
-  if (fN < 4)
+  if (fN==1) {
+    line.SetLine(GetHit(0)->GetPosition(), GetHit(0)->GetPosition());
+    line.SetRMS(0);
     return line;
+  }
+  else if (fN==2) {
+    line.SetLine(GetHit(0)->GetPosition(), GetHit(1)->GetPosition());
+    line.SetRMS(0);
+    return line;
+  }
 
+  if (fODRFitter == nullptr)
+    fODRFitter = KBODRFitter::GetFitter();
   fODRFitter -> Reset();
   fODRFitter -> SetCentroid(fEX,fEY,fEZ);
   fODRFitter -> SetMatrixA(GetAXX(),GetAXY(),GetAZX(),GetAYY(),GetAYZ(),GetAZZ());
   fODRFitter -> SetWeightSum(fW);
   fODRFitter -> SetNumPoints(fN);
-  if (fODRFitter -> Solve() == false)
+  if (fODRFitter -> Solve() == false) {
     return line;
+  }
 
   fODRFitter -> ChooseEigenValue(0);
   line.SetLine(TVector3(fEX,fEY,fEZ), TVector3(fEX,fEY,fEZ)+fODRFitter->GetDirection());

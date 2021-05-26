@@ -17,8 +17,6 @@ void KBTpcHit::Clear(Option_t *option)
   fRow = -999;
   fLayer = -999;
   fTb = -1;
-
-  fTrackCandArray.clear();
 }
 
 void KBTpcHit::Print(Option_t *option) const
@@ -126,10 +124,10 @@ void KBTpcHit::AddHit(KBTpcHit *hit)
   fTb = (w0*fTb + hit->GetCharge()*hit->GetTb()) / (w0+hit->GetCharge());
 }
 
-TF1 *KBTpcHit::GetPulseFunction(Option_t *)
+TF1 *KBTpcHit::GetPulseFunction(Option_t *opt)
 {
   auto pulseGen = KBPulseGenerator::GetPulseGenerator();
-  auto f1 = pulseGen -> GetPulseFunction("pulse");
+  auto f1 = pulseGen -> GetPulseFunction(opt);
   f1 -> SetParameters(fW, fTb);
   return f1;
 }

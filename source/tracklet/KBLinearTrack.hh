@@ -42,6 +42,8 @@ class KBLinearTrack : public KBTracklet, public KBGeoLine
     virtual TGraph *TrajectoryOnPlane(KBDetectorPlane *plane, Double_t scale=1);
     virtual TGraph *CrossSectionOnPlane(kbaxis_t axis1, kbaxis_t axis2, Double_t scale=1);
 
+    Double_t GetTrackWidth() const { return fRMS; }
+
   protected:
     Double_t fQuality = -1;
     Double_t fWidth = -1;

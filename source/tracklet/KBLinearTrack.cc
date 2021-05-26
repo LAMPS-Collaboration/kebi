@@ -110,9 +110,20 @@ void KBLinearTrack::Clear(Option_t *option)
 void KBLinearTrack::Print(Option_t *option) const
 {
   TString opts = TString(option);
+  auto centerPos = GetCenter();
 
-  kr_info(0) << " from >" << setw(12) << fX1 << "," << setw(12) << fY1 << "," << setw(12) << fZ1 << endl;
-  kr_info(0) << "   to >" << setw(12) << fX2 << "," << setw(12) << fY2 << "," << setw(12) << fZ2 << endl;
+  kb_out << left;
+  kr_info(0) << setw(13) << "track ID:"  << fTrackID << endl;
+  kr_info(0) << setw(13) << "parent ID:" << fParentID << endl;
+  kr_info(0) << setw(13) << "# of Hits:" << fHitArray.GetNumHits() << endl;
+  kr_info(0) << setw(13) << "head: "     << fX1 << ", " << fY1 << ", " << fZ1 << endl;
+  kr_info(0) << setw(13) << "tail: "     << fX2 << ", " << fY2 << ", " << fZ2 << endl;
+  kr_info(0) << setw(13) << "center: "   << centerPos.X() << ", " << centerPos.Y() << ", " << centerPos.Z() << endl;
+  kr_info(0) << setw(13) << "length: "   << Length() << endl;
+  kr_info(0) << setw(13) << "width: "    << GetTrackWidth() << endl;
+
+  if (opts.Index(">")>=0)
+    fHitArray.PrintHits(1);
 }
 
 bool KBLinearTrack::Fit()

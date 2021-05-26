@@ -81,7 +81,7 @@ class KBPadPlane : public KBDetectorPlane
     void PullOutNeighborHits(TVector2 p, Int_t range, vector<KBTpcHit*> *neighborHits);
     void PullOutNeighborHits(Double_t x, Double_t y, Int_t range, vector<KBTpcHit*> *neighborHits);
 
-    void PullOutNeighborHits(KBHitArray *hits, KBHitArray *neighborHits);
+    void PullOutNeighborHits(KBHitArray *hits, KBHitArray *neighborHits, Int_t range=1);
     void PullOutNeighborHits(Double_t x, Double_t y, Int_t range, KBHitArray *neighborHits);
 
     void GrabNeighborPads(vector<KBPad*> *pads, vector<KBPad*> *neighborPads);

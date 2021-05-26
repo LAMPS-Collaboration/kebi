@@ -22,6 +22,14 @@ class KBTracklet;
 
 class KBHit : public KBWPoint
 {
+  public :
+    enum HitStatus  {
+      kFreeHit,
+      kUsedHit,
+      kTrackHitCand,
+      kTrackHit
+    };
+
   protected:
     Int_t fHitID = -1;
     Int_t fTrackID = -1;
@@ -34,6 +42,9 @@ class KBHit : public KBWPoint
     KBHitArray fHitArray; //!
 
     vector<Int_t> fTrackCandArray;  //!
+    vector<Int_t> fTrackQualityArray;  //!
+
+    HitStatus fHitStatus = kFreeHit;
 
   public :
     KBHit() { Clear(); }
@@ -105,8 +116,22 @@ class KBHit : public KBWPoint
 
     vector<Int_t> *GetTrackCandArray();
     Int_t GetNumTrackCands();
-    void AddTrackCand(Int_t id);
+    void AddTrackCand(Int_t id, double quality=0);
     void RemoveTrackCand(Int_t trackID);
+
+    vector<Int_t> *GetTrackQualityArray();
+
+    bool IsFreeHit()      { if (fHitStatus==kFreeHit) return true; return false; }
+    bool IsUsedHit()      { if (fHitStatus==kUsedHit) return true; return false; }
+    bool IsTrackHitCand() { if (fHitStatus==kTrackHitCand) return true; return false; }
+    bool IsTrackHit()     { if (fHitStatus==kTrackHit) return true; return false; }
+
+    void SetFreeHit();
+    void SetUsedHit();
+    void SetTrackHitCand(int trackID=-1, double quality=1);
+    void SetTrackHit(int trackID=-1);
+
+    HitStatus GetHitStatus() { return fHitStatus; }
 
 #ifdef ACTIVATE_EVE
     virtual bool DrawByDefault();
@@ -116,7 +141,7 @@ class KBHit : public KBWPoint
     virtual void AddToEveSet(TEveElement *eveSet, Double_t scale=1);
 #endif
 
-  ClassDef(KBHit, 3)
+  ClassDef(KBHit, 4)
 };
 
 class KBHitSortDirection {
