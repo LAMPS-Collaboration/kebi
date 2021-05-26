@@ -8,5 +8,6 @@
 #pragma link C++ class LAPDecoderFromRootTask+;
 #pragma link C++ class LAPNoiseSubtractionTask+;
 #pragma link C++ class LAPBeamTrackingTask+;
+#pragma link C++ class LAPTrackFindingTask+;
 
 #endif
