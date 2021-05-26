@@ -111,7 +111,8 @@ foreach(_name ${KEBI_SOURCE_NAME_LIST})
 endforeach(_name)
 
 add_library(KEBI SHARED ${KEBI_LIB_LIST})
-target_link_libraries(KEBI ${ROOT_LIBRARIES})
+
+target_link_libraries(KEBI ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 
 if(BUILD_GEANT4_SIM)
   foreach(_directory ${KEBI_GEANT4_DIRECTORY_LIST})
