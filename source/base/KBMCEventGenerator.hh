@@ -50,28 +50,54 @@
 #define KBMCEVENTGENGENERATOR_HH
 
 #include "TVector3.h"
-#include <fstream>
 #include "TClonesArray.h"
+#include "TRandom3.h"
+#include "KBVector3.hh"
+#include "KBGear.hh"
+#include <fstream>
 
-class KBMCEventGenerator
+class KBMCEventGenerator : public KBGear
 {
   public:
     KBMCEventGenerator();
     KBMCEventGenerator(TString fileName);
     virtual ~KBMCEventGenerator();
 
+    // read gen
+    void AddGenFile(TString fileName);
     bool ReadNextEvent(Double_t &vx, Double_t &vy, Double_t &vz);
     bool ReadNextTrack(Int_t &pdg, Double_t &px, Double_t &py, Double_t &pz);
+    void Summary();
 
     Int_t GetNumEvents() { return fNumEvents; };
     bool ReadMomentumOrEnergy() { return fReadMomentumOrEnergy; }
 
+    // create gen
+    const char *CreateGenFile(const char *runName, int runID, int numEvents);
+    void AddEvent(int numTracks, double vX, double vY, double vZ);
+    void AddTrack(TString particleName, double pX, double pY, double pZ);
+    void AddTrack(int pdg, double pX, double pY, double pZ);
+    const char *CreateGenRandom(const char *runName, int runID, int numEvents, int numTracks, double vX, double vY, double vZ, TString particleNames, double pVal, double theta1=0, double theta2=180, double phi1=-180, double phi2=180,
+        KBVector3::Axis refAxis=KBVector3::kZ);
+
   private:
     std::ifstream fInputFile;
-    bool fReadMomentumOrEnergy;
-    Int_t fNumEvents;
-    Int_t fNumTracks;
-    Int_t fCurrentTrackID;
+    bool fReadMomentumOrEnergy = true;
+    Int_t fNumEvents = 0;
+    Int_t fNumTracks = 0;
+    Int_t fCurrentTrackID = -1;
+    Int_t fCurrentEventID = -1;
+
+    vector<TString> fInputFileNameArray;
+    Int_t fCurrentInputFileIndex = 0;
+
+    std::ofstream fOutputFile;
+
+    TString fGenName;
+
+    TRandom3 fRandom;
+
+  ClassDef(KBMCEventGenerator, 1)
 };
 
 #endif

@@ -39,6 +39,8 @@
 #include <iostream>
 #include <ctime>
 
+//#define DEBUGSETHITRANGE
+
 ClassImp(KBRun);
 
 KBRun* KBRun::fInstance = nullptr;
@@ -432,7 +434,7 @@ void KBRun::SetIOFile(TString inputName, TString outputName, TString treeName)
 bool KBRun::Init()
 {
   if (fInitialized)
-  fInitialized = false;
+    fInitialized = false;
 
   kb_info << "Initializing" << endl;
 
@@ -615,6 +617,7 @@ bool KBRun::Init()
     else {
       kb_warning << "Output file is not set!" << endl;
       kb_warning << "Set output-file-name(SetOutputFile) or runID(SetRunID)." << endl;
+      return false;
     }
   }
   else {
@@ -637,6 +640,26 @@ bool KBRun::Init()
     if (fOutputVersion != fInputVersion) {
       kb_warning << "output file version is different from input file version!" << endl;
       kb_warning << "output:" << fOutputFileName << " input:" << fInputFileName.IsNull() << endl;
+    }
+  }
+
+  // must do before init task
+  {
+    auto vBranchNamesCopy = fPar -> GetParVString("runCopyBranchToOuput");
+    for (auto iBranch=0; iBranch<fNumBranches; ++iBranch)
+    {
+      auto branchName = fBranchNames.at(iBranch);
+      bool copyBranch = false;
+      for (auto branchNameC : vBranchNamesCopy) {
+        if (branchName==branchNameC) {
+          copyBranch = true;
+          break;
+        }
+      }
+      if (copyBranch) {
+        auto obj = fBranchPtr[iBranch];
+        fOutputTree -> Branch(branchName, &obj);
+      }
     }
   }
 
@@ -796,6 +819,8 @@ Long64_t KBRun::GetNumEvents() const { return fNumEntries; }
 
 Int_t KBRun::GetEntry(Long64_t entry, Int_t getall)
 {
+  fCurrentEventID = entry;
+
   if (fInputTree == nullptr)
     return -1;
 
@@ -812,6 +837,56 @@ Long64_t KBRun::GetStartEventID() const { return fStartEventID; }
 Long64_t KBRun::GetEndEventID() const { return fEndEventID; }
 Long64_t KBRun::GetCurrentEventID() const { return fCurrentEventID; }
 Long64_t KBRun::GetEventCount() const { return fEventCount; }
+
+bool KBRun::ExecStep(Option_t *opt)
+{
+  if (fInitialized == false)
+    Init();
+
+  if (fCurrentEventID>fNumEntries-1) {
+    kb_info << "step: " << fCurrentStep << " reached end of run." << endl;
+    return false;
+  }
+
+  if (fNextStepIsNextEvent)
+  {
+    fNextStepIsNextEvent = false;
+    if (fCurrentStep!=0) fCurrentEventID = fCurrentEventID + 1;
+    if (fCurrentEventID>fNumEntries-1) {
+      kb_info << "step: " << fCurrentStep << " reached end of run." << endl;
+      return false;
+    }
+
+    kb_info << "step Event " << fCurrentEventID << endl;
+    GetEntry(fCurrentEventID);
+
+    fCurrentTaskIndex = -1;
+    fNextStepIsNextTask = true;
+  }
+
+  fCurrentStep++;
+  kb_info << "step: " << fCurrentStep << " at event " << fCurrentEventID << endl;
+
+  if (fNextStepIsNextTask)
+  {
+    fNextStepIsNextTask = false;
+    fCurrentTaskIndex = fCurrentTaskIndex + 1;
+    if (fCurrentTaskIndex>fTasks->GetEntries()-1) {
+      fNextStepIsNextEvent = true;
+      kb_info << "step: " << fCurrentStep << " reached end of event " << fCurrentEventID << endl;
+      return ExecStep(opt);
+    }
+    fCurrentTask = (KBTask *) fTasks -> At(fCurrentTaskIndex);
+  }
+
+  bool endOfTask = !fCurrentTask -> ExecStep(opt);
+  if (endOfTask) {
+    kb_info << "step: " << fCurrentStep << " reached end of task " << fCurrentTask->ClassName() << endl;
+    fNextStepIsNextTask = true;
+  }
+
+  return true;
+}
 
 bool KBRun::Event(Long64_t eventID)
 {
@@ -1085,7 +1160,6 @@ void KBRun::DrawEve3D()
     bool isHit = (objSample -> InheritsFrom("KBHit")) ? true : false;
 
     KBContainer *eveObj = (KBContainer *) objSample;
-    //if (fSelBranchNames.size() == 0 && !eveObj -> DrawByDefault())
     if (fSelBranchNames.size() == 0 || !eveObj -> DrawByDefault())
       continue;
 
@@ -1121,25 +1195,67 @@ void KBRun::DrawEve3D()
     }
     else if (eveObj -> IsEveSet())
     {
-      auto eveSet = (TEvePointSet *) eveObj -> CreateEveElement();
-      TString name = Form("%s_%s",eveSet->GetElementName(),branchName.Data());
-      eveSet -> SetElementName(name);
-      for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
-        eveObj = (KBContainer *) branch -> At(iObject);
-
-        if (isHit)  {
-          KBHit *hit = (KBHit *) branch -> At(iObject);
-          hit -> SetSortValue(1);
-
-          if (!SelectHit(hit))
-            continue;
+      if (isHit && fDrawHitsByTracks) {
+        int maxTrackID = 0;
+        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+          auto hit = (KBHit *) branch -> At(iObject);
+          auto trackID = hit -> GetTrackID();
+          if (trackID>maxTrackID)
+            maxTrackID = trackID;
         }
 
-        eveObj -> AddToEveSet(eveSet, fEveScale);
-        numSelected++;
+        vector<TEvePointSet *> eveSetArray;
+        for (auto trackID=0; trackID<=maxTrackID+1; trackID++) {
+          auto eveSet = (TEvePointSet *) eveObj -> CreateEveElement();
+          TString name = Form("%s_%s_track%d",eveSet->GetElementName(),branchName.Data(),trackID);
+          if (trackID==maxTrackID+1)
+            name = Form("%s_%s_free",eveSet->GetElementName(),branchName.Data());
+          eveSet -> SetName(name);
+          eveSetArray.push_back(eveSet);
+        }
+
+        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+          auto hit = (KBHit *) branch -> At(iObject);
+          hit -> SetSortValue(1);
+          if (!SelectHit(hit))
+            continue;
+          auto trackID = hit -> GetTrackID();
+          if (trackID<0)
+            trackID = maxTrackID+1;
+          auto eveSet = eveSetArray.at(trackID);
+          hit -> AddToEveSet(eveSet, fEveScale);
+          numSelected++;
+        }
+
+        for (auto trackID=0; trackID<=maxTrackID+1; trackID++) {
+          auto eveSet = eveSetArray.at(trackID);
+          SetEveMarkerAtt(eveSet, branchName, trackID);
+          if (trackID==maxTrackID+1)
+            eveSet -> SetMarkerColor(kGray+1);
+          eveEvent -> AddElement(eveSet);
+        }
       }
-      SetEveMarkerAtt(eveSet, branchName);
-      eveEvent -> AddElement(eveSet);
+      else {
+        auto eveSet = (TEvePointSet *) eveObj -> CreateEveElement();
+        TString name = Form("%s_%s",eveSet->GetElementName(),branchName.Data());
+        eveSet -> SetElementName(name);
+        for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
+          eveObj = (KBContainer *) branch -> At(iObject);
+
+          if (isHit)  {
+            KBHit *hit = (KBHit *) branch -> At(iObject);
+            hit -> SetSortValue(1);
+
+            if (!SelectHit(hit))
+              continue;
+          }
+
+          eveObj -> AddToEveSet(eveSet, fEveScale);
+          numSelected++;
+        }
+        SetEveMarkerAtt(eveSet, branchName);
+        eveEvent -> AddElement(eveSet);
+      }
     }
     else {
       for (Int_t iObject = 0; iObject < nObjects; ++iObject) {
@@ -1165,7 +1281,7 @@ void KBRun::DrawEve3D()
       KBVector3 direction(0,0,0);
       direction.AddAt(length,kaxis);
       auto axis = new TEveArrow(direction.X(),direction.Y(),direction.Z(),origin.X(),origin.Y(),origin.Z()); // TODO
-      axis -> SetElementName(KBVector3::AxisName(KBVector3::kX) + " axis");
+      axis -> SetElementName(KBVector3::AxisName(kaxis) + " axis");
       if (kaxis==KBVector3::kX) axis -> SetMainColor(kRed);
       if (kaxis==KBVector3::kY) axis -> SetMainColor(kBlue);
       if (kaxis==KBVector3::kZ) axis -> SetMainColor(kBlack);
@@ -1329,32 +1445,44 @@ void KBRun::DrawDetectorPlanes()
   gStyle -> SetPalette(kBird);
 }
 
-void KBRun::SetEveLineAtt(TEveElement *el, TString branchName)
+void KBRun::SetEveLineAtt(TEveElement *el, TString branchName, int idx)
 {
   TString colorPar = Form("eveLineColor__%s",branchName.Data());
   if (fPar->CheckPar(colorPar)) {
-    auto color = fPar -> GetParColor(colorPar);
+    auto numPar = fPar -> GetParN(colorPar);
+    if (numPar==0) idx = -1;
+    else { while (idx>numPar-1) idx = idx - (numPar); }
+    auto color = fPar -> GetParColor(colorPar,idx);
     ((TEveLine *) el) -> SetLineColor(color);
   }
 
   TString widthPar = Form("eveLineWidth__%s",branchName.Data());
   if (fPar->CheckPar(widthPar)) {
-    auto width = fPar -> GetParInt(widthPar);
+    auto numPar = fPar -> GetParN(widthPar);
+    if (numPar==0) idx = -1;
+    else { while (idx>numPar-1) idx = idx - (numPar); }
+    auto width = fPar -> GetParInt(widthPar,idx);
     ((TEveLine *) el) -> SetLineWidth(width);
   }
 }
 
-void KBRun::SetEveMarkerAtt(TEveElement *el, TString branchName)
+void KBRun::SetEveMarkerAtt(TEveElement *el, TString branchName, int idx)
 {
   TString colorPar = Form("eveMarkerColor__%s",branchName.Data());
   if (fPar->CheckPar(colorPar)) {
-    auto color = fPar -> GetParColor(colorPar);
+    auto numPar = fPar -> GetParN(colorPar);
+    if (numPar==0) idx = -1;
+    else { while (idx>numPar-1) idx = idx - (numPar); }
+    auto color = fPar -> GetParColor(colorPar,idx);
     ((TEvePointSet *) el) -> SetMarkerColor(color);
   }
 
   TString sizePar = Form("eveMarkerSize__%s",branchName.Data());
   if (fPar->CheckPar(sizePar)) {
-    auto size = fPar -> GetParSize(sizePar);
+    auto numPar = fPar -> GetParN(sizePar);
+    if (numPar==0) idx = -1;
+    else { while (idx>numPar-1) idx = idx - (numPar); }
+    auto size = fPar -> GetParSize(sizePar,idx);
     ((TEvePointSet *) el) -> SetMarkerSize(size);
   }
 }
@@ -1380,6 +1508,25 @@ bool KBRun::SelectHit(KBHit *hit)
   if (fIgnHitPntIDs.size()!=0) { isGood = 1; for (auto id : fIgnHitPntIDs) { if (hit->GetTrackID()==id) { isGood = 0; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
   if (fSelMCIDs.size()!=0)     { isGood = 0; for (auto id : fSelMCIDs)     { if (hit->GetMCID()==id)    { isGood = 1; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
   if (fIgnMCIDs.size()!=0)     { isGood = 1; for (auto id : fIgnMCIDs)     { if (hit->GetMCID()==id)    { isGood = 0; break; }}} if (!isGood) { hit -> SetSortValue(-1); return false; }
+
+#ifdef DEBUGSETHITRANGE
+  kb_debug << "DEBUGSETHITRANGE" << endl;
+  if (fPar->CheckPar("debug_limit_xyz")) {
+    auto x = hit -> GetX();
+    auto y = hit -> GetY();
+    auto z = hit -> GetZ();
+    if (x<fPar->GetParDouble("debug_limit_xyz",0) ||
+        x>fPar->GetParDouble("debug_limit_xyz",1) ||
+        y<fPar->GetParDouble("debug_limit_xyz",2) ||
+        y>fPar->GetParDouble("debug_limit_xyz",3) ||
+        z<fPar->GetParDouble("debug_limit_xyz",4) ||
+        z>fPar->GetParDouble("debug_limit_xyz",5))
+    {
+      hit -> SetSortValue(-1);
+      return false;
+    }
+  }
+#endif
   return true;
 }
 
@@ -1418,20 +1565,24 @@ void KBRun::RunEve(Long64_t eveEventID, TString option)
   Bool_t drawEve3D = (fEveOption.Index("e")>=0) ? true : false;
   Bool_t drawDetectorPlanes = (fEveOption.Index("p")>=0) ? true : false;
 
-  if (eveEventID>=0 && fCurrentEventID!=eveEventID)
+  if (eveEventID==-999)  {}
+  else if (eveEventID>=0 && fCurrentEventID!=eveEventID)
     Event(eveEventID);
 
-  fSelTrkIDs    = fPar -> GetParVInt("eveSelectTrackIDs");
-  fIgnTrkIDs    = fPar -> GetParVInt("eveIgnoreTrackIDs");
-  fSelPntIDs    = fPar -> GetParVInt("eveSelectTrackParentIDs");
-  fIgnPntIDs    = fPar -> GetParVInt("eveIgnoreTrackParentIDs");
-  fSelPDGs      = fPar -> GetParVInt("eveSelectTrackPDGs");
-  fIgnPDGs      = fPar -> GetParVInt("eveIgnoreTrackPDGs");
-  fSelMCIDs     = fPar -> GetParVInt("eveSelectMCIDs");
-  fIgnMCIDs     = fPar -> GetParVInt("eveIgnoreMCIDs");
-  fSelHitPntIDs = fPar -> GetParVInt("eveSelectHitParentIDs");
-  fIgnHitPntIDs = fPar -> GetParVInt("eveIgnoreHitParentIDs");
-  fSelBranchNames = fPar -> GetParVString("eveSelectBranches");
+  fSelTrkIDs        = fPar -> GetParVInt("eveSelectTrackIDs");
+  fIgnTrkIDs        = fPar -> GetParVInt("eveIgnoreTrackIDs");
+  fSelPntIDs        = fPar -> GetParVInt("eveSelectTrackParentIDs");
+  fIgnPntIDs        = fPar -> GetParVInt("eveIgnoreTrackParentIDs");
+  fSelPDGs          = fPar -> GetParVInt("eveSelectTrackPDGs");
+  fIgnPDGs          = fPar -> GetParVInt("eveIgnoreTrackPDGs");
+  fSelMCIDs         = fPar -> GetParVInt("eveSelectMCIDs");
+  fIgnMCIDs         = fPar -> GetParVInt("eveIgnoreMCIDs");
+  fSelHitPntIDs     = fPar -> GetParVInt("eveSelectHitParentIDs");
+  fIgnHitPntIDs     = fPar -> GetParVInt("eveIgnoreHitParentIDs");
+  fSelBranchNames   = fPar -> GetParVString("eveSelectBranches");
+
+  if (fPar -> CheckPar("drawHitsByTracks"))
+    fDrawHitsByTracks = fPar -> GetParBool("drawHitsByTracks");
 
   fNumSelectedBranches = fSelBranchNames.size();
   if (fNumSelectedBranches==0) {

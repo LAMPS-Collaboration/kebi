@@ -16,6 +16,8 @@ class KBGear
     KBGear() {};
     virtual ~KBGear() {};
 
+    virtual bool Init() {}
+
     void CreateParameterContainer(bool debug=false);
 
     void SetParameterContainer(KBParameterContainer *par);

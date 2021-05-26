@@ -128,6 +128,8 @@ class KBRun : public KBTask
     /// Get eventID count; event_count = current_eventID - start_eventID
     Long64_t GetEventCount() const;
 
+    bool ExecStep(Option_t *opt="");
+
     bool Event(Long64_t eventID);
     bool NextEvent();
 
@@ -184,8 +186,8 @@ class KBRun : public KBTask
     void DrawEve3D();
     void ConfigureDetectorPlanes();
     void DrawDetectorPlanes();
-    void SetEveLineAtt(TEveElement *el, TString branchName);
-    void SetEveMarkerAtt(TEveElement *el, TString branchName);
+    void SetEveLineAtt(TEveElement *el, TString branchName, int idx=-1);
+    void SetEveMarkerAtt(TEveElement *el, TString branchName, int idx=-1);
     bool SelectTrack(KBTracklet *track);
     bool SelectHit(KBHit *hit);
 
@@ -236,10 +238,16 @@ class KBRun : public KBTask
     Long64_t fIdxEntry = 0;
     Long64_t fStartEventID = -1;
     Long64_t fEndEventID = -1;
-    Long64_t fCurrentEventID = 0;
+    Long64_t fCurrentEventID = -1;
     Long64_t fEventCount = 0;
     bool fSignalEndOfRun = false;
     bool fCheckIn = false;
+
+    Long64_t fCurrentStep = 0;
+    Int_t fCurrentTaskIndex = -1;
+    KBTask *fCurrentTask = nullptr;
+    bool fNextStepIsNextEvent = true;
+    bool fNextStepIsNextTask = true;
 
     KBParameterContainer *fRunHeader = nullptr;
     KBParameterContainer *fProcessTable = nullptr;
@@ -275,6 +283,7 @@ class KBRun : public KBTask
     vector<Int_t> fSelHitPntIDs;
     vector<Int_t> fIgnHitPntIDs;
     vector<TString> fSelBranchNames;
+    bool fDrawHitsByTracks = false;
 
     int fNumSelectedBranches;
 

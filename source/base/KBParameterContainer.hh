@@ -67,6 +67,8 @@ class KBParameterContainer : public TObjArray
     virtual Int_t AddPar(KBParameterContainer *parc, TString parNameForFile = "");
     Int_t GetNumInputFiles(); ///< Get number of input parameter files
 
+    Bool_t SetPar(std::string line);
+
     Bool_t SetPar(TString name, Bool_t val, Bool_t overwrite = false);       ///< Set Bool_t   type parameter with given name
     Bool_t SetPar(TString name, Int_t val, Bool_t overwrite = false);        ///< Set Int_t    type parameter with given name
     Bool_t SetPar(TString name, Double_t val, Bool_t overwrite = false);     ///< Set Double_t type parameter with given name
@@ -88,14 +90,17 @@ class KBParameterContainer : public TObjArray
     vector<kbaxis>   GetParVAxis  (TString name);
 
     TVector3 GetParV3(TString name);
-
     Double_t GetParX(TString name) { return GetParDouble(name,0); }
     Double_t GetParY(TString name) { return GetParDouble(name,1); }
     Double_t GetParZ(TString name) { return GetParDouble(name,2); }
 
-    Int_t GetParWidth(TString name)   { return GetParInt(name); }
-    Int_t GetParColor(TString name)   { return GetParInt(name); }
-    Double_t GetParSize(TString name) { return GetParDouble(name); }
+    Int_t    GetParWidth(TString name, int idx=-1) { return GetParInt(name,idx); }
+    Int_t    GetParColor(TString name, int idx=-1) { return GetParInt(name,idx); }
+    Double_t GetParSize (TString name, int idx=-1) { return GetParDouble(name,idx); }
+
+    vector<Int_t>    GetParVWidth(TString name) { return GetParVInt(name); }
+    vector<Int_t>    GetParVColor(TString name) { return GetParVInt(name); }
+    vector<Double_t> GetParVSize (TString name) { return GetParVDouble(name); }
 
     Bool_t CheckPar(TString name);
 

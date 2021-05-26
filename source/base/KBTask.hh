@@ -18,6 +18,9 @@ class KBTask : public TTask, public KBGear
 
     virtual void SetRank(Int_t rank);
 
+    /// return false at the end of the event
+    virtual bool ExecStep(Option_t *opt="") { Exec(opt); return false; }
+
     bool InitTask();
     bool InitTasks();
     virtual bool Init();

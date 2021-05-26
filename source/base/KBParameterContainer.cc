@@ -30,8 +30,9 @@ void KBParameterContainer::SetDebugMode(Bool_t val) { fDebugMode = val; }
 
 void KBParameterContainer::SaveAs(const char *fileName, Option_t *) const
 {
-  if (TString(fileName).EndsWith(".conf") || TString(fileName).EndsWith(".par"))
+  if (!(TString(fileName).EndsWith(".conf") || TString(fileName).EndsWith(".par")))
     fileName = TString(fileName)+".conf";
+
   Print(fileName);
 }
 
@@ -68,7 +69,10 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
   kr_info(0) << "Adding parameter file " << fileNameFull << endl;
 
   if (parNameForFile.IsNull())
-    parNameForFile = Form("INPUT_PARAMETER_FILE%d", fNumInputFiles);
+    parNameForFile = Form("INPUT_FILE_%d", fNumInputFiles);
+  else if (parNameForFile.Index("INPUT_FILE")<0)
+    parNameForFile = Form("INPUT_FILE_%d", fNumInputFiles);
+
   fNumInputFiles++;
   SetPar(parNameForFile, fileNameFull);
 
@@ -78,192 +82,8 @@ Int_t KBParameterContainer::AddFile(TString fileName, TString parNameForFile)
   string line;
 
   while (getline(file, line)) {
-    if (line.find("#") == 0)
-      continue;
-
-    countParameters++;
-
-    TString parName;
-    TString parType;
-
-    istringstream ss(line);
-    ss >> parName >> parType;
-    parType.ToLower();
-
-    Bool_t overwrite = false;
-    if (parType == "o" || parType == "overwrite") {
-      overwrite = true;
-      ss >> parType;
-      parType.ToLower();
-    }
-
-    if (parType == "f" || parType == "file") {
-      TString val;
-      ss >> val;
-      ReplaceEnvironmentVariable(val);
-      AddFile(val, parName);
-    }
-    else if (parType == "v3" || parType == "vector3" || parType == "tvector3" || parType == "kbvector3") {
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("3")+2, valuesInString.Sizeof()-valuesInString.First("3")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (numValues != 3)
-        continue;
-      SetPar(TString("VECTOR3_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal)
-        SetPar(parName+"["+iVal+"]",TString(((TObjString *) valueTokens->At(iVal))->GetString()).Atof(),overwrite);
-    }
-    else if (parType == "b" || parType == "bool" || parType == "bool_t") {
-      TString valueBoolean;
-      ss >> valueBoolean;
-      valueBoolean.ToLower();
-      Bool_t val = false;
-      if (valueBoolean == "true" || valueBoolean == "1" || valueBoolean == "ktrue")
-        val = true;
-      SetPar(parName, val, overwrite);
-    }
-    else if (parType.Index("b[")==0 || parType.Index("bool[")>=0 || parType.Index("bool_t[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal) {
-        TString valueBoolean = TString(((TObjString *) valueTokens->At(iVal))->GetString());
-        Bool_t val = false;
-        if (valueBoolean == "true" || valueBoolean == "1" || valueBoolean == "ktrue")
-          val = true;
-        SetPar(parName+"["+iVal+"]",val,overwrite);
-      }
-    }
-    else if (parType == "i" || parType == "int" || parType == "int_t" || parType == "w" || parType == "width" || parType == "width_t") {
-      Int_t val;
-      ss >> val;
-      SetPar(parName, val, overwrite);
-    }
-    else if (parType.Index("i[")==0 || parType.Index("int[")>=0 || parType.Index("int_t[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal)
-        SetPar(parName+"["+iVal+"]",TString(((TObjString *) valueTokens->At(iVal))->GetString()).Atoi(),overwrite);
-    }
-    else if (parType == "d" || parType == "double" || parType == "double_t" || parType == "size" || parType == "size_t") {
-      TString valFormula;
-      ss >> valFormula;
-      Double_t val = TFormula("formula",valFormula).Eval(0);
-      SetPar(parName, val, overwrite);
-    }
-    else if (parType.Index("d[")==0 || parType.Index("double[")>=0 || parType.Index("double_t[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal) {
-        TString valFormula = TString(((TObjString *) valueTokens->At(iVal))->GetString());
-        Double_t val = TFormula("formula",valFormula).Eval(0);
-        SetPar(parName+"["+iVal+"]",val,overwrite);
-      }
-    }
-    else if (parType == "s" || parType == "string" || parType == "tstring") {
-      TString val;
-      ss >> val;
-      ReplaceEnvironmentVariable(val);
-      SetPar(parName, val, overwrite);
-    }
-    else if (parType.Index("s[")==0 || parType.Index("string[")>=0 || parType.Index("tstring[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal) {
-        TString val(((TObjString *) valueTokens->At(iVal))->GetString());
-        ReplaceEnvironmentVariable(val);
-        SetPar(parName+"["+iVal+"]",val,overwrite);
-      }
-    }
-    else if (parType == "a" || parType == "axis" || parType == "kbvector3::axis") {
-      TString val;
-      ss >> val;
-      if (val.Index("AXIS_PARAMETER_")<0)
-        val = TString("AXIS_PARAMETER_") + val;
-      SetPar(parName, val, overwrite);
-    }
-    else if (parType.Index("a[")==0 || parType.Index("axis[")>=0 || parType.Index("kbvector3::axis[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal) {
-        TString val(((TObjString *) valueTokens->At(iVal))->GetString());
-        if (val.Index("AXIS_PARAMETER_")<0)
-          val = TString("AXIS_PARAMETER_") + val;
-        SetPar(parName+"["+iVal+"]",val,overwrite);
-      }
-    }
-    else if (parType == "c" || parType == "color" || parType == "color_t") {
-      TString val;
-      ss >> val;
-      SetParColor(parName, val, overwrite);
-    }
-    else if (parType.Index("c[")==0 || parType.Index("color[")>=0 || parType.Index("color_t[")==0) {
-      Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
-      TString valuesInString = line;
-      valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
-      if (valuesInString.First("#")>=0)
-        valuesInString = TString(valuesInString(0, valuesInString.First("#")));
-      valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
-      auto valueTokens = valuesInString.Tokenize(" ");
-      Int_t numValues = valueTokens -> GetEntriesFast();
-      if (arrayLength!=0 && numValues > arrayLength)
-        numValues = arrayLength;
-      SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
-      for (auto iVal=0; iVal<numValues; ++iVal) {
-        TString val(((TObjString *) valueTokens->At(iVal))->GetString());
-        SetParColor(parName+"["+iVal+"]",val,overwrite);
-      }
-    }
-    else
-      countParameters--;
+    if (SetPar(line))
+      countParameters++;
   }
 
   if (countParameters == 0) {
@@ -294,7 +114,7 @@ Int_t KBParameterContainer::AddPar(KBParameterContainer *parc, TString parNameFo
 
     TObject *found = FindObject(name);
     if (found != nullptr) {
-      if (name.Index("INPUT_PARAMETER_FILE")==0)
+      if (name.Index("INPUT_FILE")==0)
         ((TNamed *) obj) -> SetName(name+"_");
       else {
         kr_error(0) << "Parameter with name " << name << " already exist!" << endl;
@@ -365,7 +185,12 @@ void KBParameterContainer::Print(Option_t *option) const
       if (valueString.Index("AXIS_PARAMETER_")==0) {
         valueString.ReplaceAll("AXIS_PARAMETER_","");
         parType = "axis";
-      } else
+      }
+      else if (valueString.Index("INPUT_FILE_")==0) {
+        valueString.ReplaceAll("INPUT_FILE_","");
+        parType = "file";
+      }
+      else
         parType = "string";
     }
     else if (className == "TParameter<int>") {
@@ -434,6 +259,203 @@ void KBParameterContainer::Print(Option_t *option) const
   }
 }
 
+
+Bool_t KBParameterContainer::SetPar(std::string line)
+{
+  if (line.find("#") == 0)
+    return false;
+
+  TString parName;
+  TString parType;
+
+  istringstream ss(line);
+  ss >> parName >> parType;
+  parType.ToLower();
+
+  Bool_t overwrite = false;
+  if (parType == "o" || parType == "overwrite") {
+    overwrite = true;
+    ss >> parType;
+    parType.ToLower();
+  }
+
+  if (parType == "f" || parType == "file") {
+    TString val;
+    ss >> val;
+    ReplaceEnvironmentVariable(val);
+    AddFile(val, parName);
+  }
+  else if (parType == "v3" || parType == "vector3" || parType == "tvector3" || parType == "kbvector3") {
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("3")+2, valuesInString.Sizeof()-valuesInString.First("3")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (numValues != 3)
+      return false;
+    SetPar(TString("VECTOR3_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal)
+      SetPar(parName+"["+iVal+"]",TString(((TObjString *) valueTokens->At(iVal))->GetString()).Atof(),overwrite);
+  }
+  else if (parType == "b" || parType == "bool" || parType == "bool_t") {
+    TString valueBoolean;
+    ss >> valueBoolean;
+    valueBoolean.ToLower();
+    Bool_t val = false;
+    if (valueBoolean == "true" || valueBoolean == "1" || valueBoolean == "ktrue")
+      val = true;
+    SetPar(parName, val, overwrite);
+  }
+  else if (parType.Index("b[")==0 || parType.Index("bool[")>=0 || parType.Index("bool_t[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      TString valueBoolean = TString(((TObjString *) valueTokens->At(idx))->GetString());
+      Bool_t val = false;
+      if (valueBoolean == "true" || valueBoolean == "1" || valueBoolean == "ktrue")
+        val = true;
+      SetPar(parName+"["+iVal+"]",val,overwrite);
+    }
+  }
+  else if (parType == "i" || parType == "int" || parType == "int_t" || parType == "w" || parType == "width" || parType == "width_t") {
+    Int_t val;
+    ss >> val;
+    SetPar(parName, val, overwrite);
+  }
+  else if (parType.Index("i[")==0 || parType.Index("int[")>=0 || parType.Index("int_t[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      SetPar(parName+"["+iVal+"]",TString(((TObjString *) valueTokens->At(idx))->GetString()).Atoi(),overwrite);
+    }
+  }
+  else if (parType == "d" || parType == "double" || parType == "double_t" || parType == "size" || parType == "size_t") {
+    TString valFormula;
+    ss >> valFormula;
+    Double_t val = TFormula("formula",valFormula).Eval(0);
+    SetPar(parName, val, overwrite);
+  }
+  else if (parType.Index("d[")==0 || parType.Index("double[")>=0 || parType.Index("double_t[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      TString valFormula = TString(((TObjString *) valueTokens->At(idx))->GetString());
+      Double_t val = TFormula("formula",valFormula).Eval(0);
+      SetPar(parName+"["+iVal+"]",val,overwrite);
+    }
+  }
+  else if (parType == "s" || parType == "string" || parType == "tstring") {
+    TString val;
+    ss >> val;
+    ReplaceEnvironmentVariable(val);
+    SetPar(parName, val, overwrite);
+  }
+  else if (parType.Index("s[")==0 || parType.Index("string[")>=0 || parType.Index("tstring[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      TString val(((TObjString *) valueTokens->At(idx))->GetString());
+      ReplaceEnvironmentVariable(val);
+      SetPar(parName+"["+iVal+"]",val,overwrite);
+    }
+  }
+  else if (parType == "a" || parType == "axis" || parType == "kbvector3::axis") {
+    TString val;
+    ss >> val;
+    if (val.Index("AXIS_PARAMETER_")<0)
+      val = TString("AXIS_PARAMETER_") + val;
+    SetPar(parName, val, overwrite);
+  }
+  else if (parType.Index("a[")==0 || parType.Index("axis[")>=0 || parType.Index("kbvector3::axis[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      TString val(((TObjString *) valueTokens->At(idx))->GetString());
+      if (val.Index("AXIS_PARAMETER_")<0)
+        val = TString("AXIS_PARAMETER_") + val;
+      SetPar(parName+"["+iVal+"]",val,overwrite);
+    }
+  }
+  else if (parType == "c" || parType == "color" || parType == "color_t") {
+    TString val;
+    ss >> val;
+    SetParColor(parName, val, overwrite);
+  }
+  else if (parType.Index("c[")==0 || parType.Index("color[")>=0 || parType.Index("color_t[")==0) {
+    Int_t arrayLength = TString(parType(parType.First("[")+1,parType.First("]")-parType.First("[")-1)).Atoi();
+    TString valuesInString = line;
+    valuesInString = TString(valuesInString(valuesInString.First("]")+2, valuesInString.Sizeof()-valuesInString.First("]")));
+    if (valuesInString.First("#")>=0)
+      valuesInString = TString(valuesInString(0, valuesInString.First("#")));
+    valuesInString.ReplaceAll("{",""); valuesInString.ReplaceAll("}",""); valuesInString.ReplaceAll(","," ");
+    auto valueTokens = valuesInString.Tokenize(" ");
+    Int_t numValues = valueTokens -> GetEntriesFast();
+    if (arrayLength!=0 && numValues > arrayLength) numValues = arrayLength;
+    if (arrayLength>1 && numValues==1) { numValues = arrayLength; arrayLength = -1; }
+    SetPar(TString("NUM_VALUES_")+parName,numValues,overwrite);
+    for (auto iVal=0; iVal<numValues; ++iVal) {
+      int idx = ((arrayLength<0) ? 0 : iVal);
+      TString val(((TObjString *) valueTokens->At(idx))->GetString());
+      SetParColor(parName+"["+iVal+"]",val,overwrite);
+    }
+  }
+  else
+    return false;
+
+  return true;
+}
 
 Bool_t KBParameterContainer::SetPar(TString name, Bool_t val, Bool_t overwrite)
 {
@@ -527,12 +549,24 @@ Bool_t KBParameterContainer::SetParColor(TString name, TString valColor, Bool_t 
     valColor.ReplaceAll("kViolet" ,"880");
     valColor.ReplaceAll("kPink"   ,"900");
 
-    auto colorCombi = valColor.Tokenize("+");
-    int val1 = (((TObjString *) colorCombi->At(0)) -> GetString()).Atoi();
-    int val2 = 0;
-    if (colorCombi->GetEntriesFast() > 1)
-      val2 = (((TObjString *) colorCombi->At(1)) -> GetString()).Atoi();
-    val = val1 + val2;
+    if (valColor.Index("+")>0) {
+      auto colorCombi = valColor.Tokenize("+");
+      int val1 = (((TObjString *) colorCombi->At(0)) -> GetString()).Atoi();
+      int val2 = 0;
+      if (colorCombi->GetEntriesFast() > 1)
+        val2 = (((TObjString *) colorCombi->At(1)) -> GetString()).Atoi();
+      val = val1 + val2;
+    }
+    else if (valColor.Index("-")>0) {
+      auto colorCombi = valColor.Tokenize("-");
+      int val1 = (((TObjString *) colorCombi->At(0)) -> GetString()).Atoi();
+      int val2 = 0;
+      if (colorCombi->GetEntriesFast() > 1)
+        val2 = (((TObjString *) colorCombi->At(1)) -> GetString()).Atoi();
+      val = val1 - val2;
+    }
+    else
+      val = valColor.Atoi();
   }
   else
     return false;

@@ -14,4 +14,6 @@
 #pragma link C++ class KBTask+;
 #pragma link C++ class KBRun+;
 
+#pragma link C++ class KBMCEventGenerator+;
+
 #endif
