@@ -3,6 +3,8 @@
 #include "TEveLine.h"
 #endif
 
+#include <sstream>
+
 ClassImp(KBTracklet)
 
 void KBTracklet::PropagateMC()

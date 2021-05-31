@@ -9,12 +9,15 @@
 #include "G4strstreambuf.hh"
 
 #include "TSystem.h"
+#include "TObjString.h"
 
 #include "KBG4RunMessenger.hh"
 #include "KBPrimaryGeneratorAction.hh"
 #include "KBEventAction.hh"
 #include "KBTrackingAction.hh"
 #include "KBSteppingAction.hh"
+
+#include <sstream>
 
 KBG4RunManager::KBG4RunManager()
 :G4RunManager()
