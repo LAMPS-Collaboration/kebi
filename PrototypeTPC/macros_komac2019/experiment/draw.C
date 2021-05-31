@@ -1,5 +1,3 @@
-#include "/Users/ejungwoo/kebi/jw/source/ejungwoo.h"
-
 void draw()
 {
   gStyle -> SetOptStat(0);
@@ -7,15 +5,15 @@ void draw()
   auto run = new KBRun();
   auto tpc = new LAPTpc();
   run -> AddDetector(tpc);
-  run -> SetInputFile("/Users/ejungwoo/kebi/data/komac0036.tf.2e5c877.root");
+  run -> SetInputFile("komac0036.tf");
   run -> Init();
-  auto hitArray = run -> GetBranchA("Hit");
+  run -> Print();
+  //auto hitArray = run -> GetBranchA("Hit");
   auto trackArray = run -> GetBranchA("Tracklet");
 
-  auto cvsPP = ejungwoo::canvas("","ppt_sq");
+  auto cvsPP = new TCanvas();
   auto histPP = tpc -> GetPadPlane() -> GetHist();
-  //auto histPP = new TH2D("histPP",";z;x",100,-250,250,100,-250,250);
-  ejungwoo::draw(histPP,cvsPP,0);
+  histPP -> Draw();
 
   vector<TH1D *> hists1;
   auto histNH = new TH1D("histNH",";Number of hits per event",100,0,500);
@@ -38,9 +36,9 @@ void draw()
   {
     run -> GetEvent(event);
 
-    auto numHits = hitArray -> GetEntries();
-    histNH -> Fill(numHits);
-    if (numHits>200) continue;
+    //auto numHits = hitArray -> GetEntries();
+    //histNH -> Fill(numHits);
+    //if (numHits>200) continue;
 
     auto numTracks = trackArray -> GetEntries();
     histNT -> Fill(numTracks);
@@ -84,7 +82,7 @@ void draw()
   }
 
   for (auto hist : hists1) {
-    auto cvs = ejungwoo::canvas();
-    ejungwoo::draw(hist,cvs);
+    new TCanvas();
+    hist -> Draw();
   }
 }
