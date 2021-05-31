@@ -9,6 +9,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include "TFormula.h"
+#include "TObjString.h"
 
 using namespace std;
 
@@ -30,10 +31,11 @@ void KBParameterContainer::SetDebugMode(Bool_t val) { fDebugMode = val; }
 
 void KBParameterContainer::SaveAs(const char *fileName, Option_t *) const
 {
-  if (!(TString(fileName).EndsWith(".conf") || TString(fileName).EndsWith(".par")))
-    fileName = TString(fileName)+".conf";
-
-  Print(fileName);
+  TString fielName0(fileName);
+  if (!(fielName0.EndsWith(".conf") || fielName0.EndsWith(".par")))
+    Print(Form("%s.conf",fileName));
+  else
+    Print(fileName);
 }
 
 void KBParameterContainer::ReplaceEnvironmentVariable(TString &val)

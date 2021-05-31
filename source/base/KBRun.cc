@@ -6,6 +6,7 @@
 #include "TApplication.h"
 #include "TRandom.h"
 #include "TGraph.h"
+#include "TObjString.h"
 
 #ifdef ACTIVATE_EVE
 #include "TEveViewer.h"

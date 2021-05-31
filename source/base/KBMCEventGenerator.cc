@@ -8,6 +8,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TCanvas.h"
+#include "TObjString.h"
 
 ClassImp(KBMCEventGenerator)
 
@@ -21,7 +22,7 @@ KBMCEventGenerator::KBMCEventGenerator()
 KBMCEventGenerator::KBMCEventGenerator(TString fileName)
 : KBMCEventGenerator()
 {
-  AddGenFile(fileName.Data());
+  AddGenFile(fileName);
 }
 
 KBMCEventGenerator::~KBMCEventGenerator()
@@ -128,12 +129,12 @@ void KBMCEventGenerator::Summary()
   cout_info << "Creating summary file " << fileName << endl;
 
   TH1D *histPhiTheta[3][2];
-  histPhiTheta[0][0] = new TH1D("hist_phi_x","#phi_x",100,-180,180);   histPhiTheta[0][0] -> SetMinimum(0);
-  histPhiTheta[0][1] = new TH1D("hist_theta_x","#theta_x",100,0,180);  histPhiTheta[0][1] -> SetMinimum(0);
-  histPhiTheta[1][0] = new TH1D("hist_phi_y","#phi_y",100,-180,180);   histPhiTheta[1][0] -> SetMinimum(0);
-  histPhiTheta[1][1] = new TH1D("hist_theta_y","#theta_y",100,0,180);  histPhiTheta[1][1] -> SetMinimum(0);
-  histPhiTheta[2][0] = new TH1D("hist_phi_z","#phi_z",100,-180,180);   histPhiTheta[2][0] -> SetMinimum(0);
-  histPhiTheta[2][1] = new TH1D("hist_theta_z","#theta_z",100,0,180);  histPhiTheta[2][1] -> SetMinimum(0);
+  histPhiTheta[0][0] = new TH1D("hist_phi_x",";#phi_x",100,-180,180);   histPhiTheta[0][0] -> SetMinimum(0);
+  histPhiTheta[0][1] = new TH1D("hist_theta_x",";#theta_x",100,0,180);  histPhiTheta[0][1] -> SetMinimum(0);
+  histPhiTheta[1][0] = new TH1D("hist_phi_y",";#phi_y",100,-180,180);   histPhiTheta[1][0] -> SetMinimum(0);
+  histPhiTheta[1][1] = new TH1D("hist_theta_y",";#theta_y",100,0,180);  histPhiTheta[1][1] -> SetMinimum(0);
+  histPhiTheta[2][0] = new TH1D("hist_phi_z",";#phi_z",100,-180,180);   histPhiTheta[2][0] -> SetMinimum(0);
+  histPhiTheta[2][1] = new TH1D("hist_theta_z",";#theta_z",100,0,180);  histPhiTheta[2][1] -> SetMinimum(0);
 
   auto fileGen = new TFile(fileName,"recreate");
   auto treeEvent = new TTree("event","");
@@ -198,11 +199,29 @@ void KBMCEventGenerator::Summary()
   fileGen -> Close();
 }
 
+
+const char *KBMCEventGenerator::SetDirectory(TString dirName) {
+  fDirName = dirName;
+  if (!fDirName.EndsWith("/"))
+    fDirName = fDirName + "/";
+  if (fDirName[0] == '$')
+    fDirName = KBRun::ConfigureEnv(fDirName);
+  if (fDirName[0] == '.')
+    fDirName = TString(fDirName(1,fDirName.Sizeof()));
+  if (fDirName[0] != '/' && fDirName != '~')
+    fDirName = Form("%s/%s",gSystem->pwd(),fDirName.Data());
+
+  cout_info << "Generator directory is set to " << fDirName << endl;
+  gSystem -> mkdir(fDirName);
+
+  return fDirName.Data();
+}
+
 const char *KBMCEventGenerator::CreateGenFile(const char *runName, int runID, int numEvents)
 {
   fGenName = Form("%s%04d",runName,runID);
 
-  auto genFileName = Form("%s.gen",fGenName.Data());
+  auto genFileName = Form("%s%s.gen",fDirName.Data(),fGenName.Data());
   if (fOutputFile.is_open())
     fOutputFile.close();
   fOutputFile.open(genFileName);
@@ -212,7 +231,7 @@ const char *KBMCEventGenerator::CreateGenFile(const char *runName, int runID, in
 
   cout_info << "creating " << genFileName << endl;
 
-  fPar -> SetPar("G4MacroFile","geant4_run.mac",true);
+  fPar -> SetPar("G4MacroFile",fDirName+"geant4_run.mac",true);
   fPar -> SetPar("G4InputFile",genFileName,true);
   fPar -> SetPar("G4OutputFile",Form("$KEBIPATH/data/%s.mc.root",fGenName.Data()),true);
   fPar -> SetPar("MCSetEdepSumTree",false,true);
@@ -221,7 +240,7 @@ const char *KBMCEventGenerator::CreateGenFile(const char *runName, int runID, in
   fPar -> SetPar("MCTrackVertexPersistency",true,true);
   fPar -> SetPar("RunName",runName,true);
   fPar -> SetPar("RunID",runID,true);
-  fPar -> SaveAs(fGenName);
+  fPar -> SaveAs(fDirName+fGenName);
 
   return genFileName;
 }

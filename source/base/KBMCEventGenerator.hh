@@ -73,6 +73,7 @@ class KBMCEventGenerator : public KBGear
     bool ReadMomentumOrEnergy() { return fReadMomentumOrEnergy; }
 
     // create gen
+    const char *SetDirectory(TString dirName);
     const char *CreateGenFile(const char *runName, int runID, int numEvents);
     void AddEvent(int numTracks, double vX, double vY, double vZ);
     void AddTrack(TString particleName, double pX, double pY, double pZ);
@@ -94,6 +95,7 @@ class KBMCEventGenerator : public KBGear
     std::ofstream fOutputFile;
 
     TString fGenName;
+    TString fDirName;
 
     TRandom3 fRandom;
 
