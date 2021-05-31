@@ -35,6 +35,9 @@ class LHDriftElectronTask : public KBTask
 
     Int_t fNElInCluster = 0;
 
+    Int_t fNumEleCluster = 300;
+    Int_t fNumGainCluster = 300;
+
     TH2D *fDiffusionFunction = nullptr;
     TF1 *fGainFunction = nullptr;
     Double_t fGainZeroRatio = 0;

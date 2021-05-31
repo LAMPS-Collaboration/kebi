@@ -6,6 +6,7 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 #include <iostream>
 using namespace std;
@@ -32,6 +33,9 @@ bool LHDriftElectronTask::Init()
   fCoefTD = par -> GetParDouble("gasCoefTranDiff");
   fEIonize = par -> GetParDouble("gasEIonize");
   fNElInCluster = par -> GetParInt("nElInCluster");
+
+  if (par->CheckPar("drifte_numEleCluster"))  fNumEleCluster  = par -> GetParInt("drifte_numEleCluster");
+  if (par->CheckPar("drifte_numGainCluster")) fNumGainCluster = par -> GetParInt("drifte_numGainCluster");
 
   TString gemDataFile;
   gemDataFile = par -> GetParString("tpcGEMDataFile");
@@ -82,8 +86,15 @@ void LHDriftElectronTask::Exec(Option_t*)
     Double_t sigmaTD = fCoefTD * sqrt(lDrift);
 
     Int_t nElectrons = Int_t(edep/fEIonize);
+    Int_t numEleInCluster = nElectrons/fNumEleCluster;
+    Int_t numEleInExtCluster = nElectrons - numEleInCluster * fNumEleCluster;
 
-    for (Int_t iElectron = 0; iElectron < nElectrons; iElectron++) {
+    for (Int_t iEleCluster = 0; iEleCluster < fNumEleCluster+1; iEleCluster++)
+    {
+      Int_t numEleInCluster0 = numEleInCluster;
+      if (iEleCluster==0)
+        numEleInCluster0 = numEleInExtCluster;
+
       Double_t dr    = gRandom -> Gaus(0, sigmaTD);
       Double_t angle = gRandom -> Uniform(2*TMath::Pi());
 
@@ -97,20 +108,24 @@ void LHDriftElectronTask::Exec(Option_t*)
       if (tb > fNTbs) 
         continue;
 
-      Int_t gain = fGainFunction -> GetRandom() * (1 - fGainZeroRatio);
+      Int_t gain = numEleInCluster0 * fGainFunction -> GetRandom() * (1 - fGainZeroRatio);
       if (gain <= 0)
         continue;
 
-      Int_t nElClusters = gain/fNElInCluster;
-      Int_t gainRemainder = gain%fNElInCluster;
+      Int_t numGainInCluster = gain/fNumGainCluster;
+      Int_t numGainInExtCluster = gain - numGainInCluster * fNumGainCluster;
 
-      Double_t iDiffGEM, jDiffGEM;
-      for (Int_t iElCluster = 0; iElCluster < nElClusters; iElCluster++) {
-        fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-        fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, fNElInCluster, trackID);
+      Double_t iDiffGEM, jDiffGEM; 
+      if (numGainInCluster>0) {
+        for (Int_t iElCluster = 0; iElCluster < fNumGainCluster; iElCluster++) {
+          fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
+          fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, numGainInCluster, trackID);
+        }
       }
-      fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
-      fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, gainRemainder, trackID);
+      if (numGainInExtCluster>0) {
+        fDiffusionFunction -> GetRandom2(iDiffGEM, jDiffGEM);
+        fTpc -> GetPadPlane(planeID) -> FillBufferIn(posMC.I()+di+iDiffGEM*10, posMC.J()+dj+jDiffGEM*10, tb, numGainInExtCluster, trackID);
+      }
     }
   }
 
