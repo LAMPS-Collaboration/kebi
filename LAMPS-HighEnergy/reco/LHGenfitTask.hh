@@ -5,11 +5,12 @@
 #include "KBHelixTrack.hh"
 #include "KBHit.hh"
 #include "KBVertex.hh"
+#include "KBHitArray.hh"
 
 #include "TClonesArray.h"
 
 #include "LHSpacepointMeasurement.hh"
-#include "genfit2/KalmanFitterRefTrack.h"
+#include "genfit2/AbsKalmanFitter.h"
 #include "genfit2/Track.h"
 #include "genfit2/RKTrackRep.h"
 #include "genfit2/MeasurementFactory.h"
@@ -36,9 +37,11 @@ class LHGenfitTask : public KBTask
     TClonesArray *fGFTrackHitClusterArray;
     TClonesArray *fGenfitTrackArray;
 
+		KBHitArray *fTrackHits = nullptr;
+
     Int_t fDetectorID = 0;
 
-    genfit::KalmanFitterRefTrack *fKalmanFitter;
+    genfit::AbsKalmanFitter *fKalmanFitter;
     genfit::MeasurementProducer<KBHit, genfit::LHSpacepointMeasurement> *fMeasurementProducer;
     genfit::MeasurementFactory<genfit::AbsMeasurement> *fMeasurementFactory;
     genfit::SharedPlanePtr fTargetPlane;
