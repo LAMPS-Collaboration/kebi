@@ -26,12 +26,9 @@ namespace genfit {
     //rawHitCov_(0,0) = 0.01;
     //rawHitCov_(1,1) = 0.01;
     //rawHitCov_(2,2) = 0.01;
-    rawHitCov_(0,0) = 1;
-    rawHitCov_(1,1) = 1;
-    rawHitCov_(2,2) = 1;
-    rawHitCov_(0,1) = 0;
-    rawHitCov_(1,2) = 0;
-    rawHitCov_(2,0) = 0;
+		rawHitCov_(0,0) = pow(1.0, 2);
+		rawHitCov_(1,1) = pow(1.0, 2);
+		rawHitCov_(2,2) = pow(0.05, 2);
 
     detId_ = hit->getDetId();
     hitId_ = hit->getHitId();
