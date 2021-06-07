@@ -10,6 +10,8 @@ using namespace std;
 
 #include "TMatrixDSym.h"
 
+#include "genfit2/KalmanFitterRefTrack.h"
+#include "genfit2/DAF.h"
 #include "genfit2/FieldManager.h"
 #include "genfit2/ConstField.h"
 #include "genfit2/MaterialEffects.h"
@@ -35,6 +37,8 @@ bool LHGenfitTask::Init()
   fGFTrackHitClusterArray = new TClonesArray("KBHit");
   //fGenfitTrackArray = new TClonesArray("genfit::Track");
 
+	fTrackHits = new KBHitArray();
+
 	fVertexArray = new TClonesArray("KBVertex");
 	run -> RegisterBranch("Vertex", fVertexArray, fPersistency);
 
@@ -44,6 +48,7 @@ bool LHGenfitTask::Init()
 	double bfieldz = par -> GetParDouble("bfieldz");
 
   fKalmanFitter = new genfit::KalmanFitterRefTrack();
+  //fKalmanFitter = new genfit::DAF();
   fKalmanFitter -> setMinIterations(5);
   fKalmanFitter -> setMaxIterations(20);
 	//fKalmanFitter -> setDebugLvl(10);
@@ -81,12 +86,15 @@ void LHGenfitTask::Exec(Option_t*)
   Int_t numTracks = fTrackArray -> GetEntriesFast();
   for (Int_t iTrack = 0; iTrack < numTracks; iTrack++)
   {
+		fCurrentMomTargetPlane.SetXYZ(0, 0, 0);
+		fCurrentPosTargetPlane.SetXYZ(0, 0, 0);
     KBHelixTrack *track = (KBHelixTrack *) fTrackArray -> At(iTrack);
     auto genfitTrack = FitTrack(track, 2212);
-    track -> SetGenfitMomentum(fCurrentMomTargetPlane);
+		track -> SetGenfitMomentum(fCurrentMomTargetPlane);
 
 		if ( genfitTrack )
 		{
+			track -> SetIsGenfitTrack();
 			gf_tracks.push_back(genfitTrack);
 		}
   }
@@ -120,46 +128,36 @@ void LHGenfitTask::Exec(Option_t*)
 
 genfit::Track* LHGenfitTask::FitTrack(KBHelixTrack *helixTrack, Int_t pdg)
 {
-  fGFTrackHitClusterArray -> Clear("C");
+	fGFTrackHitClusterArray -> Clear("C");
+	fTrackHits -> Clear();
   genfit::TrackCand trackCand;
 
-  KBHitArray *hitArray = helixTrack -> GetHitArray();
-  TIter nextHit(hitArray);
+	KBHitArray *hitArray = helixTrack -> GetHitArray();
+	hitArray->MoveHitsTo(fTrackHits);
 
-  while (KBHit *hit = (KBHit *) nextHit()) {
-    auto idx = fGFTrackHitClusterArray -> GetEntriesFast();
-    auto gfhit = (KBHit *) fGFTrackHitClusterArray -> ConstructedAt(idx);
+	fTrackHits->SortByR(false);
+
+	TIter next(fTrackHits);
+	while (KBHit *hit = (KBHit *) next()) {
+		auto idx = fGFTrackHitClusterArray -> GetEntriesFast();
+		auto gfhit = (KBHit *) fGFTrackHitClusterArray -> ConstructedAt(idx);
     gfhit -> CopyFrom(hit);
-    trackCand.addHit(fDetectorID, idx);
-  }
+		trackCand.addHit(fDetectorID, idx);
+	}
 
-	auto refHit = (KBHit *) fGFTrackHitClusterArray -> At(fGFTrackHitClusterArray->GetEntriesFast()-1);
+	//auto refHit = (KBHit *) fGFTrackHitClusterArray -> At(fGFTrackHitClusterArray->GetEntriesFast()-1);
+	auto refHit = (KBHit *) fGFTrackHitClusterArray -> At(0);
 
   TMatrixDSym covSeed(6);
-	/*
-  covSeed(0,0) = refHit -> GetVariance().X() / 100.;
-  covSeed(1,1) = refHit -> GetVariance().X() / 100.;
-  covSeed(2,2) = refHit -> GetVariance().Z() / 100.;
-  covSeed(3,3) = refHit -> GetVariance().X() / 100.;
-  covSeed(4,4) = refHit -> GetVariance().X() / 100.;
-  covSeed(5,5) = refHit -> GetVariance().Z() / 100.;
-	*/
-	/*
-  covSeed(0,0) = hitArray -> GetVariance().X() / 100.;
-  covSeed(1,1) = hitArray -> GetVariance().Y() / 100.;
-  covSeed(2,2) = hitArray -> GetVariance().Z() / 100.;
-  covSeed(3,3) = hitArray -> GetVariance().X() / 100.;
-  covSeed(4,4) = hitArray -> GetVariance().Y() / 100.;
-  covSeed(5,5) = hitArray -> GetVariance().Z() / 100.;
-	*/
-	for (int i=0; i<3; i++){
-		covSeed(i,i) = 1.0*1.0; // cm
-		covSeed(i+3,i+3) = 1.0*1.0; // cm
-		//covSeed(i+3,i+3) = pow(0.1/fGFTrackHitClusterArray->GetEntriesFast()/sqrt(3),2);
-	}
+	float nhits = fTrackHits->GetEntries();
+
+	covSeed(0,0) = covSeed(1,1) = pow(1.0, 2);
+	covSeed(2,2) = pow(0.05, 2);
+	covSeed(3,3) = covSeed(4,4) = pow(1.0/nhits/sqrt(3), 2);
+	covSeed(5,5) = pow(0.05/nhits/sqrt(3), 2);
 	
   Double_t dip = helixTrack -> DipAngle();
-  TVector3 momSeed = 0.001 * helixTrack -> Momentum(); // MeV -> GeV
+  TVector3 momSeed = 0.001 * helixTrack -> Momentum(1.0); // MeV -> GeV
   momSeed.SetTheta(dip); /// TODO
 
 	TVector3 posSeed = refHit -> GetPosition();
