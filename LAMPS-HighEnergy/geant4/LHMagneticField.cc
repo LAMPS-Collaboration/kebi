@@ -140,21 +140,10 @@ void LHMagneticField::MakeFieldMap(string fname)
 		if (yBinTemp<1 || yBinTemp>mapBz->GetNbinsY()) continue;
 		if (zBinTemp<1 || zBinTemp>mapBz->GetNbinsZ()) continue;
 
-		//Apply update of unit field
-		if (unitD != tesla)
-		{
-			Bx = Bx * (unitF/tesla);
-			By = By * (unitF/tesla);
-			Bz = Bz * (unitF/tesla);
-		}
-
-		//Override mapping by using given uniform values
-		if (setMonoB)
-		{
-			Bx = mBx; 
-			By = mBy;
-			Bz = mBz;
-		}
+        //Apply field unit or set it constant if the flag is on
+        Bx = setMonoB?mBx:(Bx * unitF);
+        By = setMonoB?mBy:(By * unitF);
+        Bz = setMonoB?mBz:(Bz * unitF);
 
 		mapBx->SetBinContent(xBinTemp, yBinTemp, zBinTemp, Bx);
 		mapBy->SetBinContent(xBinTemp, yBinTemp, zBinTemp, By);
