@@ -367,8 +367,8 @@ void KBG4RunManager::AddTrackVertex(Double_t px, Double_t py, Double_t pz, Int_t
 
 void KBG4RunManager::AddMCStep(Int_t detectorID, Double_t x, Double_t y, Double_t z, Double_t t, Double_t e)
 {
-	Int_t motherID = detectorID/100;
-	Int_t moduleID = detectorID>100 ? detectorID%100 : 0;
+	Int_t motherID = (detectorID/1000)*10;
+	Int_t moduleID = detectorID>1000 ? detectorID%1000 : 0;
 	auto idx = fIdxOfCopyNo[motherID];
 
   if (fSetEdepSumTree)
