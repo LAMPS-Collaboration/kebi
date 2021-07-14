@@ -68,9 +68,9 @@ void KBPSATask::Exec(Option_t*)
       ///@todo build pad plane dependent code
       Double_t k;
       if (pad -> GetPlaneID() == 0)
-        k = kPlane - (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+        k = kPlane - (channelHit.GetTDC()-0.5)*fTbTime*fDriftVelocity;
       else
-        k = kPlane + (channelHit.GetTDC()+0.5)*fTbTime*fDriftVelocity;
+        k = kPlane + (channelHit.GetTDC()-0.5)*fTbTime*fDriftVelocity;
 
       KBVector3 pos(fTpc->GetEFieldAxis(),pad->GetI(),pad->GetJ(),k);
 
