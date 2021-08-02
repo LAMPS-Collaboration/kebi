@@ -26,13 +26,13 @@ bool KBPSATask::Init()
   fDriftVelocity = par -> GetParDouble("gasDriftVelocity");
   fTbTime = par -> GetParDouble("TPCtbTime");
 
-  fPadArray = (TClonesArray *) run -> GetBranch("Pad");
+  fPadArray = (TClonesArray *) run -> GetBranch(fInputBranchName);
 
   for (auto iPlane = 0; iPlane < fNPlanes; iPlane++)
     fPadPlane[iPlane] = fTpc -> GetPadPlane(iPlane);
 
   fHitArray = new TClonesArray("KBTpcHit", 5000);
-  run -> RegisterBranch("Hit", fHitArray, fPersistency);
+	run -> RegisterBranch(fOutputBranchName, fHitArray, fPersistency);
 
   if (fPSA == nullptr)
     fPSA = new KBPSA();

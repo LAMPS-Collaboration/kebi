@@ -19,11 +19,17 @@ class KBPSATask : public KBTask
 
     void SetPSA(KBPSA *psa);
 
+		void SetInputBranchName(TString name) { fInputBranchName = name; }
+		void SetOutputBranchName(TString name) { fOutputBranchName = name; }
+
     void SetHitPersistency(bool persistence);
 
   private:
     TClonesArray* fPadArray;
     TClonesArray* fHitArray;
+
+		TString fInputBranchName = "Pad";
+		TString fOutputBranchName = "Hit";
 
     bool fPersistency;
 
