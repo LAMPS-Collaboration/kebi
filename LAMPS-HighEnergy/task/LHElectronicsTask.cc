@@ -23,7 +23,7 @@ bool LHElectronicsTask::Init()
   feVToADC = par -> GetParDouble("TPCeVToADC");
   fDynamicRange = par -> GetParDouble("TPCdynamicRange");
 
-  fPadArray = (TClonesArray *) run -> GetBranch("Pad");
+  fPadArray = (TClonesArray *) run -> GetBranch("TPCPad");
 
   KBPulseGenerator *pulseGen = new KBPulseGenerator();
   fPulseFunction = pulseGen -> GetPulseFunction();
