@@ -400,71 +400,71 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 
 	if ( par -> CheckPar("NDIn") )
 	{
-		G4int    ndID     = (par->CheckPar("NDID"))?par->GetParInt("NDID"):50;
-		G4int    ndLayerN = par->GetParInt("NDLayerN");    //Total # of layers
-		G4double ndLayerD = par->GetParDouble("NDLayerD"); //Distance btw each layer surface
-		G4double ndLayerZ = par->GetParDouble("NDLayerZ"); //1st VETO's z offset
+        G4int    ndID     = (par->CheckPar("NDID"))?par->GetParInt("NDID"):50;
+        G4int    ndLayerN = par->GetParInt("NDLayerN");    //Total # of layers
+        G4double ndLayerD = par->GetParDouble("NDLayerD"); //Distance btw each layer surface
+        G4double ndLayerZ = par->GetParDouble("NDLayerZ"); //1st VETO's z offset
 
-		G4int    ndSlatN = par->GetParInt("NDSlatN");    //# of slats per layer
-		G4double ndSlatW = par->GetParDouble("NDSlatW"); //Slat width (x)
-		G4double ndSlatH = par->GetParDouble("NDSlatH"); //Slat height (y)
-		G4double ndSlatT = par->GetParDouble("NDSlatT"); //Slat thickness (z)
-		G4double ndVetoT = par->GetParDouble("NDVetoT"); //Slat thickness (z)
+        G4int    ndSlatN = par->GetParInt("NDSlatN");    //# of slats per layer
+        G4double ndSlatW = par->GetParDouble("NDSlatW"); //Slat width (x)
+        G4double ndSlatH = par->GetParDouble("NDSlatH"); //Slat height (y)
+        G4double ndSlatT = par->GetParDouble("NDSlatT"); //Slat thickness (z)
+        G4double ndVetoT = par->GetParDouble("NDVetoT"); //Slat thickness (z)
 
-		G4ThreeVector ZERO(0, 0, 0);
-	    G4RotationMatrix* RotZ90 = new G4RotationMatrix();
-		RotZ90->rotateZ(90 * deg);
-		G4double ndTotalW = ndSlatN * ndSlatH;
-		G4double ndTotalT = ndVetoT + (2*ndSlatT + ndLayerD) * (ndLayerN-1);
+        G4double ndTheta = par->GetParDouble("NDTheta"); //Theta angle of entire ND
 
-		//Volume, mother
-		G4Box*           ndSolid = new G4Box("FTSolidBox", ndTotalW/2., ndTotalW/2., ndTotalT/2.);
-		G4LogicalVolume* ndLogic = new G4LogicalVolume(ndSolid, matVac, "ndLogic");
-		ndLogic->SetVisAttributes(G4VisAttributes::GetInvisible());
+        G4ThreeVector ZERO(0, 0, 0);
+        G4RotationMatrix* RotZ90 = new G4RotationMatrix();
+        RotZ90->rotateZ(-90 * deg);
+        G4double ndTotalW = ndSlatN * ndSlatH;
+        G4double ndTotalT = ndVetoT + (2*ndSlatT + ndLayerD) * (ndLayerN-1);
 
-		//Volume, units
-		G4Box* ndVetoSolid = new G4Box("NDVetoSolid", ndSlatW/2., ndSlatH/2., ndVetoT/2.);
-		G4Box* ndSlatSolid = new G4Box("NDSlatSolid", ndSlatW/2., ndSlatH/2., ndSlatT/2.);
-		G4LogicalVolume* ndVetoLogic = new G4LogicalVolume(ndVetoSolid, matSC, "NDVetoLogic");
-		G4LogicalVolume* ndSlatLogic = new G4LogicalVolume(ndSlatSolid, matSC, "NDSlatLogic");
-		G4VisAttributes* ndVis = new G4VisAttributes();
-		ndVis->SetColor(G4Color::Magenta());
-		ndVis->SetForceWireframe(true);
-		ndVetoLogic->SetVisAttributes(ndVis);
-		ndSlatLogic->SetVisAttributes(ndVis);
-		
-		for (int a=0; a<ndLayerN; a++) //Veto is always layer 0
-		for (int b=0; b<2;        b++) //Sublayer
-		for (int c=0; c<ndSlatN;  c++)
-		{
-			if (a==0 && b>0) continue; //No pair sublayer for Veto
-			string ndSlatName = Form("ND_l%im%is%i", a, b, c);
-			const int slatId = (ndID+a)*100 + ndSlatN*b + c;
+        //Volume, mother
+        G4Box*           ndSolid = new G4Box("FTSolidBox", ndTotalW/2., ndTotalW/2., ndTotalT/2.);
+        G4LogicalVolume* ndLogic = new G4LogicalVolume(ndSolid, matVac, "ndLogic");
+        ndLogic->SetVisAttributes(G4VisAttributes::GetInvisible());
 
-			const bool vL = (b==0)?true:false; //Vertical (x sensitive) layer or not
-			const float slatCenter = ndSlatH * (0.5 -ndSlatN/2 + c);
-			const float ofsX = vL?slatCenter:0;
-			const float ofsY = vL?0:slatCenter;
-			const float ofsZ = (a==0)?(-ndTotalT/2):(-ndTotalT/2+ndVetoT+ndSlatT/2+ndLayerD*a+ndSlatT*(2*(a-1)+b));
-			G4ThreeVector ofsSlat(ofsX, ofsY, ofsZ);
-			new G4PVPlacement(vL?RotZ90:0, ofsSlat, (a==0)?ndVetoLogic:ndSlatLogic,
-					ndSlatName, ndLogic, false, slatId, false);
+        //Volume, units
+        G4Box* ndVetoSolid = new G4Box("NDVetoSolid", ndSlatW/2., ndSlatH/2., ndVetoT/2.);
+        G4Box* ndSlatSolid = new G4Box("NDSlatSolid", ndSlatW/2., ndSlatH/2., ndSlatT/2.);
+        G4LogicalVolume* ndVetoLogic = new G4LogicalVolume(ndVetoSolid, matSC, "NDVetoLogic");
+        G4LogicalVolume* ndSlatLogic = new G4LogicalVolume(ndSlatSolid, matSC, "NDSlatLogic");
+        G4VisAttributes* ndVis = new G4VisAttributes();
+        ndVis->SetColor(G4Color::Magenta());
+        ndVis->SetForceWireframe(true);
+        ndVetoLogic->SetVisAttributes(ndVis);
+        ndSlatLogic->SetVisAttributes(ndVis);
 
-			/*
-			//Slat by Slat, for QA purpose
-			const float ofsZ = (a==0)?ndLayerZ:(ndLayerZ + ndVetoT + ndSlatT/2 + ndLayerD*a + ndSlatT*(2*(a-1)+b));
-			G4ThreeVector ofsSlat(ofsX, ofsY, ofsZ);
-			auto ndSlatPhys = new G4PVPlacement(vL?RotZ90:0, ofsSlat, (a==0)?ndVetoLogic:ndSlatLogic,
-					ndSlatName, logicWorld, false, slatId, true);
-					*/
+        for (int a=0; a<ndLayerN; a++) //Veto is always layer 0
+        for (int b=0; b<2;        b++) //Sublayer
+        for (int c=0; c<ndSlatN;  c++)
+        {
+            if (a==0 && b>0) continue; //No pair sublayer for Veto
+            string ndSlatName = Form("ND_l%im%is%i", a, b, c);
+            const int slatId = (ndID+a)*100 + ndSlatN*b + c;
 
-			//cout <<Form("L%i M%i S%i : z = %7.3f", a, b, c, ndLayerZ + ndTotalT/2 + ofsZ) <<endl;
-		}
+            const bool vL = (b==0)?true:false; //Vertical (x sensitive) layer or not
+            const float slatCenter = ndSlatH * (0.5 -ndSlatN/2 + c);
+            const float ofsX = vL?slatCenter:0;
+            const float ofsY = vL?0:slatCenter;
+            const float ofsZ = (a==0)?(-ndTotalT/2):(-ndTotalT/2+ndVetoT+ndSlatT/2+ndLayerD*a+ndSlatT*(2*(a-1)+b));
+            cout <<Form("L%i M%i S%2i : %4.0f, %4.0f, %4.0f\n", a, b, c, ofsX, ofsY, ndLayerZ+ndTotalT/2+ofsZ);
 
-		//Implementation, mother (whole)
-		G4ThreeVector ndOfs(0, 0, ndLayerZ+ndTotalT/2);
-		auto ND = new G4PVPlacement(0, ndOfs, ndLogic, "ND", logicWorld, false, ndID, true);
-		runManager->SetSensitiveDetector(ND);
+            G4ThreeVector ofsSlat(ofsX, ofsY, ofsZ);
+            new G4PVPlacement(vL?RotZ90:0, ofsSlat, (a==0)?ndVetoLogic:ndSlatLogic,
+                    ndSlatName, ndLogic, false, slatId, false);
+        }
+
+        G4RotationMatrix* RotY = new G4RotationMatrix();
+        RotY->rotateY(-ndTheta * deg);
+        const float ndOfsX = sin(ndTheta * deg) * (ndLayerZ + ndTotalT/2);
+        const float ndOfsZ = cos(ndTheta * deg) * (ndLayerZ + ndTotalT/2);
+        G4ThreeVector ndOfs(ndOfsX, 0, ndOfsZ);
+        cout <<Form("x: %5.1f, z: %5.1f, zOrig: %5.1f\n",
+                ndOfsX, ndOfsZ, sqrt(pow(ndOfsX, 2) + pow(ndOfsZ, 2)) - ndTotalT/2);
+
+        auto ND = new G4PVPlacement(RotY, ndOfs, ndLogic, "ND", logicWorld, false, ndID, true);
+        runManager->SetSensitiveDetector(ND);
 	}//ND
 
 	return physWorld;
