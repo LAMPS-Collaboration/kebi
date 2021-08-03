@@ -23,6 +23,7 @@
 #include "G4Trap.hh"
 #include "G4Tubs.hh"
 #include "G4VisAttributes.hh"
+#include "G4Vector3D.hh"
 
 LHDetectorConstruction::LHDetectorConstruction()
 : G4VUserDetectorConstruction()
@@ -241,7 +242,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 	if ( par -> GetParBool("FTOFIn") )
 	{
 		G4double dphi = 2*M_PI/btofNum, half_dphi = 0.5*dphi;
-		G4double cosdphi = cos(half_dphi);
+		//G4double cosdphi = cos(half_dphi);
 		G4double tandphi = tan(half_dphi);
 
 		G4double radiusIn = 0.5*ftofX2/tandphi;
@@ -448,13 +449,14 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
             const float ofsX = vL?slatCenter:0;
             const float ofsY = vL?0:slatCenter;
             const float ofsZ = (a==0)?(-ndTotalT/2):(-ndTotalT/2+ndVetoT+ndSlatT/2+ndLayerD*a+ndSlatT*(2*(a-1)+b));
-            cout <<Form("L%i M%i S%2i : %4.0f, %4.0f, %4.0f\n", a, b, c, ofsX, ofsY, ndLayerZ+ndTotalT/2+ofsZ);
+            //cout <<Form("L%i M%i S%2i : %4.0f, %4.0f, %4.0f\n", a, b, c, ofsX, ofsY, ndLayerZ+ndTotalT/2+ofsZ);
 
             G4ThreeVector ofsSlat(ofsX, ofsY, ofsZ);
             new G4PVPlacement(vL?RotZ90:0, ofsSlat, (a==0)?ndVetoLogic:ndSlatLogic,
                     ndSlatName, ndLogic, false, slatId, false);
         }
 
+				/*
         G4RotationMatrix* RotY = new G4RotationMatrix();
         RotY->rotateY(-ndTheta * deg);
         const float ndOfsX = sin(ndTheta * deg) * (ndLayerZ + ndTotalT/2);
@@ -464,7 +466,43 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
                 ndOfsX, ndOfsZ, sqrt(pow(ndOfsX, 2) + pow(ndOfsZ, 2)) - ndTotalT/2);
 
         auto ND = new G4PVPlacement(RotY, ndOfs, ndLogic, "ND", logicWorld, false, ndID, true);
+				*/
+        const float ndOfsX = sin(ndTheta * deg) * (ndLayerZ + ndTotalT/2);
+        const float ndOfsZ = cos(ndTheta * deg) * (ndLayerZ + ndTotalT/2);
+
+				G4RotationMatrix rotm  = G4RotationMatrix();
+				rotm.rotateY(ndTheta*deg);
+				G4Transform3D transform = G4Transform3D(rotm, G4ThreeVector(ndOfsX, 0, ndOfsZ));
+				auto ND = new G4PVPlacement(transform, ndLogic, "ND", logicWorld, false, ndID, true);
         runManager->SetSensitiveDetector(ND);
+
+				auto parGeom = runManager -> GetGeom(); 
+				for (unsigned int ii=0; ii<ndLogic->GetNoDaughters(); ii++)
+				{
+					auto slatPhys = ndLogic->GetDaughter(ii);
+					const G4ThreeVector vec = slatPhys->GetTranslation();
+
+					G4Point3D Lvec(vec.x(), vec.y(), vec.z()); 
+					G4Point3D Gvec = transform*Lvec;
+
+					TString name = Form("LX_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Lvec.x());
+					name = Form("LY_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Lvec.y());
+					name = Form("LZ_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Lvec.z());
+
+					name = Form("GX_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Gvec.x());
+					name = Form("GY_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Gvec.y());
+					name = Form("GZ_%s",slatPhys->GetName().data());
+					parGeom -> SetPar(name, Gvec.z());
+
+					//cout << slatPhys->GetName() << ", Local: " << Lvec.x() << " " << Lvec.y() << " " << Lvec.z() << endl;
+					//cout << slatPhys->GetName() << ", Global: " << Gvec.x() << " " << Gvec.y() << " " << Gvec.z() << endl;
+				}
+
 	}//ND
 
 	return physWorld;
