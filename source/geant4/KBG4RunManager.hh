@@ -42,6 +42,7 @@ class KBG4RunManager : public G4RunManager, public KBGear
     void SetSensitiveDetector(G4VPhysicalVolume *physicalVolume, TString assemblyName="");
     void SetVolume(G4VPhysicalVolume *physicalVolume);
 
+    KBParameterContainer *GetGeom();
     KBParameterContainer *GetVolumes();
     KBParameterContainer *GetSensitiveDetectors();
     KBParameterContainer *GetProcessTable();
@@ -85,6 +86,7 @@ class KBG4RunManager : public G4RunManager, public KBGear
     bool fSecondaryPersistency = false;
     bool fTrackVertexPersistency = false;
 
+    KBParameterContainer *fGeom;
     KBParameterContainer *fVolumes;
     KBParameterContainer *fSensitiveDetectors;
     KBParameterContainer *fProcessTable;
