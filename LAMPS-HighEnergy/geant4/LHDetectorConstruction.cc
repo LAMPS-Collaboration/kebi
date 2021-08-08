@@ -23,7 +23,6 @@
 #include "G4Trap.hh"
 #include "G4Tubs.hh"
 #include "G4VisAttributes.hh"
-#include "G4Vector3D.hh"
 
 LHDetectorConstruction::LHDetectorConstruction()
 : G4VUserDetectorConstruction()
@@ -399,7 +398,7 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 	//Neutron
 	//-------------------------------------------
 
-	if ( par -> CheckPar("NDIn") )
+	if ( par -> GetParBool("NDIn") )
 	{
         G4int    ndID     = (par->CheckPar("NDID"))?par->GetParInt("NDID"):50;
         G4int    ndLayerN = par->GetParInt("NDLayerN");    //Total # of layers
@@ -475,33 +474,6 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 				G4Transform3D transform = G4Transform3D(rotm, G4ThreeVector(ndOfsX, 0, ndOfsZ));
 				auto ND = new G4PVPlacement(transform, ndLogic, "ND", logicWorld, false, ndID, true);
         runManager->SetSensitiveDetector(ND);
-
-				auto parGeom = runManager -> GetGeom(); 
-				for (unsigned int ii=0; ii<ndLogic->GetNoDaughters(); ii++)
-				{
-					auto slatPhys = ndLogic->GetDaughter(ii);
-					const G4ThreeVector vec = slatPhys->GetTranslation();
-
-					G4Point3D Lvec(vec.x(), vec.y(), vec.z()); 
-					G4Point3D Gvec = transform*Lvec;
-
-					TString name = Form("LX_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Lvec.x());
-					name = Form("LY_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Lvec.y());
-					name = Form("LZ_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Lvec.z());
-
-					name = Form("GX_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Gvec.x());
-					name = Form("GY_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Gvec.y());
-					name = Form("GZ_%s",slatPhys->GetName().data());
-					parGeom -> SetPar(name, Gvec.z());
-
-					//cout << slatPhys->GetName() << ", Local: " << Lvec.x() << " " << Lvec.y() << " " << Lvec.z() << endl;
-					//cout << slatPhys->GetName() << ", Global: " << Gvec.x() << " " << Gvec.y() << " " << Gvec.z() << endl;
-				}
 
 	}//ND
 
