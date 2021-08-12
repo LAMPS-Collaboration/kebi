@@ -29,17 +29,29 @@ void run(const char *name="g4event"){
 
 		if ( bDIGI && bRECO ){
 			auto psa = new KBPSATask();
+			psa -> SetInputBranchName("TPCPad");
+			psa -> SetOutputBranchName("TPCHit");
 			psa -> SetPSA(new KBPSAFastFit());
 			run->Add(psa);
 
-			run->Add(new LHHelixTrackFindingTask());
+			auto htfTask = new LHHelixTrackFindingTask();
+			htfTask -> SetHitBranchName("TPCHit");
+			htfTask -> SetTrackletBranchName("Tracklet");
+			run->Add(htfTask);
+
 			auto gfTask = new LHGenfitTask();
 			gfTask->SetDetID(10); //TPC
 			run->Add(gfTask);
+
+			run->Add(new LHNDFastDigiTask());
+
+			/*
 			//run->Add(new LHVertexFindingTask());
+			*/
 		}
 
 		run->Init();
+		run->Print();
 		run->Run();
 	}
 

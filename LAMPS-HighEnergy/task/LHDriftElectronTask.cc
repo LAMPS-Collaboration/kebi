@@ -47,7 +47,7 @@ bool LHDriftElectronTask::Init()
     fSelectedTrackID = par -> GetParInt("selectMCTrack");
 
   fPadArray = new TClonesArray("KBPad");
-  run -> RegisterBranch("Pad", fPadArray, fPersistency);
+  run -> RegisterBranch("TPCPad", fPadArray, fPersistency);
 
   return true;
 }

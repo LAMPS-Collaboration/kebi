@@ -21,6 +21,9 @@ KBG4RunManager::KBG4RunManager()
 {
   new KBG4RunMessenger(this);
 
+  fGeom = new KBParameterContainer();
+  fGeom -> SetName("Geom");
+
   fVolumes = new KBParameterContainer();
   fVolumes -> SetName("Volumes");
 
@@ -153,6 +156,7 @@ void KBG4RunManager::Run(G4int argc, char **argv, const G4String &type)
   WriteToFile(fProcessTable);
   WriteToFile(fSensitiveDetectors);
   WriteToFile(fVolumes);
+  WriteToFile(fGeom);
   EndOfRun();
 }
 
@@ -326,6 +330,7 @@ void KBG4RunManager::SetSensitiveDetector(G4VPhysicalVolume *physicalVolume, TSt
   }
 }
 
+KBParameterContainer *KBG4RunManager::GetGeom() { return fGeom; }
 KBParameterContainer *KBG4RunManager::GetVolumes() { return fVolumes; }
 KBParameterContainer *KBG4RunManager::GetSensitiveDetectors() { return fSensitiveDetectors; }
 KBParameterContainer *KBG4RunManager::GetProcessTable()       { return fProcessTable; }
