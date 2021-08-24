@@ -142,6 +142,138 @@ G4VPhysicalVolume *LHDetectorConstruction::Construct()
 		new G4GlobalMagFieldMessenger(G4ThreeVector(bfieldx*tesla, bfieldy*tesla, bfieldz*tesla));
 	}
 
+	//Solenoid frame
+	//-------------------------------------------
+
+	if ( par -> GetParBool("MagFrameIn") )
+	{
+		//Materials
+		//+++++++++++++++++++++++++++++++++++++++
+
+		/*
+		SS304 (steel)
+		Density: 8,000 Kg/m^3
+
+		Carbon (C)		: 0.07 (%)
+		Chromium (Cr)	: 17.50 - 19.50
+		Manganese (Mn)	: 2.00
+		Nitrogen (N)	: 0.10
+		Nickel (Ni)		: 8.00 - 10.50
+		Phosphorous (P)	: 0.045
+		Sulphur (S)		: 0.015
+		Silicon (Si)	: 1.00
+		Iron (Fe) 		: Balance (ckim: assume all remaining percentage)
+		*/
+
+		const int	SS304_nComp   = 9;
+		const float SS304_density = 8000 * 0.001 * g/cm3;
+		const float SS304f_C  = 0.07; //f stands for fraction, all fraction from here are %
+		const float SS304f_Cr = (17.50 + 19.50)/2;
+		const float SS304f_Mn = 2.00;
+		const float SS304f_N  = 0.10;
+		const float SS304f_Ni = (8.00 + 10.50)/2;
+		const float SS304f_P  = 0.045;
+		const float SS304f_S  = 0.015;
+		const float SS304f_Si = 1.00;
+		const float SS304f_Fe = 100 - (SS304f_C+SS304f_Cr+SS304f_Mn+SS304f_N+SS304f_Ni+SS304f_P+SS304f_S+SS304f_Si);
+
+		G4Material* SS304 = new G4Material("SS304", SS304_density, SS304_nComp);
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_C"),  perCent * SS304f_C );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_Cr"), perCent * SS304f_Cr );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_Mn"), perCent * SS304f_Mn );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_N"),  perCent * SS304f_N );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_Ni"), perCent * SS304f_Ni );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_P"),  perCent * SS304f_P );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_S"),  perCent * SS304f_S );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_Si"), perCent * SS304f_Si );
+		SS304->AddMaterial( nist->FindOrBuildMaterial("G4_Fe"), perCent * SS304f_Fe );
+
+		//Aluminium: pure Al or Al oxide?
+		//G4Material* MagFAl = nist->FindOrBuildMaterial("G4_Al"); //Pure Al, unlikely
+		G4Material* MagFAl = nist->FindOrBuildMaterial("G4_ALUMINUM_OXIDE"); //Al oxide
+
+		//Structure parameters: no possibility of change
+		//++++++++++++++++++++++++++++++++++++++++++++++
+
+		//OVC: SS304 (* OVC: OVerall Construction)
+		const float OVC_bt_ir = 1610./2; //bt: bore tube, ir: inner radius
+		const float OVC_bt_or = 1622./2;
+		const float OVC_bt_length = 3000.;
+
+		const float OVC_ot_ir = 2144./2; //ot: outer tube
+		const float OVC_ot_or = 2160./2;
+		const float OVC_ot_length = OVC_bt_length;
+
+		const float OVC_ec_ir = OVC_bt_ir; //ec: endcap
+		const float OVC_ec_or = OVC_ot_or;
+		const float OVC_ec_length = 20.; //Thickness
+
+		//RS (Radiation shield): Aluminium
+		const float RS_bt_ir = 1650./2;
+		const float RS_bt_or = 1662./2;
+		const float RS_bt_length = 2788.;
+
+		const float RS_ot_ir = 2034./2;
+		const float RS_ot_or = 2058./2;
+		const float RS_ot_length = RS_bt_length;
+
+		const float RS_ec_ir = RS_bt_ir;
+		const float RS_ec_or = RS_ot_or;
+		const float RS_ec_length = 6.;
+
+		//Former (Cold-mass) : Aluminimum
+		const float Former_ir = 1703.2/2;
+		const float Former_or = 1815.0/2;
+		const float Former_length = 2600.;
+
+		//Implementation
+		//+++++++++++++++++++++++++++++++++++++++
+
+		G4ThreeVector ZeroP(0, 0, 0);
+		G4VisAttributes* visMagF = new G4VisAttributes(G4Colour(G4Colour::White()));
+		visMagF->SetForceWireframe(true);
+
+		//OVC
+		G4Tubs *OVC_solid_bt = new G4Tubs("OVC_bt_solid", OVC_bt_ir, OVC_bt_or, OVC_bt_length/2, 0., 360*deg);
+		G4Tubs *OVC_solid_ot = new G4Tubs("OVC_ot_solid", OVC_ot_ir, OVC_ot_or, OVC_ot_length/2, 0., 360*deg);
+		G4Tubs *OVC_solid_ec = new G4Tubs("OVC_ec_solid", OVC_ec_ir, OVC_ec_or, OVC_ec_length/2, 0., 360*deg);
+		G4LogicalVolume* OVC_logic_bt = new G4LogicalVolume(OVC_solid_bt, SS304, "OVC_bt_logic");
+		G4LogicalVolume* OVC_logic_ot = new G4LogicalVolume(OVC_solid_ot, SS304, "OVC_ot_logic");
+		G4LogicalVolume* OVC_logic_ec = new G4LogicalVolume(OVC_solid_ec, SS304, "OVC_ec_logic");
+		OVC_logic_bt->SetVisAttributes(visMagF);
+		OVC_logic_ot->SetVisAttributes(visMagF);
+		OVC_logic_ec->SetVisAttributes(visMagF);
+		G4ThreeVector OVCec1P(0, 0, -OVC_bt_length/2 - OVC_ec_length/2);
+		G4ThreeVector OVCec2P(0, 0, +OVC_bt_length/2 + OVC_ec_length/2);
+		auto OVC_bt  = new G4PVPlacement(0, ZeroP, OVC_logic_bt, "MagF_OVC_bt", logicWorld, false, -1, true);
+		auto OVC_ot  = new G4PVPlacement(0, ZeroP, OVC_logic_ot, "MagF_OVC_ot", logicWorld, false, -1, true);
+		auto OVC_ec1 = new G4PVPlacement(0, OVCec1P, OVC_logic_ec, "MagF_OVC_ec1", logicWorld, false, -1, true);
+		auto OVC_ec2 = new G4PVPlacement(0, OVCec2P, OVC_logic_ec, "MagF_OVC_ec2", logicWorld, false, -1, true);
+
+		//RS
+		G4Tubs *RS_solid_bt = new G4Tubs("RS_bt_solid", RS_bt_ir, RS_bt_or, RS_bt_length/2, 0., 360*deg);
+		G4Tubs *RS_solid_ot = new G4Tubs("RS_ot_solid", RS_ot_ir, RS_ot_or, RS_ot_length/2, 0., 360*deg);
+		G4Tubs *RS_solid_ec = new G4Tubs("RS_ec_solid", RS_ec_ir, RS_ec_or, RS_ec_length/2, 0., 360*deg);
+		G4LogicalVolume* RS_logic_bt = new G4LogicalVolume(RS_solid_bt, MagFAl, "RS_bt_logic");
+		G4LogicalVolume* RS_logic_ot = new G4LogicalVolume(RS_solid_ot, MagFAl, "RS_ot_logic");
+		G4LogicalVolume* RS_logic_ec = new G4LogicalVolume(RS_solid_ec, MagFAl, "RS_ec_logic");
+		RS_logic_bt->SetVisAttributes(G4VisAttributes::GetInvisible());//SetVisAttributes(visMagF);
+		RS_logic_ot->SetVisAttributes(G4VisAttributes::GetInvisible());//SetVisAttributes(visMagF);
+		RS_logic_ec->SetVisAttributes(G4VisAttributes::GetInvisible());//SetVisAttributes(visMagF);
+		G4ThreeVector RSec1P(0, 0, -RS_bt_length/2 - RS_ec_length/2);
+		G4ThreeVector RSec2P(0, 0, +RS_bt_length/2 + RS_ec_length/2);
+		auto RS_bt  = new G4PVPlacement(0, ZeroP, RS_logic_bt, "MagF_RS_bt", logicWorld, false, -1, true);
+		auto RS_ot  = new G4PVPlacement(0, ZeroP, RS_logic_ot, "MagF_RS_ot", logicWorld, false, -1, true);
+		auto RS_ec1 = new G4PVPlacement(0, RSec1P, RS_logic_ec, "MagF_RS_ec1", logicWorld, false, -1, true);
+		auto RS_ec2 = new G4PVPlacement(0, RSec2P, RS_logic_ec, "MagF_RS_ec2", logicWorld, false, -1, true);
+
+		//Former
+		G4Tubs *Former_solid = new G4Tubs("Former_solid", Former_ir, Former_or, Former_length/2, 0., 360*deg);
+		G4LogicalVolume* Former_logic = new G4LogicalVolume(Former_solid, MagFAl, "Former_logic");
+		Former_logic->SetVisAttributes(G4VisAttributes::GetInvisible());//SetVisAttributes(visMagF);
+		auto Former = new G4PVPlacement(0, ZeroP, Former_logic, "MagF_Former", logicWorld, false, -1, true);
+	}//Solenoid frame
+
 	//TPC
 	//-------------------------------------------
 
