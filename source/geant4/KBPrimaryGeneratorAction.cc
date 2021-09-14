@@ -9,14 +9,16 @@
 #include "G4PhysicalConstants.hh"
 #include <G4strstreambuf.hh>
 
+#include <cmath>
+
 KBPrimaryGeneratorAction::KBPrimaryGeneratorAction()
 {
-  fParticleGun = new G4ParticleGun();
+	fParticleGun = new G4ParticleGun();
 }
 
 KBPrimaryGeneratorAction::KBPrimaryGeneratorAction(const char *fileName)
 {
-  fParticleGun = new G4ParticleGun();
+	fParticleGun = new G4ParticleGun();
 	auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 	auto par = runManager -> GetParameterContainer();
 	if ( par->GetParInt("G4InputMode")==1 )
@@ -28,12 +30,11 @@ KBPrimaryGeneratorAction::KBPrimaryGeneratorAction(const char *fileName)
 
 KBPrimaryGeneratorAction::~KBPrimaryGeneratorAction()
 {
-  delete fParticleGun;
+	delete fParticleGun;
 }
 
 void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-
 	auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 	auto par = runManager -> GetParameterContainer();
 	if ( par->GetParInt("G4InputMode")==0 )
@@ -44,17 +45,14 @@ void KBPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 	{
 		GeneratePrimariesMode1(anEvent);
 	}
-}
+
+	return;
+}//GeneratePrimaries
 
 void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 {
-
 	auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 	auto par = runManager -> GetParameterContainer();
-
-	G4double vx, vy, vz;
-
-	vz = -1.0*par->GetParDouble("worlddZ");
 
 	G4double energy = par->GetParDouble("G4InputEnergy");
 
@@ -72,41 +70,67 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	}
 	else
 	{
-		G4ParticleDefinition* particle
-			= particleTable->FindParticle(particleName.Data());
+		G4ParticleDefinition* particle = particleTable->FindParticle(particleName.Data());
 		fParticleGun->SetParticleDefinition(particle);
 		fParticleGun->SetParticleEnergy(energy*MeV);
 	}
 
 	G4int NperEvent = par->GetParInt("G4InputNumberPerEvent"); 
+	G4double vx = 999., vy = 999., vz = 999.;
+	vz = -1.0 * par->GetParDouble("worlddZ"); //Beam insertion point, default
 
-	G4double beamdx = par->GetParDouble("G4InputWidthX");
-	G4double beamdy = par->GetParDouble("G4InputWidthY");
+	//-------------------------------------------
 
-	for (G4int ip=0; ip<NperEvent; ip++){
+	//Beam insertion point (user defined), ckim
+	if (par->CheckPar("G4InputPosZ") == true)
+	{
+		G4double vzUser = par->GetParDouble("G4InputPosZ");
+		if (fabs(vzUser) <= par->GetParDouble("worlddZ")) vz = vzUser;
+		else cout <<"WARNING: beam insertion point located out of the world! Set default...\n";
+	}
 
-		vx = (G4UniformRand()-0.5)*beamdx;
-		vy = (G4UniformRand()-0.5)*beamdy;
+	//Beam shape, ckim
+	for (G4int ip=0; ip<NperEvent; ip++)
+	{
+		if ( par->CheckPar("G4InputCircular") && par->GetParBool("G4InputCircular")==true ) //Circular
+		{
+			G4double beam_dr_max = par->GetParDouble("G4InputRadius");
+
+			G4double vr = 999.;
+			while (vr > beam_dr_max)
+			{
+				vx = G4RandFlat::shoot(-beam_dr_max, beam_dr_max);
+				vy = G4RandFlat::shoot(-beam_dr_max, beam_dr_max);
+				vr = std::sqrt( vx*vx + vy*vy );
+			}
+		}
+		else //Square, default
+		{
+			G4double beamdx = par->GetParDouble("G4InputWidthX");
+			G4double beamdy = par->GetParDouble("G4InputWidthY");
+
+			vx = (G4UniformRand()-0.5) * beamdx;
+			vy = (G4UniformRand()-0.5) * beamdy;
+		}
 
 		fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
+		fParticleGun->GeneratePrimaryVertex(anEvent);
+	}//ip
 
-    fParticleGun->GeneratePrimaryVertex(anEvent);
-
-  }//ip
-}
+	return;
+}//GeneratePrimariesMode0
 
 void KBPrimaryGeneratorAction::GeneratePrimariesMode1(G4Event* anEvent)
 {
+	G4int pdg;
+	G4double vx, vy, vz, px, py, pz;
 
-  G4int pdg;
-  G4double vx, vy, vz, px, py, pz;
+	fEventGenerator -> ReadNextEvent(vx, vy, vz);
 
-  fEventGenerator -> ReadNextEvent(vx, vy, vz);
+	fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
 
-  fParticleGun -> SetParticlePosition(G4ThreeVector(vx,vy,vz));
-
-  while (fEventGenerator -> ReadNextTrack(pdg, px, py, pz))
-  {
+	while (fEventGenerator -> ReadNextTrack(pdg, px, py, pz))
+	{
 		if ( pdg>1000000000 )
 		{
 			G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(pdg);
@@ -118,24 +142,27 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode1(G4Event* anEvent)
 			fParticleGun -> SetParticleDefinition(particle);
 		}
 
-    G4ThreeVector momentum(px,py,pz);
-    fParticleGun -> SetParticleMomentumDirection(momentum.unit());
+		G4ThreeVector momentum(px,py,pz);
+		fParticleGun -> SetParticleMomentumDirection(momentum.unit());
 
-    G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
-    // Removing print outs in between here ------------->
-    if (fReadMomentumOrEnergy) fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
-    else                       fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
-    // <------------- to here
-    G4cout.rdbuf(oldBuffer);
+		G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
+		// Removing print outs in between here ------------->
+		if (fReadMomentumOrEnergy) fParticleGun -> SetParticleMomentum(momentum.mag()*MeV);
+		else                       fParticleGun -> SetParticleEnergy(momentum.mag()*MeV);
+		// <------------- to here
+		G4cout.rdbuf(oldBuffer);
 
-    fParticleGun -> GeneratePrimaryVertex(anEvent);
-  }
+		fParticleGun -> GeneratePrimaryVertex(anEvent);
+	}
 
+	return;
 }
 
 void KBPrimaryGeneratorAction::SetEventGenerator(const char *fileName)
 {
-  fEventGenerator = new KBMCEventGenerator(fileName);
-  fReadMomentumOrEnergy = fEventGenerator -> ReadMomentumOrEnergy();
-  ((KBG4RunManager *) KBG4RunManager::GetRunManager()) -> SetNumEvents(fEventGenerator -> GetNumEvents());
+	fEventGenerator = new KBMCEventGenerator(fileName);
+	fReadMomentumOrEnergy = fEventGenerator -> ReadMomentumOrEnergy();
+	((KBG4RunManager *) KBG4RunManager::GetRunManager()) -> SetNumEvents(fEventGenerator -> GetNumEvents());
+
+	return;
 }
