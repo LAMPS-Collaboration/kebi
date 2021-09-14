@@ -18,7 +18,7 @@ Sep. 13, 2021 (kimc)
 			 b-1-A. To invoke it, require parameters " G4InputCircular (bool) " and " G4InputRadius (double) "
 			 b-1-B. If not invoked, square beam shape will be called as default
         b-2. Added user defined beam insertion position in z
-			 b-2-A. TO invoke it, require parameter " G4InputPosZ (double) "
+			 b-2-A. To invoke it, require parameter " G4InputPosZ (double) "
 			 b-2-B. If not invoked or given "G4InputPosZ" is out of world, default (-worldDz) will be called
 	c.	~kebi/LAMPS-HighEnergy/macros_tpc/geant4_vis.mac
 
