@@ -55,6 +55,7 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	auto par = runManager -> GetParameterContainer();
 
 	G4double energy = par->GetParDouble("G4InputEnergy");
+	G4double charge = par->GetParDouble("G4InputCharge");
 
 	G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
 	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
@@ -67,6 +68,7 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 		G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(par->GetParInt("G4InputIonId"));
 		fParticleGun->SetParticleDefinition(particle);
 		fParticleGun->SetParticleEnergy(energy*MeV);
+		fParticleGun->SetParticleCharge(charge);
 	}
 	else
 	{
