@@ -1,3 +1,27 @@
+Sep. 13, 2021 (kimc)
+
+- New project added: TB22H (Test Beam 2022 HIMAC)
+	a.	By default aims 12C (p, 2p) 11B
+	b.	Default beam: 12C, 100 MeV/A, 5.0 x 10^5 PPS, r = 5 mm (circular)
+	c.	Subsystems of interest: SC, BDC, C2H4 target, BTOF, AT-TPC, and ND
+
+- Newly added (compared to TB20A):
+    a.  ~kebi/LAMPS-HighEnergy/geant4/TB22HDetectorConstruction.hh
+    b.  ~kebi/LAMPS-HighEnergy/geant4/TB22HDetectorConstruction.cc
+    c.  ~kebi/LAMPS-HighEnergy/macros_tpc/kbpar_TB22H.conf
+    d.  ~kebi/LAMPS-HighEnergy/macros_tpc/run_TB22Hmc.cc
+
+- Modified:
+    a.  ~kebi/LAMPS-HighEnergy/CMakeLists.txt
+    b.  ~kebi/source/geant4/KBPrimaryGeneratorAction.cc
+		b-1. Added circular beam shape feature
+			 b-1-A. To invoke it, require parameters " G4InputCircular (bool) " and " G4InputRadius (double) "
+			 b-1-B. If not invoked, square beam shape will be called as default
+        b-2. Added user defined beam insertion position in z
+			 b-2-A. TO invoke it, require parameter " G4InputPosZ (double) "
+			 b-2-B. If not invoked or given "G4InputPosZ" is out of world, default (-worldDz) will be called
+	c.	~kebi/LAMPS-HighEnergy/macros_tpc/geant4_vis.mac
+
 //-----------------------------------------------
 
 June 24, 2021 (kimc)
