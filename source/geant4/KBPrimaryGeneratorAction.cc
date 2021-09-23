@@ -55,7 +55,19 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	auto runManager = (KBG4RunManager *) G4RunManager::GetRunManager();
 	auto par = runManager -> GetParameterContainer();
 
+	//Random numner, ckim
+	std::random_device RD;
+	std::mt19937_64 RDGen(RD()); //Mersenne Twister 19937 generator (64 bit)
+
+	//Beam energy and unceretainty (ckim)
 	G4double energy = par->GetParDouble("G4InputEnergy");
+	G4double energyErr = 0.;
+	if (par->CheckPar("G4InputEnergyError") == true)
+	{
+		G4double energyErrFac = par->GetParDouble("G4InputEnergyError");
+		std::uniform_real_distribution<> RDdistEnergyErr(-energy * energyErrFac, energy * energyErrFac);
+		energyErr = RDdistEnergyErr(RDGen);
+	}
 
 	G4strstreambuf* oldBuffer = dynamic_cast<G4strstreambuf*>(G4cout.rdbuf(0));
 	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
@@ -67,13 +79,13 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	{
 		G4ParticleDefinition* particle = G4IonTable::GetIonTable()->GetIon(par->GetParInt("G4InputIonId"));
 		fParticleGun->SetParticleDefinition(particle);
-		fParticleGun->SetParticleEnergy(energy*MeV);
+		fParticleGun->SetParticleEnergy((energy + energyErr) * MeV);
 	}
 	else
 	{
 		G4ParticleDefinition* particle = particleTable->FindParticle(particleName.Data());
 		fParticleGun->SetParticleDefinition(particle);
-		fParticleGun->SetParticleEnergy(energy*MeV);
+		fParticleGun->SetParticleEnergy((energy + energyErr) * MeV);
 	}
 
 	G4int NperEvent = par->GetParInt("G4InputNumberPerEvent"); 
@@ -91,8 +103,6 @@ void KBPrimaryGeneratorAction::GeneratePrimariesMode0(G4Event* anEvent)
 	}
 
 	//Beam shape, ckim
-	std::random_device RD;
-	std::mt19937_64 RDGen(RD()); //Mersenne Twister 19937 generator (64 bit)
 	for (G4int ip=0; ip<NperEvent; ip++)
 	{
 		if ( par->CheckPar("G4InputCircular") && par->GetParBool("G4InputCircular")==true ) //Circular

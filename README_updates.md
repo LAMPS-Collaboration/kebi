@@ -1,3 +1,20 @@
+
+Sep. 23, 2021 (ckim)
+
+- ~kebi/source/geant4/KBPrimaryGeneratorAction.cc: added uncertainty option in beam energy
+	a. To invoke it, use parameter " G4InputEnergyError " in exact number (i.e., 0.01 for 1 %)
+	b. This functions only activated when the above parameter is given
+
+- ~kebi/LAMPS-HighEnergy/macros_tpc/geant4_run.mac : added random seeding by SHLim (/random/setSeeds 1 1)
+- ~kebi/LAMPS-HighEnergy/geant4/TB22HDetectorConstruction.cc : modified TOF and ND arrangement
+
+Sep. 17, 2021 (ckim)
+
+- ~kebi/source/geant4/KBPrimaryGeneratorAction.cc: debugged randomizing beam XY (both radial and square shape)
+
+
+//-----------------------------------------------
+
 Sep. 13, 2021 (kimc)
 
 - New project added: TB22H (Test Beam 2022 HIMAC)
