@@ -1,5 +1,5 @@
+/random/setSeeds 1 1
 /run/setCutForAGivenParticle e- 100. mm
-
 /run/suppressPP true
+/run/beamOn 500000
 #/run/beamOnAll
-/run/beamOn 10
