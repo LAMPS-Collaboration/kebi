@@ -65,12 +65,12 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	G4double worldDZ = fPar->GetParDouble("worlddZ");
 
 	G4Box*             WorldSol = new G4Box("WorldSolid", worldDX, worldDY, worldDZ);
-	G4LogicalVolume*   WorldLog = new G4LogicalVolume(WorldSol, worldMat, "World");//"worldLogic");
+	G4LogicalVolume*   WorldLog = new G4LogicalVolume(WorldSol, worldMat, "World");
 	G4VPhysicalVolume* WorldPhy = new G4PVPlacement(0, fZero, WorldLog, "WorldPhys", 0, false, worldID, true);
 
-    auto fVisWorld = new G4VisAttributes();
-    fVisWorld->SetColor(G4Color::White());
-    fVisWorld->SetForceWireframe(true);
+	auto fVisWorld = new G4VisAttributes();
+	fVisWorld->SetColor(G4Color::White());
+	fVisWorld->SetForceWireframe(true);
 	WorldLog->SetVisAttributes(fVisWorld);
 
 	//SC
@@ -280,7 +280,6 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 				fRun->SetSensitiveDetector(FTOFPhy);
 			}//a, b
 		}//FTOF
-
 	}//B/FTOF
 
 	//ND
@@ -290,11 +289,11 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	{
 		G4Material* ndMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 
-        G4int    ndID    = fPar->GetParInt("ndID");
+		G4int    ndID    = fPar->GetParInt("ndID");
 		G4int    ndSlatN = fPar->GetParInt("ndSlatN"); //# of pairs: i.e., 1 means two slats
-        G4double ndSlatL = fPar->GetParDouble("ndSlatL"); //Slat length (x)
-        G4double ndSlatW = fPar->GetParDouble("ndSlatW"); //Slat width (y)
-        G4double ndSlatT = fPar->GetParDouble("ndSlatT"); //Slat thickness (z)
+		G4double ndSlatL = fPar->GetParDouble("ndSlatL"); //Slat length (x)
+		G4double ndSlatW = fPar->GetParDouble("ndSlatW"); //Slat width (y)
+		G4double ndSlatT = fPar->GetParDouble("ndSlatT"); //Slat thickness (z)
 		G4double ndPosY  = fPar->GetParDouble("ndPosY");
 		G4double ndPosZ  = fPar->GetParDouble("ndPosZ");
 
