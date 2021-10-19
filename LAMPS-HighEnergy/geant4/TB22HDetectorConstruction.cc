@@ -50,6 +50,30 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	G4double fSTPTemp = 273.15 * kelvin;
 	G4double fLabTemp = fSTPTemp + 20 * kelvin;
 
+	//For detectors located in specific theta angle (SC tilted, AT-TPC)
+	G4double comTheta0 = fPar->GetParDouble("comTheta0");
+	G4double comTheta1 = fPar->GetParDouble("comTheta1");
+	G4RotationMatrix rotTheta0 = G4RotationMatrix(); rotTheta0.rotateY(comTheta0 * deg);
+	G4RotationMatrix rotTheta1 = G4RotationMatrix(); rotTheta1.rotateY(comTheta1 * deg);
+
+	//Argon (gas)
+	G4double ArGasD = 1.7836 * mg/cm3 * fSTPTemp/fLabTemp;
+	G4Material* ArGas = new G4Material("ArGas", 18, 39.948*g/mole, ArGasD, kStateGas, fLabTemp);
+
+	//CH4 (Methane)
+	G4double CH4GasD = 0.717e-3 * g/cm3 * fSTPTemp/fLabTemp; //Methane density
+	G4Material* CH4Gas = new G4Material("CH4Gas", CH4GasD, 2, kStateGas, fLabTemp);
+	G4Element* elH = new G4Element("Hydrogen", "H", 1., 1.00794 * g/mole);
+	G4Element* elC = new G4Element("Carbon", "C", 6., 12.011 * g/mole);
+	CH4Gas->AddElement(elC, 1);
+	CH4Gas->AddElement(elH, 4);
+
+	//P10
+	G4double P10GasD = 0.9*ArGasD + 0.1*CH4GasD;
+	G4Material* P10Gas = new G4Material("P10Gas", P10GasD, 2, kStateGas, fLabTemp);
+	P10Gas->AddMaterial(ArGas, 0.9 * ArGasD/P10GasD);
+	P10Gas->AddMaterial(CH4Gas, 0.1 * CH4GasD/P10GasD);
+
 	//World volume
 	//--------------------------------------------------------------------
 
@@ -108,24 +132,6 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 
 	if (fPar->GetParBool("BDCIn"))
 	{
-		//Argon
-		G4double ArGasD = 1.7836 * mg/cm3 * fSTPTemp/fLabTemp;
-		G4Material* ArGas = new G4Material("ArGas", 18, 39.948*g/mole, ArGasD, kStateGas, fLabTemp);
-
-		//CH4 (Methane)
-		G4double CH4GasD = 0.717e-3 * g/cm3 * fSTPTemp/fLabTemp; //Methane density
-		G4Material* CH4Gas = new G4Material("CH4Gas", CH4GasD, 2, kStateGas, fLabTemp);
-		G4Element* elH = new G4Element("Hydrogen", "H", 1., 1.00794 * g/mole);
-		G4Element* elC = new G4Element("Carbon", "C", 6., 12.011 * g/mole);
-		CH4Gas->AddElement(elC, 1);
-		CH4Gas->AddElement(elH, 4);
-
-		//P10
-		G4double P10GasD = 0.9*ArGasD + 0.1*CH4GasD;
-		G4Material* P10Gas = new G4Material("P10Gas", P10GasD, 2, kStateGas, fLabTemp);
-		P10Gas->AddMaterial(ArGas, 0.9 * ArGasD/P10GasD);
-		P10Gas->AddMaterial(CH4Gas, 0.1 * CH4GasD/P10GasD);
-
 		//Mylar and Al oxide
 		G4Material* Mylar   = fNist->FindOrBuildMaterial("G4_MYLAR");
 		G4Material* AlOxide = fNist->FindOrBuildMaterial("G4_ALUMINUM_OXIDE");
@@ -212,6 +218,80 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		TargetLog->SetVisAttributes(fVisTarget);
 	}//Target
 
+	//SC tilted
+	//--------------------------------------------------------------------
+
+	if (fPar->GetParBool("SCTiltIn"))
+	{
+		G4Material* scMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+
+		G4int    sctID   = fPar->GetParInt("sctID");
+		G4double sctDimX = fPar->GetParDouble("sctDimX");
+		G4double sctDimY = fPar->GetParDouble("sctDimY");
+		G4double sctDimZ = fPar->GetParDouble("sctDimZ");
+		G4double sctPosZ = fPar->GetParDouble("sctPosZ");
+
+		G4Box*           SCTSol = new G4Box("SCTiltSolid", sctDimX/2, sctDimY/2, sctDimZ/2);
+		G4LogicalVolume* SCTLog = new G4LogicalVolume(SCTSol, scMat, "SCTiltLogic");
+
+		const double SCTOfsX0 = sin(comTheta0 * deg) * (sctPosZ + sctDimZ/2.);
+		const double SCTOfsZ0 = cos(comTheta0 * deg) * (sctPosZ + sctDimZ/2.);
+		G4Transform3D SCTTr0 = G4Transform3D(rotTheta0, G4ThreeVector(SCTOfsX0, 0, SCTOfsZ0));
+		G4VPhysicalVolume* SCTPhys0 = new G4PVPlacement(SCTTr0, SCTLog, "SCT0", WorldLog, false, sctID+0, true);
+		fRun->SetSensitiveDetector(SCTPhys0);
+
+		const double SCTOfsX1 = sin(comTheta1 * deg) * (sctPosZ + sctDimZ/2.);
+		const double SCTOfsZ1 = cos(comTheta1 * deg) * (sctPosZ + sctDimZ/2.);
+		G4Transform3D SCTTr1 = G4Transform3D(rotTheta1, G4ThreeVector(SCTOfsX1, 0, SCTOfsZ1));
+		G4VPhysicalVolume* SCTPhys1 = new G4PVPlacement(SCTTr1, SCTLog, "SCT1", WorldLog, false, sctID+1, true);
+		fRun->SetSensitiveDetector(SCTPhys1);
+
+		auto fVisSCT = new G4VisAttributes();
+		fVisSCT->SetColor(G4Color::Cyan());
+		fVisSCT->SetForceWireframe(true);
+		SCTLog->SetVisAttributes(fVisSCT);
+	}//SC
+
+	//AT-TPC
+	//--------------------------------------------------------------------
+
+	if (fPar->GetParBool("ATTPCIn"))
+	{
+		G4int    attpcID   = fPar->GetParInt("attpcID");
+		G4double attpcDimX = fPar->GetParDouble("attpcDimX");
+		G4double attpcDimY = fPar->GetParDouble("attpcDimY");
+		G4double attpcDimZ = fPar->GetParDouble("attpcDimZ");
+		G4double attpcPosZ = fPar->GetParDouble("attpcPosZ");
+
+		G4Box*           ATPSol = new G4Box("ATTPCSolid", attpcDimX/2, attpcDimY/2, attpcDimZ/2);
+		G4LogicalVolume* ATPLog = new G4LogicalVolume(ATPSol, P10Gas, "ATTPCLogic");
+
+		const double ATPOfsX0 = sin(comTheta0 * deg) * (attpcPosZ + attpcDimZ/2.);
+		const double ATPOfsZ0 = cos(comTheta0 * deg) * (attpcPosZ + attpcDimZ/2.);
+		G4Transform3D ATPTr0 = G4Transform3D(rotTheta0, G4ThreeVector(ATPOfsX0, 0, ATPOfsZ0));
+		G4VPhysicalVolume* ATPPhys0 = new G4PVPlacement(ATPTr0, ATPLog, "ATTPC0", WorldLog, false, attpcID+0, true);
+		fRun->SetSensitiveDetector(ATPPhys0);
+
+		const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ + attpcDimZ/2.);
+		const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ + attpcDimZ/2.);
+		G4Transform3D ATPTr1 = G4Transform3D(rotTheta1, G4ThreeVector(ATPOfsX1, 0, ATPOfsZ1));
+		G4VPhysicalVolume* ATPPhys1 = new G4PVPlacement(ATPTr1, ATPLog, "ATTPC1", WorldLog, false, attpcID+1, true);
+		fRun->SetSensitiveDetector(ATPPhys1);
+
+		/*
+		const double dX = (double)(attpcDimX/2);
+		const double dZ = (double)(attpcPosZ+attpcDimZ/2);;
+		const double dTheta = std::atan2(dZ, dX);
+		cout <<Form("ATTPC0 acceptance: [%7.3f, %7.3f]\n", comTheta0-dTheta, comTheta0+dTheta);
+		cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta, comTheta1+dTheta);
+		*/
+
+		auto fVisATP = new G4VisAttributes();
+		fVisATP->SetColor(G4Color::Yellow());
+		fVisATP->SetForceWireframe(true);
+		ATPLog->SetVisAttributes(fVisATP);
+	}//ATTPC
+
 	//TOF
 	//--------------------------------------------------------------------
 
@@ -253,6 +333,9 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		fVisTOF->SetForceWireframe(true);
 		TOFLogM_b->SetVisAttributes(fVisTOF);
 		TOFLogM_f->SetVisAttributes(fVisTOF);
+
+		//BTOF
+		//++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 		//FTOF
 		//++++++++++++++++++++++++++++++++++++++++++++++++++++++

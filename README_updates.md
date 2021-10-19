@@ -1,3 +1,8 @@
+Oct. 19, 2021 (ckim)
+
+- Added tilted angle detectors (SC tilt and AT-TPC, active volume only)
+- Minor tweak/cleanup on kbpar_TB22H.conf
+
 Oct. 15, 2021 (ckim)
 
 - Minor updates to check 12C(p, 2p)11B scattering angles from truth level

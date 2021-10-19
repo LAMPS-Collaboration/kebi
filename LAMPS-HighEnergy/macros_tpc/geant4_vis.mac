@@ -34,7 +34,7 @@
 #/vis/viewer/set/viewpointThetaPhi 90 180 # Side
 #/vis/viewer/set/viewpointThetaPhi 90. 90. # Top
 /vis/verbose warnings
-/vis/viewer/zoom 1.25
+/vis/viewer/zoom 1.5
 
 /tracking/verbose 1
 /run/setCutForAGivenParticle e- 100. mm
