@@ -1,3 +1,7 @@
+Oct. 22, 2021 (ckim
+
+- Added liquid hydrogen / solid hydrogen target options
+
 Oct. 19, 2021 (ckim)
 
 - Added tilted angle detectors (SC tilt and AT-TPC, active volume only)

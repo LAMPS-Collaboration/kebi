@@ -80,7 +80,7 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	string worldMatStr;
 	if      (fPar->GetParInt("worldOpt") == 0) worldMatStr = "G4_Galactic";
 	else if (fPar->GetParInt("worldOpt") == 1) worldMatStr = "G4_AIR";
-	else { cout <<"World material? Stop.\n"; assert(false); }
+	else { cout <<"\nWorld material???\n"; assert(false); }
 	G4Material* worldMat = fNist->FindOrBuildMaterial(worldMatStr.c_str());
 
 	G4int    worldID = fPar->GetParInt("worldID");
@@ -199,7 +199,22 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 
 	if (fPar->GetParBool("TargetIn"))
 	{
-		G4Material* targetMat = fNist->FindOrBuildMaterial("G4_POLYETHYLENE");
+		G4Material* targetMat;
+
+		if      (fPar->GetParInt("targetMat") == 0) targetMat = fNist->FindOrBuildMaterial("G4_POLYETHYLENE");
+		else if (fPar->GetParInt("targetMat") == 1)
+		{
+			//Liquid hydrogen (H2)
+			G4Material* HLiquid = new G4Material("HLiquid", 1, 1.008*g/mole, 70.85*mg/cm3);
+			targetMat = HLiquid;
+		}
+		else if (fPar->GetParInt("targetMat") == 2)
+		{
+			//Solid hydrogen: Nuclear Physics A 805 (2008)
+			G4Material* HSolid = new G4Material("HSolid", 1, 1.008*g/mole, 44.0*mg/cm3);
+			targetMat = HSolid;
+		}
+		else { cout <<"\nTarget material???\n"; assert(false); }
 
 		G4int    targetID   = fPar->GetParInt("targetID");
 		G4double targetDimX = fPar->GetParDouble("targetDimX");
@@ -225,23 +240,24 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	{
 		G4Material* scMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 
-		G4int    sctID   = fPar->GetParInt("sctID");
-		G4double sctDimX = fPar->GetParDouble("sctDimX");
-		G4double sctDimY = fPar->GetParDouble("sctDimY");
-		G4double sctDimZ = fPar->GetParDouble("sctDimZ");
-		G4double sctPosZ = fPar->GetParDouble("sctPosZ");
+		G4int    sctID    = fPar->GetParInt("sctID");
+		G4double sctDimX  = fPar->GetParDouble("sctDimX");
+		G4double sctDimY  = fPar->GetParDouble("sctDimY");
+		G4double sctDimZ  = fPar->GetParDouble("sctDimZ");
+		G4double sctPosZ0 = fPar->GetParDouble("sctPosZ0");
+		G4double sctPosZ1 = fPar->GetParDouble("sctPosZ1");
 
 		G4Box*           SCTSol = new G4Box("SCTiltSolid", sctDimX/2, sctDimY/2, sctDimZ/2);
 		G4LogicalVolume* SCTLog = new G4LogicalVolume(SCTSol, scMat, "SCTiltLogic");
 
-		const double SCTOfsX0 = sin(comTheta0 * deg) * (sctPosZ + sctDimZ/2.);
-		const double SCTOfsZ0 = cos(comTheta0 * deg) * (sctPosZ + sctDimZ/2.);
+		const double SCTOfsX0 = sin(comTheta0 * deg) * (sctPosZ0 + sctDimZ/2.);
+		const double SCTOfsZ0 = cos(comTheta0 * deg) * (sctPosZ0 + sctDimZ/2.);
 		G4Transform3D SCTTr0 = G4Transform3D(rotTheta0, G4ThreeVector(SCTOfsX0, 0, SCTOfsZ0));
 		G4VPhysicalVolume* SCTPhys0 = new G4PVPlacement(SCTTr0, SCTLog, "SCT0", WorldLog, false, sctID+0, true);
 		fRun->SetSensitiveDetector(SCTPhys0);
 
-		const double SCTOfsX1 = sin(comTheta1 * deg) * (sctPosZ + sctDimZ/2.);
-		const double SCTOfsZ1 = cos(comTheta1 * deg) * (sctPosZ + sctDimZ/2.);
+		const double SCTOfsX1 = sin(comTheta1 * deg) * (sctPosZ1 + sctDimZ/2.);
+		const double SCTOfsZ1 = cos(comTheta1 * deg) * (sctPosZ1 + sctDimZ/2.);
 		G4Transform3D SCTTr1 = G4Transform3D(rotTheta1, G4ThreeVector(SCTOfsX1, 0, SCTOfsZ1));
 		G4VPhysicalVolume* SCTPhys1 = new G4PVPlacement(SCTTr1, SCTLog, "SCT1", WorldLog, false, sctID+1, true);
 		fRun->SetSensitiveDetector(SCTPhys1);
@@ -257,34 +273,35 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 
 	if (fPar->GetParBool("ATTPCIn"))
 	{
-		G4int    attpcID   = fPar->GetParInt("attpcID");
-		G4double attpcDimX = fPar->GetParDouble("attpcDimX");
-		G4double attpcDimY = fPar->GetParDouble("attpcDimY");
-		G4double attpcDimZ = fPar->GetParDouble("attpcDimZ");
-		G4double attpcPosZ = fPar->GetParDouble("attpcPosZ");
+		G4int    attpcID    = fPar->GetParInt("attpcID");
+		G4double attpcDimX  = fPar->GetParDouble("attpcDimX");
+		G4double attpcDimY  = fPar->GetParDouble("attpcDimY");
+		G4double attpcDimZ  = fPar->GetParDouble("attpcDimZ");
+		G4double attpcPosZ0 = fPar->GetParDouble("attpcPosZ0");
+		G4double attpcPosZ1 = fPar->GetParDouble("attpcPosZ1");
 
 		G4Box*           ATPSol = new G4Box("ATTPCSolid", attpcDimX/2, attpcDimY/2, attpcDimZ/2);
 		G4LogicalVolume* ATPLog = new G4LogicalVolume(ATPSol, P10Gas, "ATTPCLogic");
 
-		const double ATPOfsX0 = sin(comTheta0 * deg) * (attpcPosZ + attpcDimZ/2.);
-		const double ATPOfsZ0 = cos(comTheta0 * deg) * (attpcPosZ + attpcDimZ/2.);
+		const double ATPOfsX0 = sin(comTheta0 * deg) * (attpcPosZ0 + attpcDimZ/2.);
+		const double ATPOfsZ0 = cos(comTheta0 * deg) * (attpcPosZ0 + attpcDimZ/2.);
 		G4Transform3D ATPTr0 = G4Transform3D(rotTheta0, G4ThreeVector(ATPOfsX0, 0, ATPOfsZ0));
 		G4VPhysicalVolume* ATPPhys0 = new G4PVPlacement(ATPTr0, ATPLog, "ATTPC0", WorldLog, false, attpcID+0, true);
 		fRun->SetSensitiveDetector(ATPPhys0);
 
-		const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ + attpcDimZ/2.);
-		const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ + attpcDimZ/2.);
+		const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
+		const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
 		G4Transform3D ATPTr1 = G4Transform3D(rotTheta1, G4ThreeVector(ATPOfsX1, 0, ATPOfsZ1));
 		G4VPhysicalVolume* ATPPhys1 = new G4PVPlacement(ATPTr1, ATPLog, "ATTPC1", WorldLog, false, attpcID+1, true);
 		fRun->SetSensitiveDetector(ATPPhys1);
 
-		/*
 		const double dX = (double)(attpcDimX/2);
-		const double dZ = (double)(attpcPosZ+attpcDimZ/2);;
-		const double dTheta = std::atan2(dZ, dX);
-		cout <<Form("ATTPC0 acceptance: [%7.3f, %7.3f]\n", comTheta0-dTheta, comTheta0+dTheta);
-		cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta, comTheta1+dTheta);
-		*/
+		const double dZ0 = (double)(attpcPosZ0+attpcDimZ/2);
+		const double dZ1 = (double)(attpcPosZ1+attpcDimZ/2);
+		const double dTheta0 = std::atan2(dZ0, dX);
+		const double dTheta1 = std::atan2(dZ1, dX);
+		cout <<Form("ATTPC0 acceptance: [%7.3f, %7.3f]\n", comTheta0-dTheta0, comTheta0+dTheta0);
+		cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta1, comTheta1+dTheta1);
 
 		auto fVisATP = new G4VisAttributes();
 		fVisATP->SetColor(G4Color::Yellow());
