@@ -266,7 +266,34 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		fVisSCT->SetColor(G4Color::Cyan());
 		fVisSCT->SetForceWireframe(true);
 		SCTLog->SetVisAttributes(fVisSCT);
-	}//SC
+
+		if (fPar->GetParInt("comSetup") == 0) 
+		{
+			//Naming scheme: SC (beamline) -> SCT (tilted) -> SCA (tiled + AT-TPC altermnative)
+			G4double scaDimX = 60.;
+			G4double scaDimY = 60.;
+			G4double scaDimZ =  3.;
+			G4double scaPosZ0 = sctPosZ1 +  50.;
+			G4double scaPosZ1 = sctPosZ1 + 100.;
+
+			G4Box*           SCASol = new G4Box("SCAltSolid", scaDimX/2, scaDimY/2, scaDimZ/2);
+			G4LogicalVolume* SCALog = new G4LogicalVolume(SCASol, scMat, "SCAltLogic");
+			SCALog->SetVisAttributes(fVisSCT);
+
+			const double SCAOfsX0 = sin(comTheta1 * deg) * (scaPosZ0 + scaDimZ/2.);
+			const double SCAOfsZ0 = cos(comTheta1 * deg) * (scaPosZ0 + scaDimZ/2.);
+			G4Transform3D SCATr0 = G4Transform3D(rotTheta1, G4ThreeVector(SCAOfsX0, 0, SCAOfsZ0));
+			G4VPhysicalVolume* SCAPhys0 = new G4PVPlacement(SCATr0,SCALog,"SCA0", WorldLog, false, sctID+10, true);
+			fRun->SetSensitiveDetector(SCAPhys0);
+
+			const double SCAOfsX1 = sin(comTheta1 * deg) * (scaPosZ1 + scaDimZ/2.);
+			const double SCAOfsZ1 = cos(comTheta1 * deg) * (scaPosZ1 + scaDimZ/2.);
+			G4Transform3D SCATr1 = G4Transform3D(rotTheta1, G4ThreeVector(SCAOfsX1, 0, SCAOfsZ1));
+			G4VPhysicalVolume* SCAPhys1 = new G4PVPlacement(SCATr1,SCALog,"SCA1", WorldLog, false, sctID+11, true);
+			fRun->SetSensitiveDetector(SCAPhys1);
+		}
+
+	}//SC tilt
 
 	//AT-TPC
 	//--------------------------------------------------------------------
@@ -289,19 +316,23 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		G4VPhysicalVolume* ATPPhys0 = new G4PVPlacement(ATPTr0, ATPLog, "ATTPC0", WorldLog, false, attpcID+0, true);
 		fRun->SetSensitiveDetector(ATPPhys0);
 
-		const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
-		const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
-		G4Transform3D ATPTr1 = G4Transform3D(rotTheta1, G4ThreeVector(ATPOfsX1, 0, ATPOfsZ1));
-		G4VPhysicalVolume* ATPPhys1 = new G4PVPlacement(ATPTr1, ATPLog, "ATTPC1", WorldLog, false, attpcID+1, true);
-		fRun->SetSensitiveDetector(ATPPhys1);
-
 		const double dX = (double)(attpcDimX/2);
 		const double dZ0 = (double)(attpcPosZ0+attpcDimZ/2);
-		const double dZ1 = (double)(attpcPosZ1+attpcDimZ/2);
 		const double dTheta0 = std::atan2(dZ0, dX);
-		const double dTheta1 = std::atan2(dZ1, dX);
 		cout <<Form("ATTPC0 acceptance: [%7.3f, %7.3f]\n", comTheta0-dTheta0, comTheta0+dTheta0);
-		cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta1, comTheta1+dTheta1);
+
+		if (fPar->GetParInt("comSetup") == 1)
+		{
+			const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
+			const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
+			G4Transform3D ATPTr1 = G4Transform3D(rotTheta1, G4ThreeVector(ATPOfsX1, 0, ATPOfsZ1));
+			G4VPhysicalVolume* ATPPhys1 = new G4PVPlacement(ATPTr1,ATPLog,"ATTPC1",WorldLog,false,attpcID+1,true);
+			fRun->SetSensitiveDetector(ATPPhys1);
+
+			const double dZ1 = (double)(attpcPosZ1+attpcDimZ/2);
+			const double dTheta1 = std::atan2(dZ1, dX);
+			cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta1, comTheta1+dTheta1);
+		}
 
 		auto fVisATP = new G4VisAttributes();
 		fVisATP->SetColor(G4Color::Yellow());

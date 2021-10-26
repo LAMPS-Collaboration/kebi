@@ -1,3 +1,8 @@
+Oct. 26, 2021
+
+- Prepared two detector setups (by # of available AT-TPCs, tilting angle and distance can be adjusted)
+- For processing codes (e.g., TB22H.h or TB22HMake.C), check "/home/ckim/work/himac_2021" in NPL server
+
 Oct. 22, 2021 (ckim
 
 - Added liquid hydrogen / solid hydrogen target options
