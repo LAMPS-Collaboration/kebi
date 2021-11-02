@@ -41,11 +41,38 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 {
 	auto fRun = (KBG4RunManager*)G4RunManager::GetRunManager();
 	auto fPar = fRun->GetParameterContainer();
-	G4ThreeVector fZero(0, 0, 0);
 
 	auto fVisFrame = new G4VisAttributes();
 	fVisFrame->SetColor(G4Color::Gray());
 	fVisFrame->SetForceWireframe(true);
+
+	G4ThreeVector fZero(0, 0, 0);
+	G4double fSTPTemp = 273.15 * kelvin;
+	G4double fLabTemp = fSTPTemp + 20 * kelvin;
+
+	//For detectors located in specific theta angle (SC tilted, AT-TPC)
+	G4double comTheta0 = fPar->GetParDouble("comTheta0");
+	G4double comTheta1 = fPar->GetParDouble("comTheta1");
+	G4RotationMatrix rotTheta0 = G4RotationMatrix(); rotTheta0.rotateY(comTheta0 * deg);
+	G4RotationMatrix rotTheta1 = G4RotationMatrix(); rotTheta1.rotateY(comTheta1 * deg);
+
+	//Argon (gas)
+	G4double ArGasD = 1.7836 * mg/cm3 * fSTPTemp/fLabTemp;
+	G4Material* ArGas = new G4Material("ArGas", 18, 39.948*g/mole, ArGasD, kStateGas, fLabTemp);
+
+	//CH4 (Methane)
+	G4double CH4GasD = 0.717e-3 * g/cm3 * fSTPTemp/fLabTemp; //Methane density
+	G4Material* CH4Gas = new G4Material("CH4Gas", CH4GasD, 2, kStateGas, fLabTemp);
+	G4Element* elH = new G4Element("Hydrogen", "H", 1., 1.00794 * g/mole);
+	G4Element* elC = new G4Element("Carbon", "C", 6., 12.011 * g/mole);
+	CH4Gas->AddElement(elC, 1);
+	CH4Gas->AddElement(elH, 4);
+
+	//P10
+	G4double P10GasD = 0.9*ArGasD + 0.1*CH4GasD;
+	G4Material* P10Gas = new G4Material("P10Gas", P10GasD, 2, kStateGas, fLabTemp);
+	P10Gas->AddMaterial(ArGas, 0.9 * ArGasD/P10GasD);
+	P10Gas->AddMaterial(CH4Gas, 0.1 * CH4GasD/P10GasD);
 
 	//World volume
 	//--------------------------------------------------------------------
@@ -53,7 +80,7 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	string worldMatStr;
 	if      (fPar->GetParInt("worldOpt") == 0) worldMatStr = "G4_Galactic";
 	else if (fPar->GetParInt("worldOpt") == 1) worldMatStr = "G4_AIR";
-	else { cout <<"World material? Stop.\n"; assert(false); }
+	else { cout <<"\nWorld material???\n"; assert(false); }
 	G4Material* worldMat = fNist->FindOrBuildMaterial(worldMatStr.c_str());
 
 	G4int    worldID = fPar->GetParInt("worldID");
@@ -62,12 +89,12 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	G4double worldDZ = fPar->GetParDouble("worlddZ");
 
 	G4Box*             WorldSol = new G4Box("WorldSolid", worldDX, worldDY, worldDZ);
-	G4LogicalVolume*   WorldLog = new G4LogicalVolume(WorldSol, worldMat, "World");//"worldLogic");
+	G4LogicalVolume*   WorldLog = new G4LogicalVolume(WorldSol, worldMat, "World");
 	G4VPhysicalVolume* WorldPhy = new G4PVPlacement(0, fZero, WorldLog, "WorldPhys", 0, false, worldID, true);
 
-    auto fVisWorld = new G4VisAttributes();
-    fVisWorld->SetColor(G4Color::White());
-    fVisWorld->SetForceWireframe(true);
+	auto fVisWorld = new G4VisAttributes();
+	fVisWorld->SetColor(G4Color::White());
+	fVisWorld->SetForceWireframe(true);
 	WorldLog->SetVisAttributes(fVisWorld);
 
 	//SC
@@ -105,27 +132,6 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 
 	if (fPar->GetParBool("BDCIn"))
 	{
-		G4double fSTPTemp = 273.15 * kelvin;
-		G4double fLabTemp = fSTPTemp + 20 * kelvin;
-
-		//Argon
-		G4double ArGasD = 1.7836 * mg/cm3 * fSTPTemp/fLabTemp;
-		G4Material* ArGas = new G4Material("ArGas", 18, 39.948*g/mole, ArGasD, kStateGas, fLabTemp);
-
-		//CH4 (Methane)
-		G4double CH4GasD = 0.717e-3 * g/cm3 * fSTPTemp/fLabTemp; //Methane density
-		G4Material* CH4Gas = new G4Material("CH4Gas", CH4GasD, 2, kStateGas, fLabTemp);
-		G4Element* elH = new G4Element("Hydrogen", "H", 1., 1.00794 * g/mole);
-		G4Element* elC = new G4Element("Carbon", "C", 6., 12.011 * g/mole);
-		CH4Gas->AddElement(elC, 1);
-		CH4Gas->AddElement(elH, 4);
-
-		//P10
-		G4double P10GasD = 0.9*ArGasD + 0.1*CH4GasD;
-		G4Material* P10Gas = new G4Material("P10Gas", P10GasD, 2, kStateGas, fLabTemp);
-		P10Gas->AddMaterial(ArGas, 0.9 * ArGasD/P10GasD);
-		P10Gas->AddMaterial(CH4Gas, 0.1 * CH4GasD/P10GasD);
-
 		//Mylar and Al oxide
 		G4Material* Mylar   = fNist->FindOrBuildMaterial("G4_MYLAR");
 		G4Material* AlOxide = fNist->FindOrBuildMaterial("G4_ALUMINUM_OXIDE");
@@ -143,7 +149,7 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		G4double bdcAlmT = 2.5 * um; //Aluminized mylar, one layer
 		const int nAlm = 5; //Total # of Alm layers
 
-		//All
+		//Enclosure volume (all)
 		G4Box*           BDCSol = new G4Box("BDCSolid", (bdcDimX+20)/2, (bdcDimY+20)/2, (bdcDimZ+bdcMylarT)/2);
 		G4LogicalVolume* BDCLog = new G4LogicalVolume(BDCSol, fNist->FindOrBuildMaterial("G4_AIR"), "BDCLogic");
 		BDCLog->SetVisAttributes(G4VisAttributes::GetInvisible());
@@ -151,7 +157,7 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		//p10
 		G4Box*           BDCSolP10 = new G4Box("BDCSolidP10", bdcDimX/2, bdcDimY/2, bdcDimZ/2);
 		G4LogicalVolume* BDCLogP10 = new G4LogicalVolume(BDCSolP10, P10Gas, "BDCLogicP10");
-		new G4PVPlacement(0, G4ThreeVector(0,0,0), BDCLogP10, "BDCP10", BDCLog, false, bdcID + 10, false);
+		new G4PVPlacement(0, fZero, BDCLogP10, "BDCP10", BDCLog, false, bdcID + 10, false);
 
 		auto fVisBDC = new G4VisAttributes();
 		fVisBDC->SetColor(G4Color::Yellow());
@@ -186,14 +192,29 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		auto BDCPhys1 = new G4PVPlacement(0, BDCPos1, BDCLog, "BDC1", WorldLog, false, bdcID+1, true);
 		fRun->SetSensitiveDetector(BDCPhys0);
 		fRun->SetSensitiveDetector(BDCPhys1);
-	}
+	}//BDC
 
 	//Target (C2H4)
 	//--------------------------------------------------------------------
 
 	if (fPar->GetParBool("TargetIn"))
 	{
-		G4Material* targetMat = fNist->FindOrBuildMaterial("G4_POLYETHYLENE");
+		G4Material* targetMat;
+
+		if      (fPar->GetParInt("targetMat") == 0) targetMat = fNist->FindOrBuildMaterial("G4_POLYETHYLENE");
+		else if (fPar->GetParInt("targetMat") == 1)
+		{
+			//Liquid hydrogen (H2)
+			G4Material* HLiquid = new G4Material("HLiquid", 1, 1.008*g/mole, 70.85*mg/cm3);
+			targetMat = HLiquid;
+		}
+		else if (fPar->GetParInt("targetMat") == 2)
+		{
+			//Solid hydrogen: Nuclear Physics A 805 (2008)
+			G4Material* HSolid = new G4Material("HSolid", 1, 1.008*g/mole, 44.0*mg/cm3);
+			targetMat = HSolid;
+		}
+		else { cout <<"\nTarget material???\n"; assert(false); }
 
 		G4int    targetID   = fPar->GetParInt("targetID");
 		G4double targetDimX = fPar->GetParDouble("targetDimX");
@@ -212,67 +233,185 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		TargetLog->SetVisAttributes(fVisTarget);
 	}//Target
 
-	//BTOF
+	//SC tilted
 	//--------------------------------------------------------------------
 
-	if (fPar->GetParBool("BTOFIn"))
+	if (fPar->GetParBool("SCTiltIn"))
 	{
-		G4Material* btofMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+		G4Material* scMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 
-		G4int    btofID     = fPar->GetParInt("btofID");
-		G4double btofDimT   = fPar->GetParDouble("btofDimT");
-		G4double btofDimW_b = fPar->GetParDouble("btofDimW_b");
-		G4double btofDimL_b = fPar->GetParDouble("btofDimL_b");
-		G4double btofDimL_f = fPar->GetParDouble("btofDimL_f");
-		G4double btofPosX   = fPar->GetParDouble("btofPosX");
-		G4double btofPosZ   = fPar->GetParDouble("btofPosZ");
+		G4int    sctID    = fPar->GetParInt("sctID");
+		G4double sctDimX  = fPar->GetParDouble("sctDimX");
+		G4double sctDimY  = fPar->GetParDouble("sctDimY");
+		G4double sctDimZ  = fPar->GetParDouble("sctDimZ");
+		G4double sctPosZ0 = fPar->GetParDouble("sctPosZ0");
+		G4double sctPosZ1 = fPar->GetParDouble("sctPosZ1");
 
-		//A BTOF module
-		//+++++++++++++++++++++++++++++++++++++++
+		G4Box*           SCTSol = new G4Box("SCTiltSolid", sctDimX/2, sctDimY/2, sctDimZ/2);
+		G4LogicalVolume* SCTLog = new G4LogicalVolume(SCTSol, scMat, "SCTiltLogic");
 
-		//Large rectangular volume encloses a whole BTOF module (central box + fishtails on edge)
-		G4Box*           BTOFSolM = new G4Box("BTOFSolM", btofDimW_b/2, (btofDimL_b + 2*btofDimL_f)/2, btofDimT/2);
-		G4LogicalVolume* BTOFLogM = new G4LogicalVolume(BTOFSolM, WorldLog->GetMaterial(), "BTOFLogM");
-		BTOFLogM->SetVisAttributes(G4VisAttributes::GetInvisible());
+		const double SCTOfsX0 = sin(comTheta0 * deg) * (sctPosZ0 + sctDimZ/2.);
+		const double SCTOfsZ0 = cos(comTheta0 * deg) * (sctPosZ0 + sctDimZ/2.);
+		G4Transform3D SCTTr0 = G4Transform3D(rotTheta0, G4ThreeVector(SCTOfsX0, 0, SCTOfsZ0));
+		G4VPhysicalVolume* SCTPhys0 = new G4PVPlacement(SCTTr0, SCTLog, "SCT0", WorldLog, false, sctID+0, true);
+		fRun->SetSensitiveDetector(SCTPhys0);
 
-		//Center box
-		G4Box*           BTOFSolB = new G4Box("BTOFSolB", btofDimW_b/2, btofDimL_b/2, btofDimT/2);
-		G4LogicalVolume* BTOFLogB = new G4LogicalVolume(BTOFSolB, btofMat, "BTOFLogB");
-		new G4PVPlacement(0, fZero, BTOFLogB, "BTOFM_b", BTOFLogM, false, btofID + 10, true);
+		const double SCTOfsX1 = sin(comTheta1 * deg) * (sctPosZ1 + sctDimZ/2.);
+		const double SCTOfsZ1 = cos(comTheta1 * deg) * (sctPosZ1 + sctDimZ/2.);
+		G4Transform3D SCTTr1 = G4Transform3D(rotTheta1, G4ThreeVector(SCTOfsX1, 0, SCTOfsZ1));
+		G4VPhysicalVolume* SCTPhys1 = new G4PVPlacement(SCTTr1, SCTLog, "SCT1", WorldLog, false, sctID+1, true);
+		fRun->SetSensitiveDetector(SCTPhys1);
 
-		//Fish tails (octant)
-		G4Trap* BTOFSolF = new G4Trap("BTOFSolF");
-		BTOFSolF->SetAllParameters(
-				btofDimT/2, 0, 0,
-				btofDimL_f/2, btofDimW_b/2, btofDimW_b/4, 0,
-				btofDimL_f/2, btofDimW_b/2, btofDimW_b/4, 0);
-		G4LogicalVolume* BTOFLogF = new G4LogicalVolume(BTOFSolF, btofMat, "BTOFLogB");
-		new G4PVPlacement(0, G4ThreeVector(0, (btofDimL_b+btofDimL_f)/2, 0),
-				BTOFLogF, "BTOFM_f0", BTOFLogM, false, btofID + 20, true);
-		G4RotationMatrix* btofRotF = new G4RotationMatrix(); btofRotF->rotateZ(180 * deg);
-		new G4PVPlacement(btofRotF, G4ThreeVector(0, -(btofDimL_b+btofDimL_f)/2, 0),
-				BTOFLogF, "BTOFM_f1", BTOFLogM, false, btofID + 21, true);
+		auto fVisSCT = new G4VisAttributes();
+		fVisSCT->SetColor(G4Color::Cyan());
+		fVisSCT->SetForceWireframe(true);
+		SCTLog->SetVisAttributes(fVisSCT);
+
+		if (fPar->GetParInt("comSetup") == 0) 
+		{
+			//Naming scheme: SC (beamline) -> SCT (tilted) -> SCA (tiled + AT-TPC altermnative)
+			G4double scaDimX = 60.;
+			G4double scaDimY = 60.;
+			G4double scaDimZ =  3.;
+			G4double scaPosZ0 = sctPosZ1 +  50.;
+			G4double scaPosZ1 = sctPosZ1 + 100.;
+
+			G4Box*           SCASol = new G4Box("SCAltSolid", scaDimX/2, scaDimY/2, scaDimZ/2);
+			G4LogicalVolume* SCALog = new G4LogicalVolume(SCASol, scMat, "SCAltLogic");
+			SCALog->SetVisAttributes(fVisSCT);
+
+			const double SCAOfsX0 = sin(comTheta1 * deg) * (scaPosZ0 + scaDimZ/2.);
+			const double SCAOfsZ0 = cos(comTheta1 * deg) * (scaPosZ0 + scaDimZ/2.);
+			G4Transform3D SCATr0 = G4Transform3D(rotTheta1, G4ThreeVector(SCAOfsX0, 0, SCAOfsZ0));
+			G4VPhysicalVolume* SCAPhys0 = new G4PVPlacement(SCATr0,SCALog,"SCA0", WorldLog, false, sctID+10, true);
+			fRun->SetSensitiveDetector(SCAPhys0);
+
+			const double SCAOfsX1 = sin(comTheta1 * deg) * (scaPosZ1 + scaDimZ/2.);
+			const double SCAOfsZ1 = cos(comTheta1 * deg) * (scaPosZ1 + scaDimZ/2.);
+			G4Transform3D SCATr1 = G4Transform3D(rotTheta1, G4ThreeVector(SCAOfsX1, 0, SCAOfsZ1));
+			G4VPhysicalVolume* SCAPhys1 = new G4PVPlacement(SCATr1,SCALog,"SCA1", WorldLog, false, sctID+11, true);
+			fRun->SetSensitiveDetector(SCAPhys1);
+		}
+
+	}//SC tilt
+
+	//AT-TPC
+	//--------------------------------------------------------------------
+
+	if (fPar->GetParBool("ATTPCIn"))
+	{
+		G4int    attpcID    = fPar->GetParInt("attpcID");
+		G4double attpcDimX  = fPar->GetParDouble("attpcDimX");
+		G4double attpcDimY  = fPar->GetParDouble("attpcDimY");
+		G4double attpcDimZ  = fPar->GetParDouble("attpcDimZ");
+		G4double attpcPosZ0 = fPar->GetParDouble("attpcPosZ0");
+		G4double attpcPosZ1 = fPar->GetParDouble("attpcPosZ1");
+
+		G4Box*           ATPSol = new G4Box("ATTPCSolid", attpcDimX/2, attpcDimY/2, attpcDimZ/2);
+		G4LogicalVolume* ATPLog = new G4LogicalVolume(ATPSol, P10Gas, "ATTPCLogic");
+
+		const double ATPOfsX0 = sin(comTheta0 * deg) * (attpcPosZ0 + attpcDimZ/2.);
+		const double ATPOfsZ0 = cos(comTheta0 * deg) * (attpcPosZ0 + attpcDimZ/2.);
+		G4Transform3D ATPTr0 = G4Transform3D(rotTheta0, G4ThreeVector(ATPOfsX0, 0, ATPOfsZ0));
+		G4VPhysicalVolume* ATPPhys0 = new G4PVPlacement(ATPTr0, ATPLog, "ATTPC0", WorldLog, false, attpcID+0, true);
+		fRun->SetSensitiveDetector(ATPPhys0);
+
+		const double dX = (double)(attpcDimX/2);
+		const double dZ0 = (double)(attpcPosZ0+attpcDimZ/2);
+		const double dTheta0 = std::atan2(dZ0, dX);
+		cout <<Form("ATTPC0 acceptance: [%7.3f, %7.3f]\n", comTheta0-dTheta0, comTheta0+dTheta0);
+
+		if (fPar->GetParInt("comSetup") == 1)
+		{
+			const double ATPOfsX1 = sin(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
+			const double ATPOfsZ1 = cos(comTheta1 * deg) * (attpcPosZ1 + attpcDimZ/2.);
+			G4Transform3D ATPTr1 = G4Transform3D(rotTheta1, G4ThreeVector(ATPOfsX1, 0, ATPOfsZ1));
+			G4VPhysicalVolume* ATPPhys1 = new G4PVPlacement(ATPTr1,ATPLog,"ATTPC1",WorldLog,false,attpcID+1,true);
+			fRun->SetSensitiveDetector(ATPPhys1);
+
+			const double dZ1 = (double)(attpcPosZ1+attpcDimZ/2);
+			const double dTheta1 = std::atan2(dZ1, dX);
+			cout <<Form("ATTPC1 acceptance: [%7.3f, %7.3f]\n", comTheta1-dTheta1, comTheta1+dTheta1);
+		}
+
+		auto fVisATP = new G4VisAttributes();
+		fVisATP->SetColor(G4Color::Yellow());
+		fVisATP->SetForceWireframe(true);
+		ATPLog->SetVisAttributes(fVisATP);
+	}//ATTPC
+
+	//TOF
+	//--------------------------------------------------------------------
+
+	if (fPar->GetParBool("BTOFIn") || fPar->GetParBool("FTOFIn"))
+	{
+		G4Material* tofMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+
+		G4double tofSlatL_b = fPar->GetParDouble("tofSlatL_b");
+		G4double tofSlatL_f = fPar->GetParDouble("tofSlatL_f");
+		G4double tofSlatW   = fPar->GetParDouble("tofSlatW");
+		G4double tofSlatT   = fPar->GetParDouble("tofSlatT");
+
+		//A module
+		//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+		G4RotationMatrix* rotZ90 = new G4RotationMatrix(); rotZ90->rotateZ(90 * deg);
+		G4RotationMatrix* rotZ180 = new G4RotationMatrix(); rotZ180->rotateZ(180 * deg);
+
+		//Enclosure volume (box + fishtails)
+		G4Box* TOFSolM = new G4Box("TOFSolM", tofSlatW/2, (tofSlatL_b+2*tofSlatL_f)/2, tofSlatT/2);
+		G4LogicalVolume* TOFLogM = new G4LogicalVolume(TOFSolM, WorldLog->GetMaterial(), "TOFLogM");
+		TOFLogM->SetVisAttributes(G4VisAttributes::GetInvisible());
+
+		//Box at center
+		G4Box*           TOFSolM_b = new G4Box("TOFSolM_b", tofSlatW/2, tofSlatL_b/2, tofSlatT/2);
+		G4LogicalVolume* TOFLogM_b = new G4LogicalVolume(TOFSolM_b, tofMat, "TOFLogM_b");
+
+		//Fish tails
+		G4Trap* TOFSolM_f = new G4Trap("TOFSolM_f");
+		TOFSolM_f->SetAllParameters(
+				tofSlatT/2, 0, 0,
+				tofSlatL_f/2, tofSlatW/2, tofSlatW/4, 0,
+				tofSlatL_f/2, tofSlatW/2, tofSlatW/4, 0);
+		G4LogicalVolume* TOFLogM_f = new G4LogicalVolume(TOFSolM_f, tofMat, "TOFLogM_f");
 
 		//Visualization
-		auto fVisBTOF = new G4VisAttributes();
-		fVisBTOF->SetColor(G4Color::Brown());
-		fVisBTOF->SetForceWireframe(true);
-		BTOFLogB->SetVisAttributes(fVisBTOF);
-		BTOFLogF->SetVisAttributes(fVisBTOF);
+		auto fVisTOF = new G4VisAttributes();
+		fVisTOF->SetColor(G4Color::Brown());
+		fVisTOF->SetForceWireframe(true);
+		TOFLogM_b->SetVisAttributes(fVisTOF);
+		TOFLogM_f->SetVisAttributes(fVisTOF);
 
-		//Implement modules: enclose it w/ a loop if necessary
-		//++++++++++++++++++++++++++++++++++++++++++++++++++++
+		//BTOF
+		//++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-		G4RotationMatrix* btofRotM = new G4RotationMatrix();
-		btofRotM->rotateY(90 * deg);
-		btofRotM->rotateZ(90 * deg);
-		G4ThreeVector BTOFPos0(+btofPosX, 0, btofDimL_b/2 + btofDimL_f + btofPosZ);
-		G4ThreeVector BTOFPos1(-btofPosX, 0, btofDimL_b/2 + btofDimL_f + btofPosZ);
-		auto BTOFPhy0 = new G4PVPlacement(btofRotM, BTOFPos0, BTOFLogM, "BTOF_0", WorldLog, false, btofID+0, true);
-		auto BTOFPhy1 = new G4PVPlacement(btofRotM, BTOFPos1, BTOFLogM, "BTOF_1", WorldLog, false, btofID+1, true);
-		fRun->SetSensitiveDetector(BTOFPhy0);
-		fRun->SetSensitiveDetector(BTOFPhy1);
-	}//BTOF
+		//FTOF
+		//++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+		if (fPar->GetParBool("FTOFIn"))
+		{
+			G4int    ftofID    = fPar->GetParInt("ftofID");
+			G4int    ftofSlatN = fPar->GetParInt("ftofSlatN");
+			G4double ftofPosY  = fPar->GetParDouble("ftofPosY");
+			G4double ftofPosZ  = fPar->GetParDouble("ftofPosZ");
+
+			new G4PVPlacement(0, fZero, TOFLogM_b, "TOFM_b", TOFLogM, false, ftofID, true);
+			new G4PVPlacement(0, G4ThreeVector(0, (tofSlatL_b + tofSlatL_f)/2, 0),
+					TOFLogM_f, "TOFM_f0", TOFLogM, false, ftofID, true);
+			new G4PVPlacement(rotZ180, G4ThreeVector(0, -(tofSlatL_b + tofSlatL_f)/2, 0),
+					TOFLogM_f, "TOFM_f1", TOFLogM, false, ftofID, true);
+
+			for (int a=0; a<ftofSlatN; a++) //# of slat pairs, by radial distance from beam axis
+			for (int b=0; b<2; b++) //Pair
+			{
+				const int mID = a*10 + b;
+				const float posY = tofSlatW*a + tofSlatW/2 + ftofPosY;
+				auto FTOFPhy = new G4PVPlacement(rotZ90, G4ThreeVector(0, b==0?posY:(-posY), ftofPosZ + tofSlatT/2),
+						TOFLogM, Form("FTOF_%i", mID), WorldLog, false, ftofID+mID, true);
+				fRun->SetSensitiveDetector(FTOFPhy);
+			}//a, b
+		}//FTOF
+	}//B/FTOF
 
 	//ND
 	//--------------------------------------------------------------------
@@ -281,14 +420,15 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 	{
 		G4Material* ndMat = fNist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
 
-        G4int    ndID    = fPar->GetParInt("ndID");
-        G4double ndSlatW = fPar->GetParDouble("ndSlatW"); //Slat width (x)
-        G4double ndSlatH = fPar->GetParDouble("ndSlatH"); //Slat height (y)
-        G4double ndSlatT = fPar->GetParDouble("ndSlatT"); //Slat thickness (z)
+		G4int    ndID    = fPar->GetParInt("ndID");
+		G4int    ndSlatN = fPar->GetParInt("ndSlatN"); //# of pairs: i.e., 1 means two slats
+		G4double ndSlatL = fPar->GetParDouble("ndSlatL"); //Slat length (x)
+		G4double ndSlatW = fPar->GetParDouble("ndSlatW"); //Slat width (y)
+		G4double ndSlatT = fPar->GetParDouble("ndSlatT"); //Slat thickness (z)
 		G4double ndPosY  = fPar->GetParDouble("ndPosY");
 		G4double ndPosZ  = fPar->GetParDouble("ndPosZ");
 
-		G4Box*           NDSol = new G4Box("NDSol", ndSlatW/2, ndSlatH/2, ndSlatT/2);
+		G4Box*           NDSol = new G4Box("NDSol", ndSlatL/2, ndSlatW/2, ndSlatT/2);
 		G4LogicalVolume* NDLog = new G4LogicalVolume(NDSol, ndMat, "NDLog");
 
 		auto fVisND = new G4VisAttributes();
@@ -297,12 +437,15 @@ G4VPhysicalVolume* TB22HDetectorConstruction::Construct()
 		NDLog->SetVisAttributes(fVisND);
 		NDLog->SetVisAttributes(fVisND);
 
-		G4ThreeVector NDPos0(0, +ndSlatH/2 +ndPosY, ndSlatT/2 + ndPosZ);
-		G4ThreeVector NDPos1(0, -ndSlatH/2 -ndPosY, ndSlatT/2 + ndPosZ);
-		auto NDPhy0 = new G4PVPlacement(0, NDPos0, NDLog, "ND_0", WorldLog, false, ndID+0, true);
-		auto NDPhy1 = new G4PVPlacement(0, NDPos1, NDLog, "ND_1", WorldLog, false, ndID+1, true);
-		fRun->SetSensitiveDetector(NDPhy0);
-		fRun->SetSensitiveDetector(NDPhy1);
+		for (int a=0; a<ndSlatN; a++) //# of slat pairs,  by radial distance from beam axis
+		for (int b=0; b<2; b++) //Pair
+		{
+			const short mID  = a*10 + b + 1;
+			const float posY = ndSlatW*a + ndSlatW/2 + ndPosY;
+			G4ThreeVector NDPos(0, b==0?posY:(-posY), ndSlatT/2 + ndPosZ);
+			auto NDPhy = new G4PVPlacement(0, NDPos, NDLog, Form("ND_%i", mID), WorldLog, false, ndID+mID, true);
+			fRun->SetSensitiveDetector(NDPhy);
+		}//a, b
 	}//ND
 
 	return WorldPhy;

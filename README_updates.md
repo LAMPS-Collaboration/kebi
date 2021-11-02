@@ -1,9 +1,31 @@
+Oct. 26, 2021
+
+- Prepared two detector setups (by # of available AT-TPCs, tilting angle and distance can be adjusted)
+- For processing codes (e.g., TB22H.h or TB22HMake.C), check "/home/ckim/work/himac_2021" in NPL server
+
+Oct. 22, 2021 (ckim
+
+- Added liquid hydrogen / solid hydrogen target options
+
+Oct. 19, 2021 (ckim)
+
+- Added tilted angle detectors (SC tilt and AT-TPC, active volume only)
+- Minor tweak/cleanup on kbpar_TB22H.conf
+
+Oct. 15, 2021 (ckim)
+
+- Minor updates to check 12C(p, 2p)11B scattering angles from truth level
+
+	a. ~kebi/LAMPS-HighEnergy/geant4/TB22HDetectorConstruction.cc
+	b. ~kebi/LAMPS-HighEnergy/macros_tpc/kbpar_TB22H.conf
+
+//-----------------------------------------------
 
 Sep. 23, 2021 (ckim)
 
 - ~kebi/source/geant4/KBPrimaryGeneratorAction.cc: added uncertainty option in beam energy
 	a. To invoke it, use parameter " G4InputEnergyError " in exact number (i.e., 0.01 for 1 %)
-	b. This functions only activated when the above parameter is given
+	b. This function only activated when the above parameter is given
 
 - ~kebi/LAMPS-HighEnergy/macros_tpc/geant4_run.mac : added random seeding by SHLim (/random/setSeeds 1 1)
 - ~kebi/LAMPS-HighEnergy/geant4/TB22HDetectorConstruction.cc : modified TOF and ND arrangement
@@ -11,7 +33,6 @@ Sep. 23, 2021 (ckim)
 Sep. 17, 2021 (ckim)
 
 - ~kebi/source/geant4/KBPrimaryGeneratorAction.cc: debugged randomizing beam XY (both radial and square shape)
-
 
 //-----------------------------------------------
 
